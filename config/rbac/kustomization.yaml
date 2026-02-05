@@ -1,0 +1,79 @@
+resources:
+# All RBAC will be applied under this service account in
+# the deployment namespace. You may comment out this resource
+# if your manager will use a service account that exists at
+# runtime. Be sure to update RoleBinding and ClusterRoleBinding
+# subjects if changing service account names.
+- service_account.yaml
+- role.yaml
+- role_binding.yaml
+- leader_election_role.yaml
+- leader_election_role_binding.yaml
+# The following RBAC configurations are used to protect
+# the metrics endpoint with authn/authz. These configurations
+# ensure that only authorized users and service accounts
+# can access the metrics endpoint. Comment the following
+# permissions if you want to disable this protection.
+# More info: https://book.kubebuilder.io/reference/metrics.html
+- metrics_auth_role.yaml
+- metrics_auth_role_binding.yaml
+- metrics_reader_role.yaml
+# For each CRD, "Admin", "Editor" and "Viewer" roles are scaffolded by
+# default, aiding admins in cluster management. Those roles are
+# not used by the keycloak-opereator itself. You can comment the following lines
+# if you do not want those helpers be installed with your Project.
+- openid_audienceprotocolmapper_admin_role.yaml
+- openid_audienceprotocolmapper_editor_role.yaml
+- openid_audienceprotocolmapper_viewer_role.yaml
+- openid_fullnameprotocolmapper_admin_role.yaml
+- openid_fullnameprotocolmapper_editor_role.yaml
+- openid_fullnameprotocolmapper_viewer_role.yaml
+- openid_userattributeprotocolmapper_admin_role.yaml
+- openid_userattributeprotocolmapper_editor_role.yaml
+- openid_userattributeprotocolmapper_viewer_role.yaml
+- openid_userpropertyprotocolmapper_admin_role.yaml
+- openid_userpropertyprotocolmapper_editor_role.yaml
+- openid_userpropertyprotocolmapper_viewer_role.yaml
+- openid_groupmembershipprotocolmapper_admin_role.yaml
+- openid_groupmembershipprotocolmapper_editor_role.yaml
+- openid_groupmembershipprotocolmapper_viewer_role.yaml
+- openid_clientscope_admin_role.yaml
+- openid_clientscope_editor_role.yaml
+- openid_clientscope_viewer_role.yaml
+- openid_defaultscopes_admin_role.yaml
+- openid_defaultscopes_editor_role.yaml
+- openid_defaultscopes_viewer_role.yaml
+- openid_openidclient_admin_role.yaml
+- openid_openidclient_editor_role.yaml
+- openid_openidclient_viewer_role.yaml
+- identity_hardcodedrolemapper_admin_role.yaml
+- identity_hardcodedrolemapper_editor_role.yaml
+- identity_hardcodedrolemapper_viewer_role.yaml
+- identity_oidcadvancedgroupmapper_admin_role.yaml
+- identity_oidcadvancedgroupmapper_editor_role.yaml
+- identity_oidcadvancedgroupmapper_viewer_role.yaml
+- identity_attributeimportermapper_admin_role.yaml
+- identity_attributeimportermapper_editor_role.yaml
+- identity_attributeimportermapper_viewer_role.yaml
+- identity_oidcidentityprovider_admin_role.yaml
+- identity_oidcidentityprovider_editor_role.yaml
+- identity_oidcidentityprovider_viewer_role.yaml
+- group_admin_role.yaml
+- group_editor_role.yaml
+- group_viewer_role.yaml
+- user_admin_role.yaml
+- user_editor_role.yaml
+- user_viewer_role.yaml
+- realm_admin_role.yaml
+- realm_editor_role.yaml
+- realm_viewer_role.yaml
+- clusterrealm_admin_role.yaml
+- clusterrealm_editor_role.yaml
+- clusterrealm_viewer_role.yaml
+- keycloak_admin_role.yaml
+- keycloak_editor_role.yaml
+- keycloak_viewer_role.yaml
+- clusterkeycloak_admin_role.yaml
+- clusterkeycloak_editor_role.yaml
+- clusterkeycloak_viewer_role.yaml
+

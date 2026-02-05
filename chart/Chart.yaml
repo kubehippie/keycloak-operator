@@ -1,0 +1,21 @@
+---
+apiVersion: v2
+type: application
+name: keycloak-operator
+description: Manage realms and clients for Keycloak
+version: 1.4.1
+appVersion: 1.4.1
+home: https://github.com/kubehippie/keycloak-operator
+icon: https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/hetzner.svg
+keywords:
+  - keycloak
+  - controller
+  - operator
+maintainers:
+  - email: thomas@webhippie.de
+    name: tboerger
+    url: https://github.com/tboerger
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/operator: "true"
+...

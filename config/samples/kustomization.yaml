@@ -1,0 +1,21 @@
+## Append samples of your project ##
+resources:
+- v1alpha1_clusterkeycloak.yaml
+- v1alpha1_keycloak.yaml
+- v1alpha1_clusterrealm.yaml
+- v1alpha1_realm.yaml
+- v1alpha1_user.yaml
+- v1alpha1_group.yaml
+- identity_v1alpha1_oidcidentityprovider.yaml
+- identity_v1alpha1_attributeimportermapper.yaml
+- identity_v1alpha1_oidcadvancedgroupmapper.yaml
+- identity_v1alpha1_hardcodedrolemapper.yaml
+- openid_v1alpha1_openidclient.yaml
+- openid_v1alpha1_defaultscopes.yaml
+- openid_v1alpha1_clientscope.yaml
+- openid_v1alpha1_groupmembershipprotocolmapper.yaml
+- openid_v1alpha1_userpropertyprotocolmapper.yaml
+- openid_v1alpha1_userattributeprotocolmapper.yaml
+- openid_v1alpha1_fullnameprotocolmapper.yaml
+- openid_v1alpha1_audienceprotocolmapper.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

@@ -1,0 +1,9 @@
+apiVersion: identity.keycloak-operator.webhippie.de/v1alpha1
+kind: OIDCAdvancedGroupMapper
+metadata:
+  labels:
+    app.kubernetes.io/name: keycloak-opereator
+    app.kubernetes.io/managed-by: kustomize
+  name: oidcadvancedgroupmapper-sample
+spec:
+  # TODO(user): Add fields here

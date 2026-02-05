@@ -1,0 +1,129 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - identity.keycloak-operator.webhippie.de
+  resources:
+  - attributeimportermappers
+  - hardcodedrolemappers
+  - oidcadvancedgroupmappers
+  - oidcidentityproviders
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - identity.keycloak-operator.webhippie.de
+  resources:
+  - attributeimportermappers/finalizers
+  - hardcodedrolemappers/finalizers
+  - oidcadvancedgroupmappers/finalizers
+  - oidcidentityproviders/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - identity.keycloak-operator.webhippie.de
+  resources:
+  - attributeimportermappers/status
+  - hardcodedrolemappers/status
+  - oidcadvancedgroupmappers/status
+  - oidcidentityproviders/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - keycloak-operator.webhippie.de
+  resources:
+  - clusterkeycloaks
+  - clusterrealms
+  - groups
+  - keycloaks
+  - realms
+  - users
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - keycloak-operator.webhippie.de
+  resources:
+  - clusterkeycloaks/finalizers
+  - clusterrealms/finalizers
+  - groups/finalizers
+  - keycloaks/finalizers
+  - realms/finalizers
+  - users/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - keycloak-operator.webhippie.de
+  resources:
+  - clusterkeycloaks/status
+  - clusterrealms/status
+  - groups/status
+  - keycloaks/status
+  - realms/status
+  - users/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - openid.keycloak-operator.webhippie.de
+  resources:
+  - audienceprotocolmappers
+  - clientscopes
+  - defaultscopes
+  - fullnameprotocolmappers
+  - groupmembershipprotocolmappers
+  - openidclients
+  - userattributeprotocolmappers
+  - userpropertyprotocolmappers
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - openid.keycloak-operator.webhippie.de
+  resources:
+  - audienceprotocolmappers/finalizers
+  - clientscopes/finalizers
+  - defaultscopes/finalizers
+  - fullnameprotocolmappers/finalizers
+  - groupmembershipprotocolmappers/finalizers
+  - openidclients/finalizers
+  - userattributeprotocolmappers/finalizers
+  - userpropertyprotocolmappers/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - openid.keycloak-operator.webhippie.de
+  resources:
+  - audienceprotocolmappers/status
+  - clientscopes/status
+  - defaultscopes/status
+  - fullnameprotocolmappers/status
+  - groupmembershipprotocolmappers/status
+  - openidclients/status
+  - userattributeprotocolmappers/status
+  - userpropertyprotocolmappers/status
+  verbs:
+  - get
+  - patch
+  - update

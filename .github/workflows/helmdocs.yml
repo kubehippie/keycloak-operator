@@ -1,0 +1,51 @@
+---
+# yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
+name: helmdocs
+
+"on":
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  helmdocs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate token
+        id: token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.TOKEN_EXCHANGE_APP }}
+          private-key: ${{ secrets.TOKEN_EXCHANGE_KEY }}
+          permission-contents: write
+
+      - name: Checkout source
+        uses: actions/checkout@v6
+        with:
+          token: ${{ steps.token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Update readme
+        uses: docker://jnorwood/helm-docs:v1.14.2@sha256:7e562b49ab6b1dbc50c3da8f2dd6ffa8a5c6bba327b1c6335cc15ce29267979c
+        with:
+          entrypoint: helm-docs
+
+      - name: Source rebase
+        run: git pull --autostash --rebase
+
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: GitHub Actions
+          author_email: github@webhippie.de
+          add: chart/
+          message: "docs: automated readme update [skip ci]"
+          push: true
+          commit: --signoff
+
+...

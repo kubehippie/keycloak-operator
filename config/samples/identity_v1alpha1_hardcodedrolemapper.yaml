@@ -1,0 +1,9 @@
+apiVersion: identity.keycloak-operator.webhippie.de/v1alpha1
+kind: HardcodedRoleMapper
+metadata:
+  labels:
+    app.kubernetes.io/name: keycloak-opereator
+    app.kubernetes.io/managed-by: kustomize
+  name: hardcodedrolemapper-sample
+spec:
+  # TODO(user): Add fields here
