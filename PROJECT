@@ -22,6 +22,10 @@ resources:
   kind: ClusterKeycloak
   path: github.com/kubehippie/keycloak-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -30,6 +34,10 @@ resources:
   kind: Keycloak
   path: github.com/kubehippie/keycloak-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
   controller: true
@@ -37,6 +45,10 @@ resources:
   kind: ClusterRealm
   path: github.com/kubehippie/keycloak-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -45,6 +57,10 @@ resources:
   kind: Realm
   path: github.com/kubehippie/keycloak-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -53,6 +69,10 @@ resources:
   kind: User
   path: github.com/kubehippie/keycloak-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -61,6 +81,10 @@ resources:
   kind: Group
   path: github.com/kubehippie/keycloak-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -70,6 +94,10 @@ resources:
   kind: OIDCIdentityProvider
   path: github.com/kubehippie/keycloak-operator/api/identity/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -79,6 +107,10 @@ resources:
   kind: AttributeImporterMapper
   path: github.com/kubehippie/keycloak-operator/api/identity/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -88,6 +120,10 @@ resources:
   kind: OIDCAdvancedGroupMapper
   path: github.com/kubehippie/keycloak-operator/api/identity/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -97,6 +133,10 @@ resources:
   kind: HardcodedRoleMapper
   path: github.com/kubehippie/keycloak-operator/api/identity/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -106,6 +146,10 @@ resources:
   kind: OpenIDClient
   path: github.com/kubehippie/keycloak-operator/api/openid/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -115,6 +159,10 @@ resources:
   kind: DefaultScopes
   path: github.com/kubehippie/keycloak-operator/api/openid/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -124,6 +172,10 @@ resources:
   kind: ClientScope
   path: github.com/kubehippie/keycloak-operator/api/openid/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -133,6 +185,10 @@ resources:
   kind: GroupMembershipProtocolMapper
   path: github.com/kubehippie/keycloak-operator/api/openid/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -142,6 +198,10 @@ resources:
   kind: UserPropertyProtocolMapper
   path: github.com/kubehippie/keycloak-operator/api/openid/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -151,6 +211,10 @@ resources:
   kind: UserAttributeProtocolMapper
   path: github.com/kubehippie/keycloak-operator/api/openid/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -160,6 +224,10 @@ resources:
   kind: FullNameProtocolMapper
   path: github.com/kubehippie/keycloak-operator/api/openid/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 - api:
     crdVersion: v1
     namespaced: true
@@ -169,4 +237,8 @@ resources:
   kind: AudienceProtocolMapper
   path: github.com/kubehippie/keycloak-operator/api/openid/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 version: "3"
