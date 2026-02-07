@@ -17,29 +17,23 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // RealmSpec defines the desired state of Realm
 type RealmSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
+	// KeycloakRef is a reference to the Keycloak instance that owns the realm.
+	// +required
+	KeycloakRef *common.KeycloakRef `json:"keycloakRef"`
 
-	// foo is an example field of Realm. Edit realm_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
+	// realmName specifies the name of the realm.
+	// +required
+	RealmName string `json:"realmName"`
 }
 
 // RealmStatus defines the observed state of Realm.
 type RealmStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
 

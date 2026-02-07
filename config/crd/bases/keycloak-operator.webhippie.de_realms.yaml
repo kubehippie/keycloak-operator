@@ -39,10 +39,34 @@ spec:
           spec:
             description: spec defines the desired state of Realm
             properties:
-              foo:
-                description: foo is an example field of Realm. Edit realm_types.go
-                  to remove/update
+              keycloakRef:
+                description: KeycloakRef is a reference to the Keycloak instance that
+                  owns the realm.
+                properties:
+                  kind:
+                    default: Keycloak
+                    description: Kind specifies the kind of the Keycloak resource.
+                    enum:
+                    - Keycloak
+                    - ClusterKeycloak
+                    type: string
+                  name:
+                    description: Name specifies the name of the Keycloak resource.
+                    type: string
+                  namespace:
+                    description: Namespace specifies the namespace of the Keycloak
+                      resource.
+                    type: string
+                required:
+                - kind
+                - name
+                type: object
+              realmName:
+                description: realmName specifies the name of the realm.
                 type: string
+            required:
+            - keycloakRef
+            - realmName
             type: object
           status:
             description: status defines the observed state of Realm
