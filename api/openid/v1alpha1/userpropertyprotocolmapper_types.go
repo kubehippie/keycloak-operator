@@ -20,16 +20,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
 // UserPropertyProtocolMapperSpec defines the desired state of UserPropertyProtocolMapper
 type UserPropertyProtocolMapperSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-	// The following markers will use OpenAPI v3 schema to validate the value
-	// More info: https://book.kubebuilder.io/reference/markers/crd-validation.html
-
 	// foo is an example field of UserPropertyProtocolMapper. Edit userpropertyprotocolmapper_types.go to remove/update
 	// +optional
 	Foo *string `json:"foo,omitempty"`
@@ -37,9 +29,6 @@ type UserPropertyProtocolMapperSpec struct {
 
 // UserPropertyProtocolMapperStatus defines the observed state of UserPropertyProtocolMapper.
 type UserPropertyProtocolMapperStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
 
