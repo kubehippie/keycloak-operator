@@ -101,8 +101,9 @@ spec:
                   accepts any certificate presented by the server and any hostname in that
                   certificate.
                 type: boolean
-              secret:
-                description: secret references a secret which contains admin credentials.
+              password:
+                description: password references a secret or direct value which contains
+                  admin password.
                 properties:
                   key:
                     description: The key of the secret to select from.
@@ -119,16 +120,52 @@ spec:
                   namespace:
                     description: Namespace of the ConfigMap.
                     type: string
+                  value:
+                    description: Directly specifies a value.
+                    type: string
                 required:
                 - key
                 type: object
                 x-kubernetes-map-type: atomic
+              realmName:
+                default: master
+                description: |-
+                  realmName defines the realm name to authenticate the admin credentials,
+                  normally this should be the master realm.
+                type: string
               url:
                 description: url of keycloak instance.
                 type: string
+              username:
+                description: username references a secret or direct value which contains
+                  admin username.
+                properties:
+                  key:
+                    description: The key of the secret to select from.
+                    type: string
+                  name:
+                    default: ""
+                    description: |-
+                      Name of the referent.
+                      This field is effectively required, but due to backwards compatibility is
+                      allowed to be empty. Instances of this type with an empty value here are
+                      almost certainly wrong.
+                      More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                    type: string
+                  namespace:
+                    description: Namespace of the ConfigMap.
+                    type: string
+                  value:
+                    description: Directly specifies a value.
+                    type: string
+                required:
+                - key
+                type: object
+                x-kubernetes-map-type: atomic
             required:
-            - secret
+            - password
             - url
+            - username
             type: object
           status:
             default:

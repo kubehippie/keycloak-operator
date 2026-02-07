@@ -5,5 +5,12 @@ metadata:
     app.kubernetes.io/name: keycloak-opereator
     app.kubernetes.io/managed-by: kustomize
   name: keycloak-sample
+  namespace: keycloak-operator-system
 spec:
-  # TODO(user): Add fields here
+  url: https://keycloak.example.com
+  username:
+    name: keycloak-admin
+    key: username
+  password:
+    name: keycloak-admin
+    key: password

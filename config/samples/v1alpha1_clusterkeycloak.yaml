@@ -6,4 +6,12 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: clusterkeycloak-sample
 spec:
-  # TODO(user): Add fields here
+  url: https://keycloak.example.com
+  username:
+    name: keycloak-admin
+    key: username
+    namespace: keycloak-operator-system
+  password:
+    name: keycloak-admin
+    key: password
+    namespace: keycloak-operator-system

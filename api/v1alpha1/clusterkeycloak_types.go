@@ -26,8 +26,17 @@ type ClusterKeycloakSpec struct {
 	// url of keycloak instance.
 	URL string `json:"url"`
 
-	// secret references a secret which contains admin credentials.
-	Secret *common.SecretKeySelector `json:"secret"`
+	// username references a secret or direct value which contains admin username.
+	Username *common.SecretKeyRefOrVal `json:"username"`
+
+	// password references a secret or direct value which contains admin password.
+	Password *common.SecretKeyRefOrVal `json:"password"`
+
+	// realmName defines the realm name to authenticate the admin credentials,
+	// normally this should be the master realm.
+	// +optional
+	// +kubebuilder:default=master
+	RealmName string `json:"realmName,omitempty"`
 
 	// caCert defines the root certificate authority that API clients use when
 	// verifying server certificates.
