@@ -5,14 +5,14 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-    - ""
+  - ""
   resources:
-    - configmaps
-    - secrets
+  - configmaps
+  - secrets
   verbs:
-    - get
-    - list
-    - watch
+  - get
+  - list
+  - watch
 - apiGroups:
   - identity.keycloak-operator.webhippie.de
   resources:

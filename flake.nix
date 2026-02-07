@@ -53,7 +53,9 @@
                 go
                 helm-docs
                 kubebuilder
+                kubernetes-helm
                 nixfmt-rfc-style
+                tilt
                 yamllint
               ];
             };

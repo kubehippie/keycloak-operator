@@ -46,6 +46,28 @@ EOF
 direnv allow
 ```
 
+To easily work on the operator we suggest to use [Tilt][tilt] for the local
+development, this work pretty good in combination with Kind to get features like
+hot reloading:
+
+```console
+kind create cluster \
+    --name keycloak-operator
+
+helm upgrade cert-manager cert-manager \
+    --install --hide-notes --wait \
+    --repo https://charts.jetstack.io \
+    --set fullnameOverride=cert-manager \
+    --set crds.enabled=true \
+    --namespace cert-manager \
+    --create-namespace
+
+tilt up
+
+kind delete cluster \
+    --name keycloak-operator
+```
+
 ## Security
 
 If you find a security issue please contact
@@ -73,3 +95,4 @@ Copyright (c) 2025 Thomas Boerger <thomas@webhippie.de>
 [nix]: https://nixos.org/
 [golang]: http://golang.org/doc/install.html
 [direnv]: https://direnv.net/
+[tilt]: https://tilt.dev/
