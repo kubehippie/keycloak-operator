@@ -54,7 +54,7 @@
                 helm-docs
                 kubebuilder
                 kubernetes-helm
-                nixfmt-rfc-style
+                nixfmt
                 tilt
                 yamllint
               ];
