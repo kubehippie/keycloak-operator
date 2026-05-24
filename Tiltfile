@@ -44,6 +44,6 @@ k8s_yaml(
 )
 
 k8s_resource(
-  'keycloak-opereator-controller-manager',
+  'keycloak-operator-controller-manager',
   extra_pod_selectors=[{'control-plane': 'controller-manager'}],
 )
