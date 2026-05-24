@@ -2,7 +2,7 @@ apiVersion: keycloak-operator.webhippie.de/v1alpha1
 kind: ClusterKeycloak
 metadata:
   labels:
-    app.kubernetes.io/name: keycloak-opereator
+    app.kubernetes.io/name: keycloak-operator
     app.kubernetes.io/managed-by: kustomize
   name: clusterkeycloak-sample
 spec:

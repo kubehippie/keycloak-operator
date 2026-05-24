@@ -12,7 +12,7 @@ plugins:
   helm.kubebuilder.io/v2-alpha:
     manifests: dist/install.yaml
     output: dist
-projectName: keycloak-opereator
+projectName: keycloak-operator
 repo: github.com/kubehippie/keycloak-operator
 resources:
 - api:
