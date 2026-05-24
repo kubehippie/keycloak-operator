@@ -109,13 +109,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	err = SetupClusterKeycloakWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
 	err = SetupKeycloakWebhookWithManager(mgr)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = SetupClusterRealmWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = SetupRealmWebhookWithManager(mgr)

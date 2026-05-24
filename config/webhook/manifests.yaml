@@ -250,46 +250,6 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-keycloak-operator-webhippie-de-v1alpha1-clusterkeycloak
-  failurePolicy: Fail
-  name: mclusterkeycloak-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - clusterkeycloaks
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-keycloak-operator-webhippie-de-v1alpha1-clusterrealm
-  failurePolicy: Fail
-  name: mclusterrealm-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - clusterrealms
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
       path: /mutate-keycloak-operator-webhippie-de-v1alpha1-group
   failurePolicy: Fail
   name: mgroup-v1alpha1.kb.io
@@ -609,46 +569,6 @@ webhooks:
     - UPDATE
     resources:
     - userpropertyprotocolmappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-keycloak-operator-webhippie-de-v1alpha1-clusterkeycloak
-  failurePolicy: Fail
-  name: vclusterkeycloak-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - clusterkeycloaks
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-keycloak-operator-webhippie-de-v1alpha1-clusterrealm
-  failurePolicy: Fail
-  name: vclusterrealm-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - clusterrealms
   sideEffects: None
 - admissionReviewVersions:
   - v1

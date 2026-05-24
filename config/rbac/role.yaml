@@ -51,8 +51,6 @@ rules:
 - apiGroups:
   - keycloak-operator.webhippie.de
   resources:
-  - clusterkeycloaks
-  - clusterrealms
   - groups
   - keycloaks
   - realms
@@ -68,8 +66,6 @@ rules:
 - apiGroups:
   - keycloak-operator.webhippie.de
   resources:
-  - clusterkeycloaks/finalizers
-  - clusterrealms/finalizers
   - groups/finalizers
   - keycloaks/finalizers
   - realms/finalizers
@@ -79,8 +75,6 @@ rules:
 - apiGroups:
   - keycloak-operator.webhippie.de
   resources:
-  - clusterkeycloaks/status
-  - clusterrealms/status
   - groups/status
   - keycloaks/status
   - realms/status

@@ -17,32 +17,10 @@ repo: github.com/kubehippie/keycloak-operator
 resources:
 - api:
     crdVersion: v1
-  controller: true
-  domain: keycloak-operator.webhippie.de
-  kind: ClusterKeycloak
-  path: github.com/kubehippie/keycloak-operator/api/v1alpha1
-  version: v1alpha1
-  webhooks:
-    defaulting: true
-    validation: true
-    webhookVersion: v1
-- api:
-    crdVersion: v1
     namespaced: true
   controller: true
   domain: keycloak-operator.webhippie.de
   kind: Keycloak
-  path: github.com/kubehippie/keycloak-operator/api/v1alpha1
-  version: v1alpha1
-  webhooks:
-    defaulting: true
-    validation: true
-    webhookVersion: v1
-- api:
-    crdVersion: v1
-  controller: true
-  domain: keycloak-operator.webhippie.de
-  kind: ClusterRealm
   path: github.com/kubehippie/keycloak-operator/api/v1alpha1
   version: v1alpha1
   webhooks:

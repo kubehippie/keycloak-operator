@@ -48,7 +48,6 @@ spec:
                     description: Kind specifies the kind of the Keycloak resource.
                     enum:
                     - Keycloak
-                    - ClusterKeycloak
                     type: string
                   name:
                     description: Name specifies the name of the Keycloak resource.

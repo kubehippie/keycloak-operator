@@ -1,8 +1,6 @@
 ## Append samples of your project ##
 resources:
-- v1alpha1_clusterkeycloak.yaml
 - v1alpha1_keycloak.yaml
-- v1alpha1_clusterrealm.yaml
 - v1alpha1_realm.yaml
 - v1alpha1_user.yaml
 - v1alpha1_group.yaml

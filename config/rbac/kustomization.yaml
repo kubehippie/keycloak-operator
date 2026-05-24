@@ -67,13 +67,8 @@ resources:
 - realm_admin_role.yaml
 - realm_editor_role.yaml
 - realm_viewer_role.yaml
-- clusterrealm_admin_role.yaml
-- clusterrealm_editor_role.yaml
-- clusterrealm_viewer_role.yaml
+
 - keycloak_admin_role.yaml
 - keycloak_editor_role.yaml
 - keycloak_viewer_role.yaml
-- clusterkeycloak_admin_role.yaml
-- clusterkeycloak_editor_role.yaml
-- clusterkeycloak_viewer_role.yaml
 

@@ -7,7 +7,7 @@ import (
 // KeycloakRef is a reference to a Keycloak instance.
 type KeycloakRef struct {
 	// Kind specifies the kind of the Keycloak resource.
-	// +kubebuilder:validation:Enum=Keycloak;ClusterKeycloak
+	// +kubebuilder:validation:Enum=Keycloak
 	// +kubebuilder:default=Keycloak
 	// +required
 	Kind string `json:"kind,omitempty"`
