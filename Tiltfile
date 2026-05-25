@@ -1,5 +1,12 @@
 allow_k8s_contexts('kind-keycloak-operator')
 
+local_resource(
+  'keycloak',
+  cmd='helm upgrade --install keycloak oci://ghcr.io/codecentric/helm-charts/keycloakx --create-namespace --namespace keycloak-system --values test/e2e/testdata/keycloak.yaml --set image.tag=26.6 --timeout=5m --wait --hide-notes',
+  deps=['test/e2e/testdata/keycloak.yaml'],
+  labels=['dependencies'],
+)
+
 docker_build(
   'ghcr.io/kubehippie/keycloak-operator',
   '.',
@@ -46,4 +53,5 @@ k8s_yaml(
 k8s_resource(
   'keycloak-operator-controller-manager',
   extra_pod_selectors=[{'control-plane': 'controller-manager'}],
+  resource_deps=['keycloak'],
 )

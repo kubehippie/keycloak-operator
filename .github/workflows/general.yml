@@ -96,25 +96,41 @@ jobs:
       - name: Run tests
         run: make test
 
-  # e2e:
-  #   runs-on: ubuntu-latest
+  e2e:
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Checkout source
-  #       uses: actions/checkout@v4
+    needs:
+      - lint
+      - chart
+      - tests
 
-  #     - name: Setup golang
-  #       uses: actions/setup-go@v5
-  #       with:
-  #         go-version-file: go.mod
+    strategy:
+      fail-fast: true
+      matrix:
+        keycloak:
+          - "24.0"
+          - "25.0"
+          - "26.6"
 
-  #     - name: Install tools
-  #       uses: alexellis/arkade-get@master
-  #       with:
-  #         kubectl: latest
-  #         kind: latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
 
-  #     - name: Run tests
-  #       run: make test-e2e
+      - name: Setup golang
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Install tools
+        uses: alexellis/arkade-get@master
+        with:
+          kubectl: latest
+          kind: latest
+          helm: latest
+
+      - name: Run tests
+        run: make test-e2e
+        env:
+          KEYCLOAK_VERSION: ${{ matrix.keycloak }}
 
 ...

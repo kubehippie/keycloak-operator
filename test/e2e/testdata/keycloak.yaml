@@ -1,0 +1,21 @@
+---
+fullnameOverride: keycloak
+replicas: 1
+
+args:
+  - start-dev
+
+http:
+  relativePath: /
+
+extraEnv: |
+  - name: KEYCLOAK_ADMIN
+    value: admin
+  - name: KEYCLOAK_ADMIN_PASSWORD
+    value: admin
+  - name: KC_BOOTSTRAP_ADMIN_USERNAME
+    value: admin
+  - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+    value: admin
+
+...

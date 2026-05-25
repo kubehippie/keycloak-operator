@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	. "github.com/onsi/ginkgo/v2" // nolint:revive,staticcheck
@@ -33,7 +34,71 @@ const (
 
 	defaultKindBinary  = "kind"
 	defaultKindCluster = "kind"
+
+	keycloakNamespace = "keycloak-system"
 )
+
+// InstallKeycloak deploys Keycloak into the Kind cluster using the codecentric
+// keycloakx Helm chart at the given version tag. It blocks until the StatefulSet
+// is ready (up to 5 minutes).
+func InstallKeycloak(version string) error {
+	projectDir, err := GetProjectDir()
+	if err != nil {
+		return err
+	}
+
+	valuesFile := filepath.Join(
+		projectDir,
+		"test",
+		"e2e",
+		"testdata",
+		"keycloak.yaml",
+	)
+
+	cmd := exec.Command("helm", "upgrade", "--install", "keycloak",
+		"oci://ghcr.io/codecentric/helm-charts/keycloakx",
+		"--create-namespace",
+		"--namespace", keycloakNamespace,
+		"--values", valuesFile,
+		"--set", "image.tag="+version,
+		"--timeout", "5m",
+		"--wait",
+		"--hide-notes",
+	)
+	if _, err := Run(cmd); err != nil {
+		return err
+	}
+	return nil
+}
+
+// UninstallKeycloak removes the keycloak Helm release and its namespace.
+func UninstallKeycloak() {
+	cmd := exec.Command("helm", "uninstall", "keycloak",
+		"--namespace", keycloakNamespace,
+		"--ignore-not-found",
+	)
+	if _, err := Run(cmd); err != nil {
+		warnError(err)
+	}
+
+	cmd = exec.Command("kubectl", "delete", "namespace",
+		keycloakNamespace,
+		"--ignore-not-found",
+	)
+	if _, err := Run(cmd); err != nil {
+		warnError(err)
+	}
+}
+
+// IsKeycloakInstalled returns true when the keycloak Helm release already
+// exists in keycloakNamespace.
+func IsKeycloakInstalled() bool {
+	cmd := exec.Command("helm", "status", "keycloak",
+		"--namespace", keycloakNamespace,
+	)
+	_, err := Run(cmd)
+	return err == nil
+}
 
 func warnError(err error) {
 	_, _ = fmt.Fprintf(GinkgoWriter, "warning: %v\n", err)
