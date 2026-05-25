@@ -1,0 +1,351 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Realm",
+  "description": "Realm is the Schema for the realms API",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "description": "spec defines the desired state of Realm",
+      "properties": {
+        "attributes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "attributes holds arbitrary realm-level key/value attributes.",
+          "type": "object"
+        },
+        "bruteForceProtected": {
+          "description": "bruteForceProtected enables automatic account lockout after repeated\nfailed login attempts.",
+          "type": "boolean"
+        },
+        "displayName": {
+          "description": "displayName is a human-readable name shown in the UI.",
+          "type": "string"
+        },
+        "displayNameHtml": {
+          "description": "displayNameHtml is an HTML-formatted display name shown in the login page.",
+          "type": "string"
+        },
+        "enabled": {
+          "description": "enabled controls whether the realm is active.",
+          "type": "boolean"
+        },
+        "internationalization": {
+          "description": "internationalization groups locale and multi-language settings.",
+          "properties": {
+            "defaultLocale": {
+              "description": "defaultLocale sets the default locale when internationalization is enabled.",
+              "type": "string"
+            },
+            "enabled": {
+              "description": "enabled enables multi-language support.",
+              "type": "boolean"
+            },
+            "supportedLocales": {
+              "description": "supportedLocales lists the locales available to users.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "type": "object"
+        },
+        "keycloakRef": {
+          "description": "keycloakRef is a reference to the Keycloak instance that owns the realm.",
+          "properties": {
+            "kind": {
+              "default": "Keycloak",
+              "description": "Kind specifies the kind of the Keycloak resource.",
+              "enum": [
+                "Keycloak"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "description": "Name specifies the name of the Keycloak resource.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace specifies the namespace of the Keycloak resource.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        "login": {
+          "description": "login groups login-page and registration behaviour settings.",
+          "properties": {
+            "duplicateEmailsAllowed": {
+              "description": "duplicateEmailsAllowed allows multiple accounts to share the same email.",
+              "type": "boolean"
+            },
+            "editUsernameAllowed": {
+              "description": "editUsernameAllowed allows users to change their own username.",
+              "type": "boolean"
+            },
+            "loginWithEmailAllowed": {
+              "description": "loginWithEmailAllowed allows users to authenticate using their email.",
+              "type": "boolean"
+            },
+            "registrationAllowed": {
+              "description": "registrationAllowed allows users to self-register.",
+              "type": "boolean"
+            },
+            "registrationEmailAsUsername": {
+              "description": "registrationEmailAsUsername uses the email address as username during\nself-registration.",
+              "type": "boolean"
+            },
+            "rememberMe": {
+              "description": "rememberMe enables the \"Remember me\" login option.",
+              "type": "boolean"
+            },
+            "resetPasswordAllowed": {
+              "description": "resetPasswordAllowed allows users to reset their password via email.",
+              "type": "boolean"
+            },
+            "verifyEmail": {
+              "description": "verifyEmail requires new users to verify their email address.",
+              "type": "boolean"
+            }
+          },
+          "type": "object"
+        },
+        "passwordPolicy": {
+          "description": "passwordPolicy sets the password policy expression for the realm\n(e.g. \"length(8) and digits(1)\").",
+          "type": "string"
+        },
+        "realmName": {
+          "description": "realmName specifies the internal name of the realm.\nThis field is immutable after creation.",
+          "type": "string"
+        },
+        "sessionTimeouts": {
+          "description": "sessionTimeouts groups session and token lifetime settings.",
+          "properties": {
+            "accessTokenLifespan": {
+              "description": "accessTokenLifespan sets how long (in seconds) an access token is valid.",
+              "type": "integer"
+            },
+            "offlineSessionIdleTimeout": {
+              "description": "offlineSessionIdleTimeout sets the idle timeout (in seconds) for offline\nsessions.",
+              "type": "integer"
+            },
+            "ssoSessionIdleTimeout": {
+              "description": "ssoSessionIdleTimeout sets the idle timeout (in seconds) for SSO sessions.",
+              "type": "integer"
+            },
+            "ssoSessionMaxLifespan": {
+              "description": "ssoSessionMaxLifespan sets the maximum lifespan (in seconds) of an SSO\nsession regardless of activity.",
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "smtpServer": {
+          "description": "smtpServer configures the SMTP server used for outgoing realm emails.",
+          "properties": {
+            "auth": {
+              "description": "auth enables SMTP authentication.",
+              "type": "boolean"
+            },
+            "envelopeFrom": {
+              "description": "envelopeFrom overrides the envelope sender address.",
+              "type": "string"
+            },
+            "from": {
+              "description": "from is the envelope-from email address used for outgoing mail.",
+              "type": "string"
+            },
+            "fromDisplayName": {
+              "description": "fromDisplayName is the human-readable name shown as the sender.",
+              "type": "string"
+            },
+            "host": {
+              "description": "host is the SMTP server hostname or IP address.",
+              "type": "string"
+            },
+            "password": {
+              "description": "password references a secret or inline value for the SMTP authentication\npassword.",
+              "properties": {
+                "key": {
+                  "description": "The key of the secret to select from.",
+                  "type": "string"
+                },
+                "name": {
+                  "default": "",
+                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the ConfigMap.",
+                  "type": "string"
+                },
+                "value": {
+                  "description": "Directly specifies a value.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key"
+              ],
+              "type": "object",
+              "x-kubernetes-map-type": "atomic"
+            },
+            "port": {
+              "description": "port is the SMTP server port. Defaults to 25 when omitted.",
+              "type": "integer"
+            },
+            "replyTo": {
+              "description": "replyTo is the reply-to email address.",
+              "type": "string"
+            },
+            "replyToDisplayName": {
+              "description": "replyToDisplayName is the human-readable name for the reply-to address.",
+              "type": "string"
+            },
+            "ssl": {
+              "description": "ssl enables SSL/TLS for the SMTP connection.",
+              "type": "boolean"
+            },
+            "startTls": {
+              "description": "startTls enables STARTTLS negotiation.",
+              "type": "boolean"
+            },
+            "user": {
+              "description": "user is the SMTP authentication username.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "from",
+            "host"
+          ],
+          "type": "object"
+        },
+        "sslRequired": {
+          "description": "sslRequired sets the SSL/TLS enforcement policy.",
+          "enum": [
+            "none",
+            "external",
+            "all"
+          ],
+          "type": "string"
+        },
+        "themes": {
+          "description": "themes groups UI theme assignments for the realm.",
+          "properties": {
+            "account": {
+              "description": "account sets the theme used on the account management page.",
+              "type": "string"
+            },
+            "admin": {
+              "description": "admin sets the theme used in the admin console.",
+              "type": "string"
+            },
+            "email": {
+              "description": "email sets the theme used for emails sent by the realm.",
+              "type": "string"
+            },
+            "login": {
+              "description": "login sets the theme used on the login page.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "keycloakRef",
+        "realmName"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "description": "status defines the observed state of Realm",
+      "properties": {
+        "conditions": {
+          "description": "conditions represent the current state of the Realm resource.\nEach condition has a unique type and reflects the status of a specific aspect of the resource.\n\nStandard condition types include:\n- \"Available\": the resource is fully functional\n- \"Progressing\": the resource is being created or updated\n- \"Degraded\": the resource failed to reach or maintain its desired state\n\nThe status of each condition is one of True, False, or Unknown.",
+          "items": {
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another.\nThis should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition.\nThis may be an empty string.",
+                "maxLength": 32768,
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.",
+                "format": "int64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition.\nProducers of specific condition types may define expected values and meanings for this field,\nand whether the values are considered a guaranteed API.\nThe value should be a CamelCase string.\nThis field may not be empty.",
+                "maxLength": 1024,
+                "minLength": 1,
+                "pattern": "^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "enum": [
+                  "True",
+                  "False",
+                  "Unknown"
+                ],
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "maxLength": 316,
+                "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "type"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
+        "keycloakID": {
+          "description": "keycloakID is the UUID assigned by Keycloak for this realm.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,168 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Keycloak",
+  "description": "Keycloak is the Schema for the keycloaks API",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "description": "spec defines the desired state of Keycloak",
+      "properties": {
+        "caCert": {
+          "description": "caCert defines the root certificate authority that API clients use when\nverifying server certificates.",
+          "properties": {
+            "configMapKeyRef": {
+              "description": "Selects a key of a ConfigMap.",
+              "properties": {
+                "key": {
+                  "description": "The key to select.",
+                  "type": "string"
+                },
+                "name": {
+                  "default": "",
+                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the ConfigMap.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key"
+              ],
+              "type": "object",
+              "x-kubernetes-map-type": "atomic"
+            },
+            "secretKeyRef": {
+              "description": "Selects a key of a secret.",
+              "properties": {
+                "key": {
+                  "description": "The key of the secret to select from.",
+                  "type": "string"
+                },
+                "name": {
+                  "default": "",
+                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the ConfigMap.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key"
+              ],
+              "type": "object",
+              "x-kubernetes-map-type": "atomic"
+            }
+          },
+          "type": "object"
+        },
+        "insecureSkipVerify": {
+          "description": "insecureSkipVerify controls whether API client verifies the servers\ncertificate chain and hostname. If insecureSkipVerify is true, API client\naccepts any certificate presented by the server and any hostname in that\ncertificate.",
+          "type": "boolean"
+        },
+        "password": {
+          "description": "password references a secret or direct value which contains admin password.",
+          "properties": {
+            "key": {
+              "description": "The key of the secret to select from.",
+              "type": "string"
+            },
+            "name": {
+              "default": "",
+              "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace of the ConfigMap.",
+              "type": "string"
+            },
+            "value": {
+              "description": "Directly specifies a value.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "type": "object",
+          "x-kubernetes-map-type": "atomic"
+        },
+        "realmName": {
+          "default": "master",
+          "description": "realmName defines the realm name to authenticate the admin credentials,\nnormally this should be the master realm.",
+          "type": "string"
+        },
+        "url": {
+          "description": "url of keycloak instance.",
+          "type": "string"
+        },
+        "username": {
+          "description": "username references a secret or direct value which contains admin username.",
+          "properties": {
+            "key": {
+              "description": "The key of the secret to select from.",
+              "type": "string"
+            },
+            "name": {
+              "default": "",
+              "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace of the ConfigMap.",
+              "type": "string"
+            },
+            "value": {
+              "description": "Directly specifies a value.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "type": "object",
+          "x-kubernetes-map-type": "atomic"
+        }
+      },
+      "required": [
+        "password",
+        "url",
+        "username"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "default": {
+        "connected": false
+      },
+      "description": "status defines the observed state of Keycloak",
+      "properties": {
+        "connected": {
+          "description": "connected shows if the Keycloak instance is connected successfully.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "connected"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "spec"
+  ],
+  "type": "object"
+}

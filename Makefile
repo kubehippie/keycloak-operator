@@ -121,6 +121,20 @@ build-installer: manifests generate kustomize ## Generate a consolidated YAML wi
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > dist/install.yaml
 
+.PHONY: schema
+schema: manifests ## Generate JSON Schema files from CRDs for editor integration (yaml-language-server).
+	rm -rf config/schema && mkdir -p config/schema
+	@for crd in config/crd/bases/*.yaml; do \
+		group=$$(yq '.spec.group' "$$crd"); \
+		version=$$(yq '.spec.versions[0].name' "$$crd"); \
+		singular=$$(yq '.spec.names.singular' "$$crd"); \
+		filename="$${group}_$${singular}_$${version}.json"; \
+		echo "Generating config/schema/$$filename"; \
+		yq -o=json \
+			'{"$$schema": "http://json-schema.org/draft-07/schema#", "title": .spec.names.kind} + .spec.versions[0].schema.openAPIV3Schema' \
+			"$$crd" > "config/schema/$$filename"; \
+	done
+
 ##@ Deployment
 
 ifndef ignore-not-found
