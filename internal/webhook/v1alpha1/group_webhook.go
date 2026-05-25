@@ -19,6 +19,7 @@ package v1alpha1
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -41,8 +42,6 @@ func SetupGroupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
 // +kubebuilder:webhook:path=/mutate-keycloak-operator-webhippie-de-v1alpha1-group,mutating=true,failurePolicy=fail,sideEffects=None,groups=keycloak-operator.webhippie.de,resources=groups,verbs=create;update,versions=v1alpha1,name=mgroup-v1alpha1.kb.io,admissionReviewVersions=v1
 
 // GroupCustomDefaulter struct is responsible for setting default values on the custom resource of the
@@ -50,28 +49,15 @@ func SetupGroupWebhookWithManager(mgr ctrl.Manager) error {
 //
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as it is used only for temporary operations and does not need to be deeply copied.
-type GroupCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
-}
+type GroupCustomDefaulter struct{}
 
 var _ webhook.CustomDefaulter = &GroupCustomDefaulter{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind Group.
 func (d *GroupCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	group, ok := obj.(*keycloakoperatorwebhippiedev1alpha1.Group)
-
-	if !ok {
-		return fmt.Errorf("expected an Group object but got %T", obj)
-	}
-	grouplog.Info("Defaulting for Group", "name", group.GetName())
-
-	// TODO(user): fill in your defaulting logic.
-
 	return nil
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: If you want to customise the 'path', use the flags '--defaulting-path' or '--validation-path'.
 // +kubebuilder:webhook:path=/validate-keycloak-operator-webhippie-de-v1alpha1-group,mutating=false,failurePolicy=fail,sideEffects=None,groups=keycloak-operator.webhippie.de,resources=groups,verbs=create;update,versions=v1alpha1,name=vgroup-v1alpha1.kb.io,admissionReviewVersions=v1
 
 // GroupCustomValidator struct is responsible for validating the Group resource
@@ -79,9 +65,7 @@ func (d *GroupCustomDefaulter) Default(_ context.Context, obj runtime.Object) er
 //
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as this struct is used only for temporary operations and does not need to be deeply copied.
-type GroupCustomValidator struct {
-	// TODO(user): Add more fields as needed for validation
-}
+type GroupCustomValidator struct{}
 
 var _ webhook.CustomValidator = &GroupCustomValidator{}
 
@@ -93,33 +77,46 @@ func (v *GroupCustomValidator) ValidateCreate(_ context.Context, obj runtime.Obj
 	}
 	grouplog.Info("Validation for Group upon creation", "name", group.GetName())
 
-	// TODO(user): fill in your validation logic upon object creation.
-
-	return nil, nil
+	return nil, v.validate(group)
 }
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type Group.
 func (v *GroupCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
+	oldGroup, ok := oldObj.(*keycloakoperatorwebhippiedev1alpha1.Group)
+	if !ok {
+		return nil, fmt.Errorf("expected a Group object for the oldObj but got %T", oldObj)
+	}
+
 	group, ok := newObj.(*keycloakoperatorwebhippiedev1alpha1.Group)
 	if !ok {
 		return nil, fmt.Errorf("expected a Group object for the newObj but got %T", newObj)
 	}
 	grouplog.Info("Validation for Group upon update", "name", group.GetName())
 
-	// TODO(user): fill in your validation logic upon object update.
+	if err := v.validate(group); err != nil {
+		return nil, err
+	}
+
+	if oldGroup.Spec.Name != group.Spec.Name {
+		return nil, fmt.Errorf("spec.name is immutable and cannot be changed after creation")
+	}
 
 	return nil, nil
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type Group.
-func (v *GroupCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	group, ok := obj.(*keycloakoperatorwebhippiedev1alpha1.Group)
-	if !ok {
-		return nil, fmt.Errorf("expected a Group object but got %T", obj)
-	}
-	grouplog.Info("Validation for Group upon deletion", "name", group.GetName())
-
-	// TODO(user): fill in your validation logic upon object deletion.
-
+func (v *GroupCustomValidator) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
 	return nil, nil
+}
+
+func (v *GroupCustomValidator) validate(group *keycloakoperatorwebhippiedev1alpha1.Group) error {
+	if group.Spec.RealmRef == nil || strings.TrimSpace(group.Spec.RealmRef.Name) == "" {
+		return fmt.Errorf("spec.realmRef.name must be set")
+	}
+
+	if strings.TrimSpace(group.Spec.Name) == "" {
+		return fmt.Errorf("spec.name must be set")
+	}
+
+	return nil
 }

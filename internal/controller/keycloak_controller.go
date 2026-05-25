@@ -21,12 +21,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Nerzal/gocloak/v13"
+	"github.com/kubehippie/keycloak-operator/api/common"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
-	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -115,46 +113,11 @@ func (r *KeycloakReconciler) updateConnectionStatus(ctx context.Context, instanc
 }
 
 func (r *KeycloakReconciler) createClient(ctx context.Context, instance *v1alpha1.Keycloak) error {
-	usernameSecret := &corev1.Secret{}
-	if err := r.Get(ctx, types.NamespacedName{
-		Namespace: instance.Namespace,
-		Name:      instance.Spec.Username.Name,
-	}, usernameSecret); err != nil {
-		return fmt.Errorf("unable to get username secret: %w", err)
+	kcRef := &common.KeycloakRef{
+		Kind: "Keycloak",
+		Name: instance.Name,
 	}
 
-	username, ok := usernameSecret.Data[instance.Spec.Username.Key]
-	if !ok {
-		return fmt.Errorf("username key not found in secret")
-	}
-
-	passwordSecret := &corev1.Secret{}
-	if err := r.Get(ctx, types.NamespacedName{
-		Namespace: instance.Namespace,
-		Name:      instance.Spec.Password.Name,
-	}, passwordSecret); err != nil {
-		return fmt.Errorf("unable to get password secret: %w", err)
-	}
-
-	password, ok := passwordSecret.Data[instance.Spec.Password.Key]
-	if !ok {
-		return fmt.Errorf("password key not found in secret")
-	}
-
-	kc := gocloak.NewClient(
-		instance.Spec.URL,
-	)
-
-	_, err := kc.LoginAdmin(
-		ctx,
-		string(username),
-		string(password),
-		instance.Spec.RealmName,
-	)
-
-	if err != nil {
-		return fmt.Errorf("failed to authenticate: %w", err)
-	}
-
-	return nil
+	_, err := keycloakSessionForKeycloak(ctx, r.Client, kcRef, instance.Namespace)
+	return err
 }

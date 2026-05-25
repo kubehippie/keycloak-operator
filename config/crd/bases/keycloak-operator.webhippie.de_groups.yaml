@@ -14,7 +14,17 @@ spec:
     singular: group
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.realmRef.name
+      name: Realm
+      type: string
+    - jsonPath: .spec.name
+      name: Name
+      type: string
+    - jsonPath: .status.keycloakID
+      name: KeycloakID
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: Group is the Schema for the groups API
@@ -39,10 +49,57 @@ spec:
           spec:
             description: spec defines the desired state of Group
             properties:
-              foo:
-                description: foo is an example field of Group. Edit group_types.go
-                  to remove/update
+              attributes:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: |-
+                  attributes holds custom group attributes as key/value pairs where each
+                  key maps to one or more values.
+                type: object
+              clientRoles:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: |-
+                  clientRoles maps client IDs to the list of client-level roles assigned
+                  to this group for each client.
+                type: object
+              name:
+                description: name specifies the group name within the realm.
                 type: string
+              realmRef:
+                description: |-
+                  realmRef is a reference to the Realm this group belongs to.
+                  The Keycloak connection is resolved transitively through the Realm resource.
+                properties:
+                  kind:
+                    default: Realm
+                    description: Kind specifies the kind of the Realm resource.
+                    enum:
+                    - Realm
+                    type: string
+                  name:
+                    description: Name specifies the name of the Realm resource.
+                    type: string
+                  namespace:
+                    description: Namespace specifies the namespace of the Realm resource.
+                    type: string
+                required:
+                - kind
+                - name
+                type: object
+              realmRoles:
+                description: realmRoles lists the realm-level roles assigned to this
+                  group.
+                items:
+                  type: string
+                type: array
+            required:
+            - name
+            - realmRef
             type: object
           status:
             description: status defines the observed state of Group
@@ -116,6 +173,12 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              keycloakID:
+                description: |-
+                  keycloakID is the UUID assigned by Keycloak for this group.
+                  It is stored here so that update and delete operations can reference the
+                  group directly without an additional lookup by name.
+                type: string
             type: object
         required:
         - spec

@@ -21,6 +21,23 @@ type KeycloakRef struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
+// RealmRef is a reference to a Realm resource.
+type RealmRef struct {
+	// Kind specifies the kind of the Realm resource.
+	// +kubebuilder:validation:Enum=Realm
+	// +kubebuilder:default=Realm
+	// +required
+	Kind string `json:"kind,omitempty"`
+
+	// Name specifies the name of the Realm resource.
+	// +required
+	Name string `json:"name,omitempty"`
+
+	// Namespace specifies the namespace of the Realm resource.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+}
+
 // SourceRefOrVal is reference to a key in a ConfigMap or a Secret or a direct value.
 // +kubebuilder:object:generate=true
 type SourceRefOrVal struct {

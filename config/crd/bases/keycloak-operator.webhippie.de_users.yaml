@@ -14,7 +14,23 @@ spec:
     singular: user
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.realmRef.name
+      name: Realm
+      type: string
+    - jsonPath: .spec.username
+      name: Username
+      type: string
+    - jsonPath: .spec.email
+      name: Email
+      type: string
+    - jsonPath: .spec.enabled
+      name: Enabled
+      type: boolean
+    - jsonPath: .status.keycloakID
+      name: KeycloakID
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: User is the Schema for the users API
@@ -39,10 +55,65 @@ spec:
           spec:
             description: spec defines the desired state of User
             properties:
-              foo:
-                description: foo is an example field of User. Edit user_types.go to
-                  remove/update
+              attributes:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: |-
+                  attributes holds custom user attributes as key/value pairs where each
+                  key maps to one or more values.
+                type: object
+              email:
+                description: email specifies the user's email address.
                 type: string
+              emailVerified:
+                description: emailVerified specifies whether the user's email address
+                  has been verified.
+                type: boolean
+              enabled:
+                description: enabled specifies whether the user account is active.
+                type: boolean
+              firstName:
+                description: firstName specifies the user's first name.
+                type: string
+              lastName:
+                description: lastName specifies the user's last name.
+                type: string
+              realmRef:
+                description: |-
+                  realmRef is a reference to the Realm this user belongs to.
+                  The Keycloak connection is resolved transitively through the Realm resource.
+                properties:
+                  kind:
+                    default: Realm
+                    description: Kind specifies the kind of the Realm resource.
+                    enum:
+                    - Realm
+                    type: string
+                  name:
+                    description: Name specifies the name of the Realm resource.
+                    type: string
+                  namespace:
+                    description: Namespace specifies the namespace of the Realm resource.
+                    type: string
+                required:
+                - kind
+                - name
+                type: object
+              requiredActions:
+                description: |-
+                  requiredActions lists the actions the user must perform on next login
+                  (e.g. UPDATE_PASSWORD, VERIFY_EMAIL).
+                items:
+                  type: string
+                type: array
+              username:
+                description: username specifies the login name of the user.
+                type: string
+            required:
+            - realmRef
+            - username
             type: object
           status:
             description: status defines the observed state of User
@@ -116,6 +187,12 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              keycloakID:
+                description: |-
+                  keycloakID is the UUID assigned by Keycloak for this user.
+                  It is stored here so that update and delete operations can reference the
+                  user directly without an additional lookup by username.
+                type: string
             type: object
         required:
         - spec

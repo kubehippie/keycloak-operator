@@ -18,14 +18,20 @@ package controller
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
+	"github.com/Nerzal/gocloak/v13"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
+
+const realmFinalizer = "keycloak-operator.webhippie.de/realm"
 
 // RealmReconciler reconciles a Realm object
 type RealmReconciler struct {
@@ -39,25 +45,217 @@ type RealmReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the Realm object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.22.1/pkg/reconcile
 func (r *RealmReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+	log := logf.FromContext(ctx)
+	log.Info("Reconciling")
 
-	// TODO(user): your logic here
+	instance := &v1alpha1.Realm{}
+	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, fmt.Errorf("unable to fetch: %w", err)
+	}
+
+	session, err := keycloakSessionForKeycloak(ctx, r.Client, instance.Spec.KeycloakRef, req.Namespace)
+	if err != nil {
+		log.Error(err, "Unable to get Keycloak session")
+		return ctrl.Result{RequeueAfter: failedKeycloakConnectionRetryPeriod}, nil
+	}
+
+	if !instance.DeletionTimestamp.IsZero() {
+		return r.handleDeletion(ctx, instance, session)
+	}
+
+	if !controllerutil.ContainsFinalizer(instance, realmFinalizer) {
+		controllerutil.AddFinalizer(instance, realmFinalizer)
+		if err := r.Update(ctx, instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	return r.reconcileRealm(ctx, instance, session)
+}
+
+func (r *RealmReconciler) handleDeletion(ctx context.Context, instance *v1alpha1.Realm, session *keycloakSession) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+
+	if !controllerutil.ContainsFinalizer(instance, realmFinalizer) {
+		return ctrl.Result{}, nil
+	}
+
+	log.Info("Deleting realm from Keycloak", "realm", instance.Spec.RealmName)
+	if err := session.Client.DeleteRealm(ctx, session.Token.AccessToken, instance.Spec.RealmName); err != nil {
+		var apiErr gocloak.APIError
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			log.Info("Realm already absent in Keycloak, skipping delete")
+		} else {
+			return ctrl.Result{}, fmt.Errorf("failed to delete realm from Keycloak: %w", err)
+		}
+	}
+
+	controllerutil.RemoveFinalizer(instance, realmFinalizer)
+	if err := r.Update(ctx, instance); err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to remove finalizer: %w", err)
+	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *RealmReconciler) reconcileRealm(ctx context.Context, instance *v1alpha1.Realm, session *keycloakSession) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+
+	desired, err := realmToGocloak(ctx, r.Client, instance, instance.Namespace)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to build realm representation: %w", err)
+	}
+
+	existing, err := session.Client.GetRealm(ctx, session.Token.AccessToken, instance.Spec.RealmName)
+	if err != nil {
+		var apiErr gocloak.APIError
+		if !errors.As(err, &apiErr) || apiErr.Code != 404 {
+			return ctrl.Result{}, fmt.Errorf("failed to check for existing realm: %w", err)
+		}
+
+		id, err := session.Client.CreateRealm(ctx, session.Token.AccessToken, desired)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to create realm in Keycloak: %w", err)
+		}
+		log.Info("Realm created in Keycloak", "id", id)
+		if err := updateKeycloakIDStatus(ctx, r.Client, instance, &id); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if err := updateKeycloakIDStatus(ctx, r.Client, instance, existing.ID); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if err := session.Client.UpdateRealm(ctx, session.Token.AccessToken, desired); err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to update realm in Keycloak: %w", err)
+	}
+
+	log.Info("Realm reconciled", "realm", instance.Spec.RealmName)
+	return ctrl.Result{}, nil
+}
+
+// realmToGocloak converts a Realm CR spec into the gocloak representation
+// used for create and update API calls. The SMTP password (if configured as a
+// Secret reference) is resolved from the cluster at call time.
+func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns string) (gocloak.RealmRepresentation, error) {
+	realm := gocloak.RealmRepresentation{
+		Realm:               gocloak.StringP(r.Spec.RealmName),
+		DisplayName:         r.Spec.DisplayName,
+		DisplayNameHTML:     r.Spec.DisplayNameHtml,
+		Enabled:             r.Spec.Enabled,
+		SslRequired:         r.Spec.SslRequired,
+		PasswordPolicy:      r.Spec.PasswordPolicy,
+		BruteForceProtected: r.Spec.BruteForceProtected,
+	}
+
+	if l := r.Spec.Login; l != nil {
+		realm.RegistrationAllowed = l.RegistrationAllowed
+		realm.RegistrationEmailAsUsername = l.RegistrationEmailAsUsername
+		realm.EditUsernameAllowed = l.EditUsernameAllowed
+		realm.ResetPasswordAllowed = l.ResetPasswordAllowed
+		realm.RememberMe = l.RememberMe
+		realm.VerifyEmail = l.VerifyEmail
+		realm.LoginWithEmailAllowed = l.LoginWithEmailAllowed
+		realm.DuplicateEmailsAllowed = l.DuplicateEmailsAllowed
+	}
+
+	if t := r.Spec.Themes; t != nil {
+		realm.LoginTheme = t.Login
+		realm.AccountTheme = t.Account
+		realm.AdminTheme = t.Admin
+		realm.EmailTheme = t.Email
+	}
+
+	if i := r.Spec.Internationalization; i != nil {
+		realm.InternationalizationEnabled = i.Enabled
+		realm.DefaultLocale = i.DefaultLocale
+		if len(i.SupportedLocales) > 0 {
+			realm.SupportedLocales = &i.SupportedLocales
+		}
+	}
+
+	if st := r.Spec.SessionTimeouts; st != nil {
+		realm.AccessTokenLifespan = st.AccessTokenLifespan
+		realm.SsoSessionIdleTimeout = st.SsoSessionIdleTimeout
+		realm.SsoSessionMaxLifespan = st.SsoSessionMaxLifespan
+		realm.OfflineSessionIdleTimeout = st.OfflineSessionIdleTimeout
+	}
+
+	if smtp := r.Spec.SmtpServer; smtp != nil {
+		smtpMap := map[string]string{
+			"host": smtp.Host,
+			"from": smtp.From,
+		}
+
+		if smtp.Port != nil {
+			smtpMap["port"] = fmt.Sprintf("%d", *smtp.Port)
+		}
+		if smtp.FromDisplayName != nil {
+			smtpMap["fromDisplayName"] = *smtp.FromDisplayName
+		}
+		if smtp.ReplyTo != nil {
+			smtpMap["replyTo"] = *smtp.ReplyTo
+		}
+		if smtp.ReplyToDisplayName != nil {
+			smtpMap["replyToDisplayName"] = *smtp.ReplyToDisplayName
+		}
+		if smtp.EnvelopeFrom != nil {
+			smtpMap["envelopeFrom"] = *smtp.EnvelopeFrom
+		}
+		if smtp.Ssl != nil {
+			if *smtp.Ssl {
+				smtpMap["ssl"] = "true"
+			} else {
+				smtpMap["ssl"] = "false"
+			}
+		}
+		if smtp.StartTls != nil {
+			if *smtp.StartTls {
+				smtpMap["starttls"] = "true"
+			} else {
+				smtpMap["starttls"] = "false"
+			}
+		}
+		if smtp.Auth != nil {
+			if *smtp.Auth {
+				smtpMap["auth"] = "true"
+			} else {
+				smtpMap["auth"] = "false"
+			}
+		}
+		if smtp.User != nil {
+			smtpMap["user"] = *smtp.User
+		}
+		if smtp.Password != nil {
+			password, err := resolveSecretKeyRefOrVal(ctx, cl, smtp.Password, ns)
+			if err != nil {
+				return gocloak.RealmRepresentation{}, fmt.Errorf("failed to resolve SMTP password: %w", err)
+			}
+			smtpMap["password"] = password
+		}
+
+		realm.SMTPServer = &smtpMap
+	}
+
+	if r.Spec.Attributes != nil {
+		attrs := r.Spec.Attributes
+		realm.Attributes = &attrs
+	}
+
+	return realm, nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RealmReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&keycloakoperatorwebhippiedev1alpha1.Realm{}).
+		For(&v1alpha1.Realm{}).
 		Named("realm").
 		Complete(r)
 }

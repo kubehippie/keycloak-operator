@@ -17,20 +17,62 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // UserSpec defines the desired state of User
 type UserSpec struct {
-	// foo is an example field of User. Edit user_types.go to remove/update
+	// realmRef is a reference to the Realm this user belongs to.
+	// The Keycloak connection is resolved transitively through the Realm resource.
+	// +required
+	RealmRef *common.RealmRef `json:"realmRef"`
+
+	// username specifies the login name of the user.
+	// +required
+	Username string `json:"username"`
+
+	// enabled specifies whether the user account is active.
 	// +optional
-	Foo *string `json:"foo,omitempty"`
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// emailVerified specifies whether the user's email address has been verified.
+	// +optional
+	EmailVerified *bool `json:"emailVerified,omitempty"`
+
+	// firstName specifies the user's first name.
+	// +optional
+	FirstName *string `json:"firstName,omitempty"`
+
+	// lastName specifies the user's last name.
+	// +optional
+	LastName *string `json:"lastName,omitempty"`
+
+	// email specifies the user's email address.
+	// +optional
+	Email *string `json:"email,omitempty"`
+
+	// attributes holds custom user attributes as key/value pairs where each
+	// key maps to one or more values.
+	// +optional
+	Attributes map[string][]string `json:"attributes,omitempty"`
+
+	// requiredActions lists the actions the user must perform on next login
+	// (e.g. UPDATE_PASSWORD, VERIFY_EMAIL).
+	// +optional
+	RequiredActions []string `json:"requiredActions,omitempty"`
 }
 
 // UserStatus defines the observed state of User.
 type UserStatus struct {
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+	// keycloakID is the UUID assigned by Keycloak for this user.
+	// It is stored here so that update and delete operations can reference the
+	// user directly without an additional lookup by username.
+	// +optional
+	KeycloakID *string `json:"keycloakID,omitempty"`
 
 	// conditions represent the current state of the User resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
@@ -49,6 +91,11 @@ type UserStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Realm",type=string,JSONPath=`.spec.realmRef.name`
+// +kubebuilder:printcolumn:name="Username",type=string,JSONPath=`.spec.username`
+// +kubebuilder:printcolumn:name="Email",type=string,JSONPath=`.spec.email`
+// +kubebuilder:printcolumn:name="Enabled",type=boolean,JSONPath=`.spec.enabled`
+// +kubebuilder:printcolumn:name="KeycloakID",type=string,JSONPath=`.status.keycloakID`
 
 // User is the Schema for the users API
 type User struct {
@@ -79,3 +126,9 @@ type UserList struct {
 func init() {
 	SchemeBuilder.Register(&User{}, &UserList{})
 }
+
+// GetKeycloakID returns the Keycloak-assigned UUID stored in the status.
+func (u *User) GetKeycloakID() *string { return u.Status.KeycloakID }
+
+// SetKeycloakID stores a Keycloak-assigned UUID in the status.
+func (u *User) SetKeycloakID(id *string) { u.Status.KeycloakID = id }

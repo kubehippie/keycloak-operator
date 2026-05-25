@@ -27,6 +27,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/kubehippie/keycloak-operator/api/common"
 	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
 
@@ -51,7 +52,13 @@ var _ = Describe("User Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{
+						RealmRef: &common.RealmRef{
+							Kind: "Realm",
+							Name: "test-realm",
+						},
+						Username: "testuser",
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}

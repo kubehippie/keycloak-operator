@@ -20,8 +20,10 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	corev1 "k8s.io/api/core/v1"
+
+	"github.com/kubehippie/keycloak-operator/api/common"
 	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
-	// TODO (user): Add any additional imports if needed
 )
 
 var _ = Describe("Keycloak Webhook", func() {
@@ -36,52 +38,130 @@ var _ = Describe("Keycloak Webhook", func() {
 		obj = &keycloakoperatorwebhippiedev1alpha1.Keycloak{}
 		oldObj = &keycloakoperatorwebhippiedev1alpha1.Keycloak{}
 		validator = KeycloakCustomValidator{}
-		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		defaulter = KeycloakCustomDefaulter{}
-		Expect(defaulter).NotTo(BeNil(), "Expected defaulter to be initialized")
-		Expect(oldObj).NotTo(BeNil(), "Expected oldObj to be initialized")
-		Expect(obj).NotTo(BeNil(), "Expected obj to be initialized")
-		// TODO (user): Add any setup logic common to all tests
+		Expect(validator).NotTo(BeNil())
+		Expect(defaulter).NotTo(BeNil())
 	})
 
-	AfterEach(func() {
-		// TODO (user): Add any teardown logic common to all tests
-	})
+	validSpec := func() keycloakoperatorwebhippiedev1alpha1.KeycloakSpec {
+		return keycloakoperatorwebhippiedev1alpha1.KeycloakSpec{
+			URL:       "https://keycloak.example.com",
+			RealmName: "master",
+			Username:  &common.SecretKeyRefOrVal{Value: "admin"},
+			Password:  &common.SecretKeyRefOrVal{Value: "secret"},
+		}
+	}
 
 	Context("When creating Keycloak under Defaulting Webhook", func() {
-		// TODO (user): Add logic for defaulting webhooks
-		// Example:
-		// It("Should apply defaults when a required field is empty", func() {
-		//     By("simulating a scenario where defaults should be applied")
-		//     obj.SomeFieldWithDefault = ""
-		//     By("calling the Default method to apply defaults")
-		//     defaulter.Default(ctx, obj)
-		//     By("checking that the default values are set")
-		//     Expect(obj.SomeFieldWithDefault).To(Equal("default_value"))
-		// })
+		It("Should apply defaults without error", func() {
+			obj.Spec = validSpec()
+			Expect(defaulter.Default(ctx, obj)).To(Succeed())
+		})
 	})
 
 	Context("When creating or updating Keycloak under Validating Webhook", func() {
-		// TODO (user): Add logic for validating webhooks
-		// Example:
-		// It("Should deny creation if a required field is missing", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = ""
-		//     Expect(validator.ValidateCreate(ctx, obj)).Error().To(HaveOccurred())
-		// })
-		//
-		// It("Should admit creation if all required fields are present", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = "valid_value"
-		//     Expect(validator.ValidateCreate(ctx, obj)).To(BeNil())
-		// })
-		//
-		// It("Should validate updates correctly", func() {
-		//     By("simulating a valid update scenario")
-		//     oldObj.SomeRequiredField = "updated_value"
-		//     obj.SomeRequiredField = "updated_value"
-		//     Expect(validator.ValidateUpdate(ctx, oldObj, obj)).To(BeNil())
-		// })
-	})
+		It("Should admit creation when all required fields are present with inline values", func() {
+			obj.Spec = validSpec()
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
 
+		It("Should admit creation when credentials are supplied as secret references", func() {
+			obj.Spec = keycloakoperatorwebhippiedev1alpha1.KeycloakSpec{
+				URL:       "https://keycloak.example.com",
+				RealmName: "master",
+				Username: &common.SecretKeyRefOrVal{
+					SecretKeySelector: common.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{Name: "kc-secret"},
+						Key:                  "username",
+					},
+				},
+				Password: &common.SecretKeyRefOrVal{
+					SecretKeySelector: common.SecretKeySelector{
+						LocalObjectReference: corev1.LocalObjectReference{Name: "kc-secret"},
+						Key:                  "password",
+					},
+				},
+			}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Should deny creation when url is missing", func() {
+			obj.Spec = validSpec()
+			obj.Spec.URL = ""
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.url"))
+		})
+
+		It("Should deny creation when url is not a valid URL", func() {
+			obj.Spec = validSpec()
+			obj.Spec.URL = "not-a-url"
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.url"))
+		})
+
+		It("Should deny creation when realmName is missing", func() {
+			obj.Spec = validSpec()
+			obj.Spec.RealmName = ""
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.realmName"))
+		})
+
+		It("Should deny creation when username is nil", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Username = nil
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.username"))
+		})
+
+		It("Should deny creation when username has neither value nor secret ref", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Username = &common.SecretKeyRefOrVal{}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.username"))
+		})
+
+		It("Should deny creation when password is nil", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Password = nil
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.password"))
+		})
+
+		It("Should deny creation when password has neither value nor secret ref", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Password = &common.SecretKeyRefOrVal{}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.password"))
+		})
+
+		It("Should admit update when spec is valid", func() {
+			obj.Spec = validSpec()
+			oldObj.Spec = validSpec()
+			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Should deny update when url becomes invalid", func() {
+			oldObj.Spec = validSpec()
+			obj.Spec = validSpec()
+			obj.Spec.URL = "not-a-url"
+			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("Should admit deletion", func() {
+			obj.Spec = validSpec()
+			_, err := validator.ValidateDelete(ctx, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
 })
