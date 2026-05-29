@@ -134,19 +134,31 @@ func resolveSecretKeyRefOrVal(ctx context.Context, c client.Client, ref *common.
 		return ref.Value, nil
 	}
 
-	ns := ref.Namespace
+	if ref.SecretKeyRef == nil {
+		return "", fmt.Errorf("either value or secretKeyRef must be set")
+	}
+
+	if ref.SecretKeyRef.Name == "" {
+		return "", fmt.Errorf("secretKeyRef.name must be set")
+	}
+
+	if ref.SecretKeyRef.Key == "" {
+		return "", fmt.Errorf("secretKeyRef.key must be set")
+	}
+
+	ns := ref.SecretKeyRef.Namespace
 	if ns == "" {
 		ns = defaultNamespace
 	}
 
 	secret := &corev1.Secret{}
-	if err := c.Get(ctx, types.NamespacedName{Namespace: ns, Name: ref.Name}, secret); err != nil {
-		return "", fmt.Errorf("unable to get secret %s/%s: %w", ns, ref.Name, err)
+	if err := c.Get(ctx, types.NamespacedName{Namespace: ns, Name: ref.SecretKeyRef.Name}, secret); err != nil {
+		return "", fmt.Errorf("unable to get secret %s/%s: %w", ns, ref.SecretKeyRef.Name, err)
 	}
 
-	val, ok := secret.Data[ref.Key]
+	val, ok := secret.Data[ref.SecretKeyRef.Key]
 	if !ok {
-		return "", fmt.Errorf("key %q not found in secret %s/%s", ref.Key, ns, ref.Name)
+		return "", fmt.Errorf("key %q not found in secret %s/%s", ref.SecretKeyRef.Key, ns, ref.SecretKeyRef.Name)
 	}
 
 	return string(val), nil

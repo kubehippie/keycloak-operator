@@ -9,8 +9,10 @@ metadata:
 spec:
   url: https://keycloak.example.com
   username:
-    name: keycloak-admin
-    key: username
+    secretKeyRef:
+      name: keycloak-admin
+      key: username
   password:
-    name: keycloak-admin
-    key: password
+    secretKeyRef:
+      name: keycloak-admin
+      key: password

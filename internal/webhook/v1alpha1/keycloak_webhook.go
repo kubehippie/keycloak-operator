@@ -126,8 +126,12 @@ func (v *KeycloakCustomValidator) validateSecretKeyRefOrVal(field string, ref *c
 		return nil
 	}
 
-	if strings.TrimSpace(ref.Name) == "" || strings.TrimSpace(ref.Key) == "" {
-		return fmt.Errorf("%s must set value or secret name/key", field)
+	if ref.SecretKeyRef == nil {
+		return fmt.Errorf("%s must set value or secretKeyRef", field)
+	}
+
+	if strings.TrimSpace(ref.SecretKeyRef.Name) == "" || strings.TrimSpace(ref.SecretKeyRef.Key) == "" {
+		return fmt.Errorf("%s.secretKeyRef must set name and key", field)
 	}
 
 	return nil

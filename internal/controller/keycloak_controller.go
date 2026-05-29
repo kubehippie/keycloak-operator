@@ -90,7 +90,17 @@ func (r *KeycloakReconciler) updateConnectionStatus(ctx context.Context, instanc
 	log.Info("Start updating connection status")
 	connected := false
 
-	if err := r.createClient(ctx, instance); err != nil {
+	_, err := keycloakSessionForKeycloak(
+		ctx,
+		r.Client,
+		&common.KeycloakRef{
+			Kind: "Keycloak",
+			Name: instance.Name,
+		},
+		instance.Namespace,
+	)
+
+	if err != nil {
 		log.Error(err, "Unable to connect to Keycloak")
 	} else {
 		connected = true
@@ -110,14 +120,4 @@ func (r *KeycloakReconciler) updateConnectionStatus(ctx context.Context, instanc
 
 	log.Info("Status have been updated", "status", instance.Status)
 	return nil
-}
-
-func (r *KeycloakReconciler) createClient(ctx context.Context, instance *v1alpha1.Keycloak) error {
-	kcRef := &common.KeycloakRef{
-		Kind: "Keycloak",
-		Name: instance.Name,
-	}
-
-	_, err := keycloakSessionForKeycloak(ctx, r.Client, kcRef, instance.Namespace)
-	return err
 }

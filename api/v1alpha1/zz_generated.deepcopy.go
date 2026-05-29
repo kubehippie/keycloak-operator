@@ -234,12 +234,12 @@ func (in *KeycloakSpec) DeepCopyInto(out *KeycloakSpec) {
 	if in.Username != nil {
 		in, out := &in.Username, &out.Username
 		*out = new(common.SecretKeyRefOrVal)
-		**out = **in
+		(*in).DeepCopyInto(*out)
 	}
 	if in.Password != nil {
 		in, out := &in.Password, &out.Password
 		*out = new(common.SecretKeyRefOrVal)
-		**out = **in
+		(*in).DeepCopyInto(*out)
 	}
 	if in.CACert != nil {
 		in, out := &in.CACert, &out.CACert
@@ -503,7 +503,7 @@ func (in *RealmSmtpServer) DeepCopyInto(out *RealmSmtpServer) {
 	if in.Password != nil {
 		in, out := &in.Password, &out.Password
 		*out = new(common.SecretKeyRefOrVal)
-		**out = **in
+		(*in).DeepCopyInto(*out)
 	}
 }
 

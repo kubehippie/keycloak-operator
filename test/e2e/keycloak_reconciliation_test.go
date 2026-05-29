@@ -32,7 +32,7 @@ import (
 )
 
 // keycloakServiceURL is the in-cluster address of the test Keycloak instance.
-const keycloakServiceURL = "http://keycloak.keycloak-system.svc.cluster.local"
+const keycloakServiceURL = "http://keycloak-http.keycloak-system.svc.cluster.local"
 
 var _ = Describe("Keycloak Reconciliation", Ordered, func() {
 	const (
@@ -48,21 +48,42 @@ var _ = Describe("Keycloak Reconciliation", Ordered, func() {
 	)
 
 	BeforeAll(func() {
-		if keycloakSkip {
+		if skipKeycloakInstall {
 			Skip("Keycloak reconciliation tests skipped")
 		}
 	})
 
 	AfterAll(func() {
-		if keycloakSkip {
+		if skipKeycloakInstall {
 			return
 		}
 
 		for _, args := range [][]string{
-			{"delete", "users.keycloak-operator.webhippie.de", userCRName, "-n", testNamespace, "--ignore-not-found", "--wait=false"},
-			{"delete", "groups.keycloak-operator.webhippie.de", groupCRName, "-n", testNamespace, "--ignore-not-found", "--wait=false"},
-			{"delete", "realms.keycloak-operator.webhippie.de", realmCRName, "-n", testNamespace, "--ignore-not-found", "--wait=false"},
-			{"delete", "keycloaks.keycloak-operator.webhippie.de", keycloakCRName, "-n", testNamespace, "--ignore-not-found", "--wait=false"},
+			{
+				"delete",
+				"users.keycloak-operator.webhippie.de",
+				userCRName,
+				"-n", testNamespace,
+				"--ignore-not-found", "--wait=false",
+			},
+			{
+				"delete", "groups.keycloak-operator.webhippie.de",
+				groupCRName,
+				"-n", testNamespace,
+				"--ignore-not-found", "--wait=false",
+			},
+			{
+				"delete", "realms.keycloak-operator.webhippie.de",
+				realmCRName,
+				"-n", testNamespace,
+				"--ignore-not-found", "--wait=false",
+			},
+			{
+				"delete", "keycloaks.keycloak-operator.webhippie.de",
+				keycloakCRName,
+				"-n", testNamespace,
+				"--ignore-not-found", "--wait=false",
+			},
 		} {
 			cmd := exec.Command("kubectl", args...)
 			_, _ = utils.Run(cmd)
@@ -299,7 +320,7 @@ spec:
 	})
 })
 
-// kubectlGetJSONPath returns the JSONPath value for a named resource in a namespace.
+// kubectlGetJSONPath returns the JSONPath value for a named resource.
 func kubectlGetJSONPath(resource, name, ns, jsonpath string) (string, error) {
 	cmd := exec.Command("kubectl", "get", resource, name,
 		"-n", ns,

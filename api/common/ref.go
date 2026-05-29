@@ -1,9 +1,5 @@
 package common
 
-import (
-	v1 "k8s.io/api/core/v1"
-)
-
 // KeycloakRef is a reference to a Keycloak instance.
 type KeycloakRef struct {
 	// Kind specifies the kind of the Keycloak resource.
@@ -38,13 +34,60 @@ type RealmRef struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
-// SourceRefOrVal is reference to a key in a ConfigMap or a Secret or a direct value.
+// ConfigMapKeySelector selects a key of a ConfigMap.
 // +kubebuilder:object:generate=true
-type SourceRefOrVal struct {
-	// Selects a key of a ConfigMap or a Secret.
-	SourceRef *SourceRef `json:",inline,omitempty"`
+type ConfigMapKeySelector struct {
+	// Name is the name of the ConfigMap.
+	// +required
+	Name string `json:"name"`
 
-	// Directly specifies a value.
+	// Key is the key in the ConfigMap to select from.
+	// +required
+	Key string `json:"key"`
+
+	// Namespace of the ConfigMap.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+}
+
+// SecretKeySelector selects a key of a Secret.
+// +kubebuilder:object:generate=true
+type SecretKeySelector struct {
+	// Name is the name of the Secret.
+	// +required
+	Name string `json:"name"`
+
+	// Key is the key of the Secret to select from.
+	// +required
+	Key string `json:"key"`
+
+	// Namespace of the Secret.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+}
+
+// SecretKeyRefOrVal holds either an inline value or a reference to a Secret key.
+// Exactly one of value or secretKeyRef must be set.
+// +kubebuilder:object:generate=true
+type SecretKeyRefOrVal struct {
+	// SecretKeyRef selects a key of a Kubernetes Secret.
+	// +optional
+	SecretKeyRef *SecretKeySelector `json:"secretKeyRef,omitempty"`
+
+	// Value directly specifies the value as a plain string.
+	// +optional
+	Value string `json:"value,omitempty"`
+}
+
+// ConfigMapRefOrVal holds either an inline value or a reference to a ConfigMap key.
+// Exactly one of value or configMapKeyRef must be set.
+// +kubebuilder:object:generate=true
+type ConfigMapRefOrVal struct {
+	// ConfigMapKeyRef selects a key of a Kubernetes ConfigMap.
+	// +optional
+	ConfigMapKeyRef *ConfigMapKeySelector `json:"configMapKeyRef,omitempty"`
+
+	// Value directly specifies the value as a plain string.
 	// +optional
 	Value string `json:"value,omitempty"`
 }
@@ -52,51 +95,28 @@ type SourceRefOrVal struct {
 // SourceRef is a reference to a key in a ConfigMap or a Secret.
 // +kubebuilder:object:generate=true
 type SourceRef struct {
-	// Selects a key of a ConfigMap.
+	// ConfigMapKeyRef selects a key of a ConfigMap.
 	// +optional
 	ConfigMapKeyRef *ConfigMapKeySelector `json:"configMapKeyRef,omitempty"`
 
-	// Selects a key of a secret.
+	// SecretKeyRef selects a key of a Secret.
 	// +optional
 	SecretKeyRef *SecretKeySelector `json:"secretKeyRef,omitempty"`
 }
 
-// ConfigMapRefOrVal is reference to a key in a ConfigMap or a direct value.
+// SourceRefOrVal holds either an inline value or a reference to a ConfigMap or Secret key.
+// Exactly one of value, configMapKeyRef, or secretKeyRef must be set.
 // +kubebuilder:object:generate=true
-type ConfigMapRefOrVal struct {
-	ConfigMapKeySelector `json:",inline"`
+type SourceRefOrVal struct {
+	// ConfigMapKeyRef selects a key of a ConfigMap.
+	// +optional
+	ConfigMapKeyRef *ConfigMapKeySelector `json:"configMapKeyRef,omitempty"`
 
-	// Directly specifies a value.
+	// SecretKeyRef selects a key of a Secret.
+	// +optional
+	SecretKeyRef *SecretKeySelector `json:"secretKeyRef,omitempty"`
+
+	// Value directly specifies the value as a plain string.
 	// +optional
 	Value string `json:"value,omitempty"`
-}
-
-type ConfigMapKeySelector struct {
-	// The ConfigMap to select from.
-	v1.LocalObjectReference `json:",inline"`
-	// The key to select.
-	Key string `json:"key"`
-	// Namespace of the ConfigMap.
-	// +optional
-	Namespace string `json:"namespace,omitempty"`
-}
-
-// SecretKeyRefOrVal is reference to a key in a Secret or a direct value.
-// +kubebuilder:object:generate=true
-type SecretKeyRefOrVal struct {
-	SecretKeySelector `json:",inline"`
-
-	// Directly specifies a value.
-	// +optional
-	Value string `json:"value,omitempty"`
-}
-
-type SecretKeySelector struct {
-	// The name of the secret.
-	v1.LocalObjectReference `json:",inline"`
-	// The key of the secret to select from.
-	Key string `json:"key"`
-	// Namespace of the ConfigMap.
-	// +optional
-	Namespace string `json:"namespace,omitempty"`
 }

@@ -20,8 +20,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	corev1 "k8s.io/api/core/v1"
-
 	"github.com/kubehippie/keycloak-operator/api/common"
 	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
@@ -71,15 +69,15 @@ var _ = Describe("Keycloak Webhook", func() {
 				URL:       "https://keycloak.example.com",
 				RealmName: "master",
 				Username: &common.SecretKeyRefOrVal{
-					SecretKeySelector: common.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{Name: "kc-secret"},
-						Key:                  "username",
+					SecretKeyRef: &common.SecretKeySelector{
+						Name: "kc-secret",
+						Key:  "username",
 					},
 				},
 				Password: &common.SecretKeyRefOrVal{
-					SecretKeySelector: common.SecretKeySelector{
-						LocalObjectReference: corev1.LocalObjectReference{Name: "kc-secret"},
-						Key:                  "password",
+					SecretKeyRef: &common.SecretKeySelector{
+						Name: "kc-secret",
+						Key:  "password",
 					},
 				},
 			}

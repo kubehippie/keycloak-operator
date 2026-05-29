@@ -23,7 +23,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -32,36 +34,40 @@ import (
 )
 
 var (
-	// Optional Environment Variables:
-	// - CERT_MANAGER_INSTALL_SKIP=true: Skips CertManager installation during test setup.
-	// These variables are useful if CertManager is already installed, avoiding
-	// re-installation and conflicts.
-	skipCertManagerInstall = os.Getenv("CERT_MANAGER_INSTALL_SKIP") == "true"
-	// isCertManagerAlreadyInstalled will be set true when CertManager CRDs be found on the cluster
-	isCertManagerAlreadyInstalled = false
-
-	// projectImage is the name of the image which will be build and loaded
-	// with the code source changes to be tested.
-	projectImage = "ghcr.io/kubehippie/keycloak-operator:latest"
+	// projectImage is the name of the image which will be build and loaded with
+	// the code source changes to be tested.
+	projectImage = "ghcr.io/kubehippie/keycloak-operator:local"
 
 	// keycloakVersion is the Keycloak version tag used for the test instance.
 	// Override via the KEYCLOAK_VERSION environment variable.
 	keycloakVersion = envOrDefault("KEYCLOAK_VERSION", "26.6")
 
-	// keycloakImage is the full Keycloak container image reference derived from keycloakVersion.
-	keycloakImage = "quay.io/keycloak/keycloak:" + keycloakVersion
+	// skipKeycloakInstall disables the Keycloak reconciliation suite when
+	// KEYCLOAK_INSTALL_SKIP=true.
+	skipKeycloakInstall = os.Getenv("KEYCLOAK_INSTALL_SKIP") == "true"
 
-	// keycloakSkip disables the Keycloak reconciliation suite when KEYCLOAK_SKIP=true.
-	keycloakSkip = os.Getenv("KEYCLOAK_SKIP") == "true"
-
-	// isKeycloakAlreadyInstalled is true when the Keycloak namespace already exists.
+	// isKeycloakAlreadyInstalled is true when the Keycloak namespace already
+	// exists.
 	isKeycloakAlreadyInstalled = false
+
+	// certManagerVersion is the CertManager version tag used for the test
+	// instance. Override via the CERT_MANAGER_VERSION environment variable.
+	certManagerVersion = envOrDefault("CERT_MANAGER_VERSION", "1.20.2")
+
+	// skipCertManagerInstall disables the Cert Manager reconciliation suite
+	// when CERT_MANAGER_INSTALL_SKIP=true.
+	skipCertManagerInstall = os.Getenv("CERT_MANAGER_INSTALL_SKIP") == "true"
+
+	// isCertManagerAlreadyInstalled is true when the Cert Manager namespace
+	// already exists.
+	isCertManagerAlreadyInstalled = false
 )
 
-// TestE2E runs the end-to-end (e2e) test suite for the project. These tests execute in an isolated,
-// temporary environment to validate project changes with the purpose of being used in CI jobs.
-// The default setup requires Kind, builds/loads the Manager Docker image locally, and installs
-// CertManager.
+// TestE2E runs the end-to-end (e2e) test suite for the project. These tests
+// execute in an isolated, temporary environment to validate project changes
+// with the purpose of being used in CI jobs. The default setup requires Kind,
+// builds/loads the Manager Docker image locally, and installs CertManager
+// beside the required Keycloak.
 func TestE2E(t *testing.T) {
 	RegisterFailHandler(Fail)
 	_, _ = fmt.Fprintf(GinkgoWriter, "Starting keycloak-operator integration test suite\n")
@@ -69,27 +75,27 @@ func TestE2E(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	By("building the manager(Operator) image")
+	By("building the manager image")
 	cmd := exec.Command("make", "docker-build", fmt.Sprintf("IMG=%s", projectImage))
 	_, err := utils.Run(cmd)
-	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to build the manager(Operator) image")
+	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to build the manager image")
 
-	By("loading the manager(Operator) image on Kind")
+	By("loading the image on Kind")
 	err = utils.LoadImageToKindClusterWithName(projectImage)
-	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to load the manager(Operator) image into Kind")
+	ExpectWithOffset(1, err).NotTo(HaveOccurred(), "Failed to load the image on Kind")
 
 	if !skipCertManagerInstall {
-		By("checking if cert manager is installed already")
-		isCertManagerAlreadyInstalled = utils.IsCertManagerCRDsInstalled()
+		By("checking if CertManager is installed already")
+		isCertManagerAlreadyInstalled = utils.IsCertManagerInstalled()
 		if !isCertManagerAlreadyInstalled {
-			_, _ = fmt.Fprintf(GinkgoWriter, "Installing CertManager...\n")
-			Expect(utils.InstallCertManager()).To(Succeed(), "Failed to install CertManager")
+			_, _ = fmt.Fprintf(GinkgoWriter, "Installing CertManager (%s)...\n", certManagerVersion)
+			Expect(utils.InstallCertManager(certManagerVersion)).To(Succeed(), "Failed to install CertManager")
 		} else {
 			_, _ = fmt.Fprintf(GinkgoWriter, "WARNING: CertManager is already installed. Skipping installation...\n")
 		}
 	}
 
-	if !keycloakSkip {
+	if !skipKeycloakInstall {
 		By("checking if Keycloak is installed already")
 		isKeycloakAlreadyInstalled = utils.IsKeycloakInstalled()
 		if !isKeycloakAlreadyInstalled {
@@ -105,29 +111,71 @@ var _ = BeforeSuite(func() {
 	_, err = utils.Run(cmd)
 	Expect(err).NotTo(HaveOccurred(), "Failed to create namespace")
 
-	By("labeling the namespace to enforce the restricted security policy")
-	cmd = exec.Command("kubectl", "label", "--overwrite", "ns", namespace,
-		"pod-security.kubernetes.io/enforce=restricted")
+	By("labeling the security policy")
+	cmd = exec.Command("kubectl", "label", "--overwrite",
+		"ns", namespace,
+		"pod-security.kubernetes.io/enforce=restricted",
+	)
 	_, err = utils.Run(cmd)
-	Expect(err).NotTo(HaveOccurred(), "Failed to label namespace with restricted policy")
+	Expect(err).NotTo(HaveOccurred(), "Failed to label the security policy")
 
-	By("installing CRDs")
+	By("installing manager CRDs")
 	cmd = exec.Command("make", "install")
 	_, err = utils.Run(cmd)
-	Expect(err).NotTo(HaveOccurred(), "Failed to install CRDs")
+	Expect(err).NotTo(HaveOccurred(), "Failed to install manager CRDs")
 
-	By("deploying the controller-manager")
+	By("deploying the manager")
 	cmd = exec.Command("make", "deploy", fmt.Sprintf("IMG=%s", projectImage))
 	_, err = utils.Run(cmd)
-	Expect(err).NotTo(HaveOccurred(), "Failed to deploy the controller-manager")
+	Expect(err).NotTo(HaveOccurred(), "Failed to deploy manager")
+
+	By("waiting for the serving certificate to be issued by cert-manager")
+	cmd = exec.Command("kubectl", "wait",
+		"--for=condition=Ready",
+		"certificate/keycloak-operator-serving-cert",
+		"-n", namespace,
+		"--timeout=2m",
+	)
+	_, err = utils.Run(cmd)
+	Expect(err).NotTo(HaveOccurred(), "Serving certificate was not issued in time")
+
+	By("waiting for manager deployment to be ready")
+	cmd = exec.Command("kubectl", "rollout", "status",
+		"deployment/keycloak-operator-controller-manager",
+		"-n", namespace,
+		"--timeout=2m",
+	)
+	_, err = utils.Run(cmd)
+	Expect(err).NotTo(HaveOccurred(), "Manager deployment did not become ready in time")
+
+	By("waiting for webhooks to become reachable")
+	webhookProbe := fmt.Sprintf(`
+apiVersion: keycloak-operator.webhippie.de/v1alpha1
+kind: Keycloak
+metadata:
+  name: webhook-probe
+  namespace: %s
+spec:
+  url: https://keycloak.example.com
+  username:
+    value: admin
+  password:
+    value: admin
+`, namespace)
+	Eventually(func(g Gomega) {
+		cmd := exec.Command("kubectl", "apply", "--dry-run=server", "-f", "-")
+		cmd.Stdin = strings.NewReader(webhookProbe)
+		_, err := utils.Run(cmd)
+		g.Expect(err).NotTo(HaveOccurred())
+	}, 2*time.Minute, 5*time.Second).Should(Succeed(), "Webhook did not become reachable in time")
 })
 
 var _ = AfterSuite(func() {
-	By("undeploying the controller-manager")
+	By("undeploying the manager")
 	cmd := exec.Command("make", "undeploy")
 	_, _ = utils.Run(cmd)
 
-	By("uninstalling CRDs")
+	By("uninstalling manager CRDs")
 	cmd = exec.Command("make", "uninstall")
 	_, _ = utils.Run(cmd)
 
@@ -140,7 +188,7 @@ var _ = AfterSuite(func() {
 		utils.UninstallCertManager()
 	}
 
-	if !keycloakSkip && !isKeycloakAlreadyInstalled {
+	if !skipKeycloakInstall && !isKeycloakAlreadyInstalled {
 		_, _ = fmt.Fprintf(GinkgoWriter, "Uninstalling Keycloak...\n")
 		utils.UninstallKeycloak()
 	}

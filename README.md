@@ -12,11 +12,9 @@ Generally you should install this project via [Helm][helm], the other options
 are not covered by this document as the chart deployment is the preferred way:
 
 ```sh
-cat << EOF > values.yaml
+cat << EOF | helm install keycloak-operator oci://ghcr.io/kubehippie/charts/keycloak-operator --values -
 fullnameOverride: keycloak-operartor
 EOF
-
-helm install keycloak-operator oci://ghcr.io/kubehippie/charts/keycloak-operator --values values.yaml
 ```
 
 ## Development
@@ -53,14 +51,6 @@ hot reloading:
 ```console
 kind create cluster \
     --name keycloak-operator
-
-helm upgrade cert-manager cert-manager \
-    --install --hide-notes --wait \
-    --repo https://charts.jetstack.io \
-    --set fullnameOverride=cert-manager \
-    --set crds.enabled=true \
-    --namespace cert-manager \
-    --create-namespace
 
 tilt up
 

@@ -200,28 +200,27 @@ spec:
                       password references a secret or inline value for the SMTP authentication
                       password.
                     properties:
-                      key:
-                        description: The key of the secret to select from.
-                        type: string
-                      name:
-                        default: ""
-                        description: |-
-                          Name of the referent.
-                          This field is effectively required, but due to backwards compatibility is
-                          allowed to be empty. Instances of this type with an empty value here are
-                          almost certainly wrong.
-                          More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                        type: string
-                      namespace:
-                        description: Namespace of the ConfigMap.
-                        type: string
+                      secretKeyRef:
+                        description: SecretKeyRef selects a key of a Kubernetes Secret.
+                        properties:
+                          key:
+                            description: Key is the key of the Secret to select from.
+                            type: string
+                          name:
+                            description: Name is the name of the Secret.
+                            type: string
+                          namespace:
+                            description: Namespace of the Secret.
+                            type: string
+                        required:
+                        - key
+                        - name
+                        type: object
                       value:
-                        description: Directly specifies a value.
+                        description: Value directly specifies the value as a plain
+                          string.
                         type: string
-                    required:
-                    - key
                     type: object
-                    x-kubernetes-map-type: atomic
                   port:
                     description: port is the SMTP server port. Defaults to 25 when
                       omitted.

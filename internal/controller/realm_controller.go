@@ -87,7 +87,7 @@ func (r *RealmReconciler) handleDeletion(ctx context.Context, instance *v1alpha1
 
 	log.Info("Deleting realm from Keycloak", "realm", instance.Spec.RealmName)
 	if err := session.Client.DeleteRealm(ctx, session.Token.AccessToken, instance.Spec.RealmName); err != nil {
-		var apiErr gocloak.APIError
+		var apiErr *gocloak.APIError
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
 			log.Info("Realm already absent in Keycloak, skipping delete")
 		} else {
@@ -113,7 +113,7 @@ func (r *RealmReconciler) reconcileRealm(ctx context.Context, instance *v1alpha1
 
 	existing, err := session.Client.GetRealm(ctx, session.Token.AccessToken, instance.Spec.RealmName)
 	if err != nil {
-		var apiErr gocloak.APIError
+		var apiErr *gocloak.APIError
 		if !errors.As(err, &apiErr) || apiErr.Code != 404 {
 			return ctrl.Result{}, fmt.Errorf("failed to check for existing realm: %w", err)
 		}
