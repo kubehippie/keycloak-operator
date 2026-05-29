@@ -170,10 +170,10 @@ type RealmSpec struct {
 	// +required
 	KeycloakRef *common.KeycloakRef `json:"keycloakRef"`
 
-	// realmName specifies the internal name of the realm.
+	// name specifies the internal name of the realm in Keycloak.
 	// This field is immutable after creation.
 	// +required
-	RealmName string `json:"realmName"`
+	Name string `json:"name"`
 
 	// displayName is a human-readable name shown in the UI.
 	// +optional
@@ -253,7 +253,7 @@ type RealmStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Realm",type=string,JSONPath=`.spec.realmName`
+// +kubebuilder:printcolumn:name="Realm",type=string,JSONPath=`.spec.name`
 // +kubebuilder:printcolumn:name="Enabled",type=boolean,JSONPath=`.spec.enabled`
 // +kubebuilder:printcolumn:name="KeycloakID",type=string,JSONPath=`.status.keycloakID`
 

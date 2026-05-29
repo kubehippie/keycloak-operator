@@ -80,7 +80,7 @@ func keycloakSessionForRealm(ctx context.Context, c client.Client, realmRef *com
 		return nil, err
 	}
 
-	session.RealmName = realm.Spec.RealmName
+	session.RealmName = realm.Spec.Name
 	return session, nil
 }
 

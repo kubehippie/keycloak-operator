@@ -109,10 +109,10 @@ func (v *RealmCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj 
 		allErrs = append(allErrs, errs...)
 	}
 
-	if oldRealm.Spec.RealmName != newRealm.Spec.RealmName {
+	if oldRealm.Spec.Name != newRealm.Spec.Name {
 		allErrs = append(allErrs, field.Forbidden(
-			field.NewPath("spec", "realmName"),
-			"realmName is immutable and cannot be changed after creation",
+			field.NewPath("spec", "name"),
+			"name is immutable and cannot be changed after creation",
 		))
 	}
 
@@ -148,10 +148,10 @@ func validateRealm(realm *keycloakoperatorwebhippiedev1alpha1.Realm) field.Error
 		))
 	}
 
-	if realm.Spec.RealmName == "" {
+	if realm.Spec.Name == "" {
 		errs = append(errs, field.Required(
-			field.NewPath("spec", "realmName"),
-			"realmName is required",
+			field.NewPath("spec", "name"),
+			"name is required",
 		))
 	}
 

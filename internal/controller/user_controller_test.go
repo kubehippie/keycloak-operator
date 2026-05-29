@@ -39,7 +39,7 @@ var _ = Describe("User Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: "default",
 		}
 		user := &keycloakoperatorwebhippiedev1alpha1.User{}
 
@@ -54,7 +54,6 @@ var _ = Describe("User Controller", func() {
 					},
 					Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{
 						RealmRef: &common.RealmRef{
-							Kind: "Realm",
 							Name: "test-realm",
 						},
 						Username: "testuser",
@@ -65,7 +64,6 @@ var _ = Describe("User Controller", func() {
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &keycloakoperatorwebhippiedev1alpha1.User{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
@@ -73,6 +71,7 @@ var _ = Describe("User Controller", func() {
 			By("Cleanup the specific resource instance User")
 			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 		})
+
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 			controllerReconciler := &UserReconciler{
@@ -84,8 +83,77 @@ var _ = Describe("User Controller", func() {
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
+	})
+})
+
+var _ = Describe("userToGocloak", func() {
+	It("maps username", func() {
+		u := &keycloakoperatorwebhippiedev1alpha1.User{
+			Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{Username: "alice"},
+		}
+		g := userToGocloak(u)
+		Expect(g.Username).NotTo(BeNil())
+		Expect(*g.Username).To(Equal("alice"))
+	})
+
+	It("maps optional fields when set", func() {
+		email := "alice@example.com"
+		enabled := true
+		verified := false
+		first := "Alice"
+		last := "Smith"
+
+		u := &keycloakoperatorwebhippiedev1alpha1.User{
+			Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{
+				Username:      "alice",
+				Email:         &email,
+				Enabled:       &enabled,
+				EmailVerified: &verified,
+				FirstName:     &first,
+				LastName:      &last,
+			},
+		}
+		g := userToGocloak(u)
+		Expect(*g.Email).To(Equal(email))
+		Expect(*g.Enabled).To(BeTrue())
+		Expect(*g.EmailVerified).To(BeFalse())
+		Expect(*g.FirstName).To(Equal(first))
+		Expect(*g.LastName).To(Equal(last))
+	})
+
+	It("maps attributes when set", func() {
+		u := &keycloakoperatorwebhippiedev1alpha1.User{
+			Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{
+				Username:   "alice",
+				Attributes: map[string][]string{"department": {"engineering"}},
+			},
+		}
+		g := userToGocloak(u)
+		Expect(g.Attributes).NotTo(BeNil())
+		Expect((*g.Attributes)["department"]).To(ConsistOf("engineering"))
+	})
+
+	It("maps requiredActions when set", func() {
+		u := &keycloakoperatorwebhippiedev1alpha1.User{
+			Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{
+				Username:        "alice",
+				RequiredActions: []string{"UPDATE_PASSWORD"},
+			},
+		}
+		g := userToGocloak(u)
+		Expect(g.RequiredActions).NotTo(BeNil())
+		Expect(*g.RequiredActions).To(ConsistOf("UPDATE_PASSWORD"))
+	})
+
+	It("leaves optional fields nil when not set", func() {
+		u := &keycloakoperatorwebhippiedev1alpha1.User{
+			Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{Username: "bob"},
+		}
+		g := userToGocloak(u)
+		Expect(g.Email).To(BeNil())
+		Expect(g.Enabled).To(BeNil())
+		Expect(g.Attributes).To(BeNil())
+		Expect(g.RequiredActions).To(BeNil())
 	})
 })

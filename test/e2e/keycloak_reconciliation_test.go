@@ -139,7 +139,7 @@ metadata:
 spec:
   keycloakRef:
     name: %s
-  realmName: %s
+  name: %s
   displayName: E2E Test Realm
 `, realmCRName, testNamespace, keycloakCRName, realmName)
 
@@ -189,7 +189,7 @@ metadata:
 spec:
   keycloakRef:
     name: %s
-  realmName: %s
+  name: %s
   displayName: E2E Test Realm
 `, realmCRName, testNamespace, keycloakCRName, realmName)
 

@@ -5,7 +5,7 @@ type KeycloakRef struct {
 	// Kind specifies the kind of the Keycloak resource.
 	// +kubebuilder:validation:Enum=Keycloak
 	// +kubebuilder:default=Keycloak
-	// +required
+	// +optional
 	Kind string `json:"kind,omitempty"`
 
 	// Name specifies the name of the Keycloak resource.
@@ -22,7 +22,7 @@ type RealmRef struct {
 	// Kind specifies the kind of the Realm resource.
 	// +kubebuilder:validation:Enum=Realm
 	// +kubebuilder:default=Realm
-	// +required
+	// +optional
 	Kind string `json:"kind,omitempty"`
 
 	// Name specifies the name of the Realm resource.

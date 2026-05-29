@@ -43,8 +43,8 @@ var _ = Describe("Realm Webhook", func() {
 
 	validSpec := func() keycloakoperatorwebhippiedev1alpha1.RealmSpec {
 		return keycloakoperatorwebhippiedev1alpha1.RealmSpec{
-			KeycloakRef: &common.KeycloakRef{Kind: "Keycloak", Name: "my-kc"},
-			RealmName:   "test-realm",
+			KeycloakRef: &common.KeycloakRef{Name: "my-kc"},
+			Name:        "test-realm",
 		}
 	}
 
@@ -72,18 +72,18 @@ var _ = Describe("Realm Webhook", func() {
 
 		It("Should deny creation when keycloakRef.name is empty", func() {
 			obj.Spec = validSpec()
-			obj.Spec.KeycloakRef = &common.KeycloakRef{Kind: "Keycloak", Name: ""}
+			obj.Spec.KeycloakRef = &common.KeycloakRef{Name: ""}
 			_, err := validator.ValidateCreate(ctx, obj)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("spec.keycloakRef"))
 		})
 
-		It("Should deny creation when realmName is empty", func() {
+		It("Should deny creation when name is empty", func() {
 			obj.Spec = validSpec()
-			obj.Spec.RealmName = ""
+			obj.Spec.Name = ""
 			_, err := validator.ValidateCreate(ctx, obj)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("spec.realmName"))
+			Expect(err.Error()).To(ContainSubstring("spec.name"))
 		})
 
 		It("Should admit deletion", func() {
@@ -94,17 +94,17 @@ var _ = Describe("Realm Webhook", func() {
 	})
 
 	Context("When updating Realm under Validating Webhook", func() {
-		It("Should admit update when realmName is unchanged", func() {
+		It("Should admit update when name is unchanged", func() {
 			oldObj.Spec = validSpec()
 			obj.Spec = validSpec()
 			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("Should deny update when realmName is changed", func() {
+		It("Should deny update when name is changed", func() {
 			oldObj.Spec = validSpec()
 			obj.Spec = validSpec()
-			obj.Spec.RealmName = "other-realm"
+			obj.Spec.Name = "other-realm"
 			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("immutable"))
@@ -119,10 +119,10 @@ var _ = Describe("Realm Webhook", func() {
 			Expect(err.Error()).To(ContainSubstring("spec.keycloakRef"))
 		})
 
-		It("Should deny update when realmName becomes empty", func() {
+		It("Should deny update when name becomes empty", func() {
 			oldObj.Spec = validSpec()
 			obj.Spec = validSpec()
-			obj.Spec.RealmName = ""
+			obj.Spec.Name = ""
 			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
 			Expect(err).To(HaveOccurred())
 		})

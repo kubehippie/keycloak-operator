@@ -85,8 +85,8 @@ func (r *RealmReconciler) handleDeletion(ctx context.Context, instance *v1alpha1
 		return ctrl.Result{}, nil
 	}
 
-	log.Info("Deleting realm from Keycloak", "realm", instance.Spec.RealmName)
-	if err := session.Client.DeleteRealm(ctx, session.Token.AccessToken, instance.Spec.RealmName); err != nil {
+	log.Info("Deleting realm from Keycloak", "realm", instance.Spec.Name)
+	if err := session.Client.DeleteRealm(ctx, session.Token.AccessToken, instance.Spec.Name); err != nil {
 		var apiErr *gocloak.APIError
 		if errors.As(err, &apiErr) && apiErr.Code == 404 {
 			log.Info("Realm already absent in Keycloak, skipping delete")
@@ -111,7 +111,7 @@ func (r *RealmReconciler) reconcileRealm(ctx context.Context, instance *v1alpha1
 		return ctrl.Result{}, fmt.Errorf("failed to build realm representation: %w", err)
 	}
 
-	existing, err := session.Client.GetRealm(ctx, session.Token.AccessToken, instance.Spec.RealmName)
+	existing, err := session.Client.GetRealm(ctx, session.Token.AccessToken, instance.Spec.Name)
 	if err != nil {
 		var apiErr *gocloak.APIError
 		if !errors.As(err, &apiErr) || apiErr.Code != 404 {
@@ -137,7 +137,7 @@ func (r *RealmReconciler) reconcileRealm(ctx context.Context, instance *v1alpha1
 		return ctrl.Result{}, fmt.Errorf("failed to update realm in Keycloak: %w", err)
 	}
 
-	log.Info("Realm reconciled", "realm", instance.Spec.RealmName)
+	log.Info("Realm reconciled", "realm", instance.Spec.Name)
 	return ctrl.Result{}, nil
 }
 
@@ -146,7 +146,7 @@ func (r *RealmReconciler) reconcileRealm(ctx context.Context, instance *v1alpha1
 // Secret reference) is resolved from the cluster at call time.
 func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns string) (gocloak.RealmRepresentation, error) {
 	realm := gocloak.RealmRepresentation{
-		Realm:               gocloak.StringP(r.Spec.RealmName),
+		Realm:               gocloak.StringP(r.Spec.Name),
 		DisplayName:         r.Spec.DisplayName,
 		DisplayNameHTML:     r.Spec.DisplayNameHtml,
 		Enabled:             r.Spec.Enabled,

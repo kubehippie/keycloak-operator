@@ -15,7 +15,7 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - jsonPath: .spec.realmName
+    - jsonPath: .spec.name
       name: Realm
       type: string
     - jsonPath: .spec.enabled
@@ -104,7 +104,6 @@ spec:
                       resource.
                     type: string
                 required:
-                - kind
                 - name
                 type: object
               login:
@@ -142,15 +141,15 @@ spec:
                       address.
                     type: boolean
                 type: object
+              name:
+                description: |-
+                  name specifies the internal name of the realm in Keycloak.
+                  This field is immutable after creation.
+                type: string
               passwordPolicy:
                 description: |-
                   passwordPolicy sets the password policy expression for the realm
                   (e.g. "length(8) and digits(1)").
-                type: string
-              realmName:
-                description: |-
-                  realmName specifies the internal name of the realm.
-                  This field is immutable after creation.
                 type: string
               sessionTimeouts:
                 description: sessionTimeouts groups session and token lifetime settings.
@@ -272,7 +271,7 @@ spec:
                 type: object
             required:
             - keycloakRef
-            - realmName
+            - name
             type: object
           status:
             description: status defines the observed state of Realm

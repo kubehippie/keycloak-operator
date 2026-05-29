@@ -88,7 +88,6 @@ spec:
                     description: Namespace specifies the namespace of the Realm resource.
                     type: string
                 required:
-                - kind
                 - name
                 type: object
               realmRoles:
