@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/Nerzal/gocloak/v13"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
@@ -210,25 +211,13 @@ func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns
 			smtpMap["envelopeFrom"] = *smtp.EnvelopeFrom
 		}
 		if smtp.Ssl != nil {
-			if *smtp.Ssl {
-				smtpMap["ssl"] = "true"
-			} else {
-				smtpMap["ssl"] = "false"
-			}
+			smtpMap["ssl"] = strconv.FormatBool(*smtp.Ssl)
 		}
 		if smtp.StartTls != nil {
-			if *smtp.StartTls {
-				smtpMap["starttls"] = "true"
-			} else {
-				smtpMap["starttls"] = "false"
-			}
+			smtpMap["starttls"] = strconv.FormatBool(*smtp.StartTls)
 		}
 		if smtp.Auth != nil {
-			if *smtp.Auth {
-				smtpMap["auth"] = "true"
-			} else {
-				smtpMap["auth"] = "false"
-			}
+			smtpMap["auth"] = strconv.FormatBool(*smtp.Auth)
 		}
 		if smtp.User != nil {
 			smtpMap["user"] = *smtp.User
