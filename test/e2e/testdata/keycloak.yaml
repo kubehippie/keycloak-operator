@@ -8,7 +8,12 @@ args:
 http:
   relativePath: /
 
+cache:
+  stack: custom
+
 extraEnv: |
+  - name: KC_CACHE
+    value: local
   - name: KEYCLOAK_ADMIN
     value: admin
   - name: KEYCLOAK_ADMIN_PASSWORD
