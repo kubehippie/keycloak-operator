@@ -105,10 +105,9 @@ jobs:
       - tests
 
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         keycloak:
-          - "24.0"
           - "25.0"
           - "26.6"
 
