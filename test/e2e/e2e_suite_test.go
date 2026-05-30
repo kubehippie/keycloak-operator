@@ -46,6 +46,10 @@ var (
 	// KEYCLOAK_INSTALL_SKIP=true.
 	skipKeycloakInstall = os.Getenv("KEYCLOAK_INSTALL_SKIP") == "true"
 
+	// keepKeycloakInstall keeps the installation of Keycloak after the
+	// execution of the test suite when KEYCLOAK_KEEP_INSTALL=true.
+	keepKeycloakInstall = os.Getenv("KEYCLOAK_KEEP_INSTALL") == "true"
+
 	// isKeycloakAlreadyInstalled is true when the Keycloak namespace already
 	// exists.
 	isKeycloakAlreadyInstalled = false
@@ -57,6 +61,10 @@ var (
 	// skipCertManagerInstall disables the Cert Manager reconciliation suite
 	// when CERT_MANAGER_INSTALL_SKIP=true.
 	skipCertManagerInstall = os.Getenv("CERT_MANAGER_INSTALL_SKIP") == "true"
+
+	// keepCertManagerInstall keeps the installation of Cert Manager after the
+	// execution of the test suite when CERT_MANAGER_KEEP_INSTALL=true.
+	keepCertManagerInstall = os.Getenv("CERT_MANAGER_KEEP_INSTALL") == "true"
 
 	// isCertManagerAlreadyInstalled is true when the Cert Manager namespace
 	// already exists.
@@ -183,12 +191,12 @@ var _ = AfterSuite(func() {
 	cmd = exec.Command("kubectl", "delete", "ns", namespace)
 	_, _ = utils.Run(cmd)
 
-	if !skipCertManagerInstall && !isCertManagerAlreadyInstalled {
+	if !skipCertManagerInstall && !isCertManagerAlreadyInstalled && !keepCertManagerInstall {
 		_, _ = fmt.Fprintf(GinkgoWriter, "Uninstalling CertManager...\n")
 		utils.UninstallCertManager()
 	}
 
-	if !skipKeycloakInstall && !isKeycloakAlreadyInstalled {
+	if !skipKeycloakInstall && !isKeycloakAlreadyInstalled && !keepKeycloakInstall {
 		_, _ = fmt.Fprintf(GinkgoWriter, "Uninstalling Keycloak...\n")
 		utils.UninstallKeycloak()
 	}
