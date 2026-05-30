@@ -6,7 +6,9 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["(^|/)Makefile$"],
+      "managerFilePatterns": [
+        "/(^|/)Makefile$/"
+      ],
       "matchStrings": [
         "KUSTOMIZE_VERSION \\?= (?<currentValue>v[\\d.]+)"
       ],
@@ -16,7 +18,9 @@
     },
     {
       "customType": "regex",
-      "fileMatch": ["(^|/)Makefile$"],
+      "managerFilePatterns": [
+        "/(^|/)Makefile$/"
+      ],
       "matchStrings": [
         "CONTROLLER_TOOLS_VERSION \\?= (?<currentValue>v[\\d.]+)"
       ],
@@ -25,7 +29,9 @@
     },
     {
       "customType": "regex",
-      "fileMatch": ["(^|/)Makefile$"],
+      "managerFilePatterns": [
+        "/(^|/)Makefile$/"
+      ],
       "matchStrings": [
         "GOLANGCI_LINT_VERSION \\?= (?<currentValue>v[\\d.]+)"
       ],
