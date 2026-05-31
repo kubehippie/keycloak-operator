@@ -154,12 +154,12 @@ func userToGocloak(u *v1alpha1.User) gocloak.User {
 
 	if u.Spec.Attributes != nil {
 		attrs := u.Spec.Attributes
-		user.Attributes = &attrs
+		user.Attributes = attrs
 	}
 
 	if u.Spec.RequiredActions != nil {
 		actions := u.Spec.RequiredActions
-		user.RequiredActions = &actions
+		user.RequiredActions = actions
 	}
 
 	return user

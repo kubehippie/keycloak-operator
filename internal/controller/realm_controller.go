@@ -151,7 +151,7 @@ func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns
 		DisplayName:         r.Spec.DisplayName,
 		DisplayNameHTML:     r.Spec.DisplayNameHtml,
 		Enabled:             r.Spec.Enabled,
-		SslRequired:         r.Spec.SslRequired,
+		SSLRequired:         r.Spec.SslRequired,
 		PasswordPolicy:      r.Spec.PasswordPolicy,
 		BruteForceProtected: r.Spec.BruteForceProtected,
 	}
@@ -178,14 +178,14 @@ func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns
 		realm.InternationalizationEnabled = i.Enabled
 		realm.DefaultLocale = i.DefaultLocale
 		if len(i.SupportedLocales) > 0 {
-			realm.SupportedLocales = &i.SupportedLocales
+			realm.SupportedLocales = i.SupportedLocales
 		}
 	}
 
 	if st := r.Spec.SessionTimeouts; st != nil {
 		realm.AccessTokenLifespan = st.AccessTokenLifespan
-		realm.SsoSessionIdleTimeout = st.SsoSessionIdleTimeout
-		realm.SsoSessionMaxLifespan = st.SsoSessionMaxLifespan
+		realm.SSOSessionIdleTimeout = st.SsoSessionIdleTimeout
+		realm.SSOSessionMaxLifespan = st.SsoSessionMaxLifespan
 		realm.OfflineSessionIdleTimeout = st.OfflineSessionIdleTimeout
 	}
 
@@ -230,12 +230,12 @@ func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns
 			smtpMap["password"] = password
 		}
 
-		realm.SMTPServer = &smtpMap
+		realm.SMTPServer = smtpMap
 	}
 
 	if r.Spec.Attributes != nil {
 		attrs := r.Spec.Attributes
-		realm.Attributes = &attrs
+		realm.Attributes = attrs
 	}
 
 	return realm, nil
