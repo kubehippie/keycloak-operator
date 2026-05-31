@@ -68,6 +68,10 @@ var (
 	// isCertManagerAlreadyInstalled is true when the Cert Manager namespace
 	// already exists.
 	isCertManagerAlreadyInstalled = false
+
+	// ci is true when the CI environment variable is set, indicating the tests
+	// are running on an ephemeral CI runner where cleanup is not necessary.
+	ci = os.Getenv("CI") == "true"
 )
 
 // TestE2E runs the end-to-end (e2e) test suite for the project. These tests
@@ -178,6 +182,10 @@ spec:
 })
 
 var _ = AfterSuite(func() {
+	if ci {
+		return
+	}
+
 	By("undeploying the manager")
 	cmd := exec.Command("make", "undeploy")
 	_, _ = utils.Run(cmd)
