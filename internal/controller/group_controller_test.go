@@ -109,7 +109,7 @@ var _ = Describe("groupToGocloak", func() {
 		}
 		got := groupToGocloak(g)
 		Expect(got.Attributes).NotTo(BeNil())
-		Expect((*got.Attributes)["team"]).To(ConsistOf("platform"))
+		Expect(got.Attributes["team"]).To(ConsistOf("platform"))
 	})
 
 	It("maps realmRoles when set", func() {
@@ -121,7 +121,7 @@ var _ = Describe("groupToGocloak", func() {
 		}
 		got := groupToGocloak(g)
 		Expect(got.RealmRoles).NotTo(BeNil())
-		Expect(*got.RealmRoles).To(ConsistOf(testGroupAdminRole, testGroupViewerRole))
+		Expect(got.RealmRoles).To(ConsistOf(testGroupAdminRole, testGroupViewerRole))
 	})
 
 	It("maps clientRoles when set", func() {
@@ -133,7 +133,7 @@ var _ = Describe("groupToGocloak", func() {
 		}
 		got := groupToGocloak(g)
 		Expect(got.ClientRoles).NotTo(BeNil())
-		Expect((*got.ClientRoles)["my-client"]).To(ConsistOf("role-a"))
+		Expect(got.ClientRoles["my-client"]).To(ConsistOf("role-a"))
 	})
 
 	It("leaves optional fields nil when not set", func() {

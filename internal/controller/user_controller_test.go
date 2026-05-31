@@ -132,7 +132,7 @@ var _ = Describe("userToGocloak", func() {
 		}
 		g := userToGocloak(u)
 		Expect(g.Attributes).NotTo(BeNil())
-		Expect((*g.Attributes)["department"]).To(ConsistOf("engineering"))
+		Expect(g.Attributes["department"]).To(ConsistOf("engineering"))
 	})
 
 	It("maps requiredActions when set", func() {
@@ -144,7 +144,7 @@ var _ = Describe("userToGocloak", func() {
 		}
 		g := userToGocloak(u)
 		Expect(g.RequiredActions).NotTo(BeNil())
-		Expect(*g.RequiredActions).To(ConsistOf("UPDATE_PASSWORD"))
+		Expect(g.RequiredActions).To(ConsistOf("UPDATE_PASSWORD"))
 	})
 
 	It("leaves optional fields nil when not set", func() {
