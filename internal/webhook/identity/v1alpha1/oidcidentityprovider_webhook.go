@@ -18,13 +18,10 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -34,7 +31,7 @@ var oidcidentityproviderlog = logf.Log.WithName("oidcidentityprovider-resource")
 
 // SetupOIDCIdentityProviderWebhookWithManager registers the webhook for OIDCIdentityProvider in the manager.
 func SetupOIDCIdentityProviderWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.OIDCIdentityProvider{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.OIDCIdentityProvider{}).
 		WithValidator(&OIDCIdentityProviderCustomValidator{}).
 		WithDefaulter(&OIDCIdentityProviderCustomDefaulter{}).
 		Complete()
@@ -53,16 +50,11 @@ type OIDCIdentityProviderCustomDefaulter struct {
 	// TODO(user): Add more fields as needed for defaulting
 }
 
-var _ webhook.CustomDefaulter = &OIDCIdentityProviderCustomDefaulter{}
+var _ admission.Defaulter[*v1alpha1.OIDCIdentityProvider] = &OIDCIdentityProviderCustomDefaulter{}
 
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind OIDCIdentityProvider.
-func (d *OIDCIdentityProviderCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	oidcidentityprovider, ok := obj.(*v1alpha1.OIDCIdentityProvider)
-
-	if !ok {
-		return fmt.Errorf("expected an OIDCIdentityProvider object but got %T", obj)
-	}
-	oidcidentityproviderlog.Info("Defaulting for OIDCIdentityProvider", "name", oidcidentityprovider.GetName())
+// Default implements admission.Defaulter so a webhook will be registered for the Kind OIDCIdentityProvider.
+func (d *OIDCIdentityProviderCustomDefaulter) Default(_ context.Context, provider *v1alpha1.OIDCIdentityProvider) error {
+	oidcidentityproviderlog.Info("Defaulting for OIDCIdentityProvider", "name", provider.GetName())
 
 	// TODO(user): fill in your defaulting logic.
 
@@ -82,41 +74,30 @@ type OIDCIdentityProviderCustomValidator struct {
 	// TODO(user): Add more fields as needed for validation
 }
 
-var _ webhook.CustomValidator = &OIDCIdentityProviderCustomValidator{}
+var _ admission.Validator[*v1alpha1.OIDCIdentityProvider] = &OIDCIdentityProviderCustomValidator{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type OIDCIdentityProvider.
-func (v *OIDCIdentityProviderCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	oidcidentityprovider, ok := obj.(*v1alpha1.OIDCIdentityProvider)
-	if !ok {
-		return nil, fmt.Errorf("expected a OIDCIdentityProvider object but got %T", obj)
-	}
-	oidcidentityproviderlog.Info("Validation for OIDCIdentityProvider upon creation", "name", oidcidentityprovider.GetName())
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type OIDCIdentityProvider.
+func (v *OIDCIdentityProviderCustomValidator) ValidateCreate(_ context.Context, provider *v1alpha1.OIDCIdentityProvider) (admission.Warnings, error) {
+	oidcidentityproviderlog.Info("Validation for OIDCIdentityProvider upon creation", "name", provider.GetName())
 
 	// TODO(user): fill in your validation logic upon object creation.
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type OIDCIdentityProvider.
-func (v *OIDCIdentityProviderCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	oidcidentityprovider, ok := newObj.(*v1alpha1.OIDCIdentityProvider)
-	if !ok {
-		return nil, fmt.Errorf("expected a OIDCIdentityProvider object for the newObj but got %T", newObj)
-	}
-	oidcidentityproviderlog.Info("Validation for OIDCIdentityProvider upon update", "name", oidcidentityprovider.GetName())
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type OIDCIdentityProvider.
+func (v *OIDCIdentityProviderCustomValidator) ValidateUpdate(_ context.Context, oldProvider, provider *v1alpha1.OIDCIdentityProvider) (admission.Warnings, error) {
+	_ = oldProvider
+	oidcidentityproviderlog.Info("Validation for OIDCIdentityProvider upon update", "name", provider.GetName())
 
 	// TODO(user): fill in your validation logic upon object update.
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type OIDCIdentityProvider.
-func (v *OIDCIdentityProviderCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	oidcidentityprovider, ok := obj.(*v1alpha1.OIDCIdentityProvider)
-	if !ok {
-		return nil, fmt.Errorf("expected a OIDCIdentityProvider object but got %T", obj)
-	}
-	oidcidentityproviderlog.Info("Validation for OIDCIdentityProvider upon deletion", "name", oidcidentityprovider.GetName())
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type OIDCIdentityProvider.
+func (v *OIDCIdentityProviderCustomValidator) ValidateDelete(_ context.Context, provider *v1alpha1.OIDCIdentityProvider) (admission.Warnings, error) {
+	oidcidentityproviderlog.Info("Validation for OIDCIdentityProvider upon deletion", "name", provider.GetName())
 
 	// TODO(user): fill in your validation logic upon object deletion.
 

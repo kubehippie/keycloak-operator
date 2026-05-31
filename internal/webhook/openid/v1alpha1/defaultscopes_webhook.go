@@ -18,13 +18,10 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -34,7 +31,7 @@ var defaultscopeslog = logf.Log.WithName("defaultscopes-resource")
 
 // SetupDefaultScopesWebhookWithManager registers the webhook for DefaultScopes in the manager.
 func SetupDefaultScopesWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.DefaultScopes{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.DefaultScopes{}).
 		WithValidator(&DefaultScopesCustomValidator{}).
 		WithDefaulter(&DefaultScopesCustomDefaulter{}).
 		Complete()
@@ -53,16 +50,11 @@ type DefaultScopesCustomDefaulter struct {
 	// TODO(user): Add more fields as needed for defaulting
 }
 
-var _ webhook.CustomDefaulter = &DefaultScopesCustomDefaulter{}
+var _ admission.Defaulter[*v1alpha1.DefaultScopes] = &DefaultScopesCustomDefaulter{}
 
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind DefaultScopes.
-func (d *DefaultScopesCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	defaultscopes, ok := obj.(*v1alpha1.DefaultScopes)
-
-	if !ok {
-		return fmt.Errorf("expected an DefaultScopes object but got %T", obj)
-	}
-	defaultscopeslog.Info("Defaulting for DefaultScopes", "name", defaultscopes.GetName())
+// Default implements admission.Defaulter so a webhook will be registered for the Kind DefaultScopes.
+func (d *DefaultScopesCustomDefaulter) Default(_ context.Context, defaultScopes *v1alpha1.DefaultScopes) error {
+	defaultscopeslog.Info("Defaulting for DefaultScopes", "name", defaultScopes.GetName())
 
 	// TODO(user): fill in your defaulting logic.
 
@@ -82,41 +74,30 @@ type DefaultScopesCustomValidator struct {
 	// TODO(user): Add more fields as needed for validation
 }
 
-var _ webhook.CustomValidator = &DefaultScopesCustomValidator{}
+var _ admission.Validator[*v1alpha1.DefaultScopes] = &DefaultScopesCustomValidator{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type DefaultScopes.
-func (v *DefaultScopesCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	defaultscopes, ok := obj.(*v1alpha1.DefaultScopes)
-	if !ok {
-		return nil, fmt.Errorf("expected a DefaultScopes object but got %T", obj)
-	}
-	defaultscopeslog.Info("Validation for DefaultScopes upon creation", "name", defaultscopes.GetName())
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type DefaultScopes.
+func (v *DefaultScopesCustomValidator) ValidateCreate(_ context.Context, defaultScopes *v1alpha1.DefaultScopes) (admission.Warnings, error) {
+	defaultscopeslog.Info("Validation for DefaultScopes upon creation", "name", defaultScopes.GetName())
 
 	// TODO(user): fill in your validation logic upon object creation.
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type DefaultScopes.
-func (v *DefaultScopesCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	defaultscopes, ok := newObj.(*v1alpha1.DefaultScopes)
-	if !ok {
-		return nil, fmt.Errorf("expected a DefaultScopes object for the newObj but got %T", newObj)
-	}
-	defaultscopeslog.Info("Validation for DefaultScopes upon update", "name", defaultscopes.GetName())
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type DefaultScopes.
+func (v *DefaultScopesCustomValidator) ValidateUpdate(_ context.Context, oldDefaultScopes, defaultScopes *v1alpha1.DefaultScopes) (admission.Warnings, error) {
+	_ = oldDefaultScopes
+	defaultscopeslog.Info("Validation for DefaultScopes upon update", "name", defaultScopes.GetName())
 
 	// TODO(user): fill in your validation logic upon object update.
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type DefaultScopes.
-func (v *DefaultScopesCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	defaultscopes, ok := obj.(*v1alpha1.DefaultScopes)
-	if !ok {
-		return nil, fmt.Errorf("expected a DefaultScopes object but got %T", obj)
-	}
-	defaultscopeslog.Info("Validation for DefaultScopes upon deletion", "name", defaultscopes.GetName())
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type DefaultScopes.
+func (v *DefaultScopesCustomValidator) ValidateDelete(_ context.Context, defaultScopes *v1alpha1.DefaultScopes) (admission.Warnings, error) {
+	defaultscopeslog.Info("Validation for DefaultScopes upon deletion", "name", defaultScopes.GetName())
 
 	// TODO(user): fill in your validation logic upon object deletion.
 

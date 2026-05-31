@@ -18,13 +18,10 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -34,7 +31,7 @@ var attributeimportermapperlog = logf.Log.WithName("attributeimportermapper-reso
 
 // SetupAttributeImporterMapperWebhookWithManager registers the webhook for AttributeImporterMapper in the manager.
 func SetupAttributeImporterMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.AttributeImporterMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.AttributeImporterMapper{}).
 		WithValidator(&AttributeImporterMapperCustomValidator{}).
 		WithDefaulter(&AttributeImporterMapperCustomDefaulter{}).
 		Complete()
@@ -53,16 +50,11 @@ type AttributeImporterMapperCustomDefaulter struct {
 	// TODO(user): Add more fields as needed for defaulting
 }
 
-var _ webhook.CustomDefaulter = &AttributeImporterMapperCustomDefaulter{}
+var _ admission.Defaulter[*v1alpha1.AttributeImporterMapper] = &AttributeImporterMapperCustomDefaulter{}
 
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind AttributeImporterMapper.
-func (d *AttributeImporterMapperCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	attributeimportermapper, ok := obj.(*v1alpha1.AttributeImporterMapper)
-
-	if !ok {
-		return fmt.Errorf("expected an AttributeImporterMapper object but got %T", obj)
-	}
-	attributeimportermapperlog.Info("Defaulting for AttributeImporterMapper", "name", attributeimportermapper.GetName())
+// Default implements admission.Defaulter so a webhook will be registered for the Kind AttributeImporterMapper.
+func (d *AttributeImporterMapperCustomDefaulter) Default(_ context.Context, mapper *v1alpha1.AttributeImporterMapper) error {
+	attributeimportermapperlog.Info("Defaulting for AttributeImporterMapper", "name", mapper.GetName())
 
 	// TODO(user): fill in your defaulting logic.
 
@@ -82,41 +74,30 @@ type AttributeImporterMapperCustomValidator struct {
 	// TODO(user): Add more fields as needed for validation
 }
 
-var _ webhook.CustomValidator = &AttributeImporterMapperCustomValidator{}
+var _ admission.Validator[*v1alpha1.AttributeImporterMapper] = &AttributeImporterMapperCustomValidator{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type AttributeImporterMapper.
-func (v *AttributeImporterMapperCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	attributeimportermapper, ok := obj.(*v1alpha1.AttributeImporterMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a AttributeImporterMapper object but got %T", obj)
-	}
-	attributeimportermapperlog.Info("Validation for AttributeImporterMapper upon creation", "name", attributeimportermapper.GetName())
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type AttributeImporterMapper.
+func (v *AttributeImporterMapperCustomValidator) ValidateCreate(_ context.Context, mapper *v1alpha1.AttributeImporterMapper) (admission.Warnings, error) {
+	attributeimportermapperlog.Info("Validation for AttributeImporterMapper upon creation", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object creation.
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type AttributeImporterMapper.
-func (v *AttributeImporterMapperCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	attributeimportermapper, ok := newObj.(*v1alpha1.AttributeImporterMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a AttributeImporterMapper object for the newObj but got %T", newObj)
-	}
-	attributeimportermapperlog.Info("Validation for AttributeImporterMapper upon update", "name", attributeimportermapper.GetName())
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type AttributeImporterMapper.
+func (v *AttributeImporterMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *v1alpha1.AttributeImporterMapper) (admission.Warnings, error) {
+	_ = oldMapper
+	attributeimportermapperlog.Info("Validation for AttributeImporterMapper upon update", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object update.
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type AttributeImporterMapper.
-func (v *AttributeImporterMapperCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	attributeimportermapper, ok := obj.(*v1alpha1.AttributeImporterMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a AttributeImporterMapper object but got %T", obj)
-	}
-	attributeimportermapperlog.Info("Validation for AttributeImporterMapper upon deletion", "name", attributeimportermapper.GetName())
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type AttributeImporterMapper.
+func (v *AttributeImporterMapperCustomValidator) ValidateDelete(_ context.Context, mapper *v1alpha1.AttributeImporterMapper) (admission.Warnings, error) {
+	attributeimportermapperlog.Info("Validation for AttributeImporterMapper upon deletion", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object deletion.
 

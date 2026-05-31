@@ -18,13 +18,10 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -34,7 +31,7 @@ var oidcadvancedgroupmapperlog = logf.Log.WithName("oidcadvancedgroupmapper-reso
 
 // SetupOIDCAdvancedGroupMapperWebhookWithManager registers the webhook for OIDCAdvancedGroupMapper in the manager.
 func SetupOIDCAdvancedGroupMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.OIDCAdvancedGroupMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.OIDCAdvancedGroupMapper{}).
 		WithValidator(&OIDCAdvancedGroupMapperCustomValidator{}).
 		WithDefaulter(&OIDCAdvancedGroupMapperCustomDefaulter{}).
 		Complete()
@@ -53,16 +50,11 @@ type OIDCAdvancedGroupMapperCustomDefaulter struct {
 	// TODO(user): Add more fields as needed for defaulting
 }
 
-var _ webhook.CustomDefaulter = &OIDCAdvancedGroupMapperCustomDefaulter{}
+var _ admission.Defaulter[*v1alpha1.OIDCAdvancedGroupMapper] = &OIDCAdvancedGroupMapperCustomDefaulter{}
 
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind OIDCAdvancedGroupMapper.
-func (d *OIDCAdvancedGroupMapperCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	oidcadvancedgroupmapper, ok := obj.(*v1alpha1.OIDCAdvancedGroupMapper)
-
-	if !ok {
-		return fmt.Errorf("expected an OIDCAdvancedGroupMapper object but got %T", obj)
-	}
-	oidcadvancedgroupmapperlog.Info("Defaulting for OIDCAdvancedGroupMapper", "name", oidcadvancedgroupmapper.GetName())
+// Default implements admission.Defaulter so a webhook will be registered for the Kind OIDCAdvancedGroupMapper.
+func (d *OIDCAdvancedGroupMapperCustomDefaulter) Default(_ context.Context, mapper *v1alpha1.OIDCAdvancedGroupMapper) error {
+	oidcadvancedgroupmapperlog.Info("Defaulting for OIDCAdvancedGroupMapper", "name", mapper.GetName())
 
 	// TODO(user): fill in your defaulting logic.
 
@@ -82,41 +74,30 @@ type OIDCAdvancedGroupMapperCustomValidator struct {
 	// TODO(user): Add more fields as needed for validation
 }
 
-var _ webhook.CustomValidator = &OIDCAdvancedGroupMapperCustomValidator{}
+var _ admission.Validator[*v1alpha1.OIDCAdvancedGroupMapper] = &OIDCAdvancedGroupMapperCustomValidator{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type OIDCAdvancedGroupMapper.
-func (v *OIDCAdvancedGroupMapperCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	oidcadvancedgroupmapper, ok := obj.(*v1alpha1.OIDCAdvancedGroupMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a OIDCAdvancedGroupMapper object but got %T", obj)
-	}
-	oidcadvancedgroupmapperlog.Info("Validation for OIDCAdvancedGroupMapper upon creation", "name", oidcadvancedgroupmapper.GetName())
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type OIDCAdvancedGroupMapper.
+func (v *OIDCAdvancedGroupMapperCustomValidator) ValidateCreate(_ context.Context, mapper *v1alpha1.OIDCAdvancedGroupMapper) (admission.Warnings, error) {
+	oidcadvancedgroupmapperlog.Info("Validation for OIDCAdvancedGroupMapper upon creation", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object creation.
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type OIDCAdvancedGroupMapper.
-func (v *OIDCAdvancedGroupMapperCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	oidcadvancedgroupmapper, ok := newObj.(*v1alpha1.OIDCAdvancedGroupMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a OIDCAdvancedGroupMapper object for the newObj but got %T", newObj)
-	}
-	oidcadvancedgroupmapperlog.Info("Validation for OIDCAdvancedGroupMapper upon update", "name", oidcadvancedgroupmapper.GetName())
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type OIDCAdvancedGroupMapper.
+func (v *OIDCAdvancedGroupMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *v1alpha1.OIDCAdvancedGroupMapper) (admission.Warnings, error) {
+	_ = oldMapper
+	oidcadvancedgroupmapperlog.Info("Validation for OIDCAdvancedGroupMapper upon update", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object update.
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type OIDCAdvancedGroupMapper.
-func (v *OIDCAdvancedGroupMapperCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	oidcadvancedgroupmapper, ok := obj.(*v1alpha1.OIDCAdvancedGroupMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a OIDCAdvancedGroupMapper object but got %T", obj)
-	}
-	oidcadvancedgroupmapperlog.Info("Validation for OIDCAdvancedGroupMapper upon deletion", "name", oidcadvancedgroupmapper.GetName())
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type OIDCAdvancedGroupMapper.
+func (v *OIDCAdvancedGroupMapperCustomValidator) ValidateDelete(_ context.Context, mapper *v1alpha1.OIDCAdvancedGroupMapper) (admission.Warnings, error) {
+	oidcadvancedgroupmapperlog.Info("Validation for OIDCAdvancedGroupMapper upon deletion", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object deletion.
 

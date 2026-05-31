@@ -18,13 +18,10 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -34,7 +31,7 @@ var openidclientlog = logf.Log.WithName("openidclient-resource")
 
 // SetupOpenIDClientWebhookWithManager registers the webhook for OpenIDClient in the manager.
 func SetupOpenIDClientWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.OpenIDClient{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.OpenIDClient{}).
 		WithValidator(&OpenIDClientCustomValidator{}).
 		WithDefaulter(&OpenIDClientCustomDefaulter{}).
 		Complete()
@@ -53,16 +50,11 @@ type OpenIDClientCustomDefaulter struct {
 	// TODO(user): Add more fields as needed for defaulting
 }
 
-var _ webhook.CustomDefaulter = &OpenIDClientCustomDefaulter{}
+var _ admission.Defaulter[*v1alpha1.OpenIDClient] = &OpenIDClientCustomDefaulter{}
 
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind OpenIDClient.
-func (d *OpenIDClientCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	openidclient, ok := obj.(*v1alpha1.OpenIDClient)
-
-	if !ok {
-		return fmt.Errorf("expected an OpenIDClient object but got %T", obj)
-	}
-	openidclientlog.Info("Defaulting for OpenIDClient", "name", openidclient.GetName())
+// Default implements admission.Defaulter so a webhook will be registered for the Kind OpenIDClient.
+func (d *OpenIDClientCustomDefaulter) Default(_ context.Context, client *v1alpha1.OpenIDClient) error {
+	openidclientlog.Info("Defaulting for OpenIDClient", "name", client.GetName())
 
 	// TODO(user): fill in your defaulting logic.
 
@@ -82,41 +74,30 @@ type OpenIDClientCustomValidator struct {
 	// TODO(user): Add more fields as needed for validation
 }
 
-var _ webhook.CustomValidator = &OpenIDClientCustomValidator{}
+var _ admission.Validator[*v1alpha1.OpenIDClient] = &OpenIDClientCustomValidator{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type OpenIDClient.
-func (v *OpenIDClientCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	openidclient, ok := obj.(*v1alpha1.OpenIDClient)
-	if !ok {
-		return nil, fmt.Errorf("expected a OpenIDClient object but got %T", obj)
-	}
-	openidclientlog.Info("Validation for OpenIDClient upon creation", "name", openidclient.GetName())
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type OpenIDClient.
+func (v *OpenIDClientCustomValidator) ValidateCreate(_ context.Context, client *v1alpha1.OpenIDClient) (admission.Warnings, error) {
+	openidclientlog.Info("Validation for OpenIDClient upon creation", "name", client.GetName())
 
 	// TODO(user): fill in your validation logic upon object creation.
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type OpenIDClient.
-func (v *OpenIDClientCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	openidclient, ok := newObj.(*v1alpha1.OpenIDClient)
-	if !ok {
-		return nil, fmt.Errorf("expected a OpenIDClient object for the newObj but got %T", newObj)
-	}
-	openidclientlog.Info("Validation for OpenIDClient upon update", "name", openidclient.GetName())
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type OpenIDClient.
+func (v *OpenIDClientCustomValidator) ValidateUpdate(_ context.Context, oldClient, client *v1alpha1.OpenIDClient) (admission.Warnings, error) {
+	_ = oldClient
+	openidclientlog.Info("Validation for OpenIDClient upon update", "name", client.GetName())
 
 	// TODO(user): fill in your validation logic upon object update.
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type OpenIDClient.
-func (v *OpenIDClientCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	openidclient, ok := obj.(*v1alpha1.OpenIDClient)
-	if !ok {
-		return nil, fmt.Errorf("expected a OpenIDClient object but got %T", obj)
-	}
-	openidclientlog.Info("Validation for OpenIDClient upon deletion", "name", openidclient.GetName())
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type OpenIDClient.
+func (v *OpenIDClientCustomValidator) ValidateDelete(_ context.Context, client *v1alpha1.OpenIDClient) (admission.Warnings, error) {
+	openidclientlog.Info("Validation for OpenIDClient upon deletion", "name", client.GetName())
 
 	// TODO(user): fill in your validation logic upon object deletion.
 

@@ -18,13 +18,10 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -34,7 +31,7 @@ var hardcodedrolemapperlog = logf.Log.WithName("hardcodedrolemapper-resource")
 
 // SetupHardcodedRoleMapperWebhookWithManager registers the webhook for HardcodedRoleMapper in the manager.
 func SetupHardcodedRoleMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.HardcodedRoleMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.HardcodedRoleMapper{}).
 		WithValidator(&HardcodedRoleMapperCustomValidator{}).
 		WithDefaulter(&HardcodedRoleMapperCustomDefaulter{}).
 		Complete()
@@ -53,16 +50,11 @@ type HardcodedRoleMapperCustomDefaulter struct {
 	// TODO(user): Add more fields as needed for defaulting
 }
 
-var _ webhook.CustomDefaulter = &HardcodedRoleMapperCustomDefaulter{}
+var _ admission.Defaulter[*v1alpha1.HardcodedRoleMapper] = &HardcodedRoleMapperCustomDefaulter{}
 
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind HardcodedRoleMapper.
-func (d *HardcodedRoleMapperCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	hardcodedrolemapper, ok := obj.(*v1alpha1.HardcodedRoleMapper)
-
-	if !ok {
-		return fmt.Errorf("expected an HardcodedRoleMapper object but got %T", obj)
-	}
-	hardcodedrolemapperlog.Info("Defaulting for HardcodedRoleMapper", "name", hardcodedrolemapper.GetName())
+// Default implements admission.Defaulter so a webhook will be registered for the Kind HardcodedRoleMapper.
+func (d *HardcodedRoleMapperCustomDefaulter) Default(_ context.Context, mapper *v1alpha1.HardcodedRoleMapper) error {
+	hardcodedrolemapperlog.Info("Defaulting for HardcodedRoleMapper", "name", mapper.GetName())
 
 	// TODO(user): fill in your defaulting logic.
 
@@ -82,41 +74,30 @@ type HardcodedRoleMapperCustomValidator struct {
 	// TODO(user): Add more fields as needed for validation
 }
 
-var _ webhook.CustomValidator = &HardcodedRoleMapperCustomValidator{}
+var _ admission.Validator[*v1alpha1.HardcodedRoleMapper] = &HardcodedRoleMapperCustomValidator{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type HardcodedRoleMapper.
-func (v *HardcodedRoleMapperCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	hardcodedrolemapper, ok := obj.(*v1alpha1.HardcodedRoleMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a HardcodedRoleMapper object but got %T", obj)
-	}
-	hardcodedrolemapperlog.Info("Validation for HardcodedRoleMapper upon creation", "name", hardcodedrolemapper.GetName())
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type HardcodedRoleMapper.
+func (v *HardcodedRoleMapperCustomValidator) ValidateCreate(_ context.Context, mapper *v1alpha1.HardcodedRoleMapper) (admission.Warnings, error) {
+	hardcodedrolemapperlog.Info("Validation for HardcodedRoleMapper upon creation", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object creation.
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type HardcodedRoleMapper.
-func (v *HardcodedRoleMapperCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	hardcodedrolemapper, ok := newObj.(*v1alpha1.HardcodedRoleMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a HardcodedRoleMapper object for the newObj but got %T", newObj)
-	}
-	hardcodedrolemapperlog.Info("Validation for HardcodedRoleMapper upon update", "name", hardcodedrolemapper.GetName())
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type HardcodedRoleMapper.
+func (v *HardcodedRoleMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *v1alpha1.HardcodedRoleMapper) (admission.Warnings, error) {
+	_ = oldMapper
+	hardcodedrolemapperlog.Info("Validation for HardcodedRoleMapper upon update", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object update.
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type HardcodedRoleMapper.
-func (v *HardcodedRoleMapperCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	hardcodedrolemapper, ok := obj.(*v1alpha1.HardcodedRoleMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a HardcodedRoleMapper object but got %T", obj)
-	}
-	hardcodedrolemapperlog.Info("Validation for HardcodedRoleMapper upon deletion", "name", hardcodedrolemapper.GetName())
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type HardcodedRoleMapper.
+func (v *HardcodedRoleMapperCustomValidator) ValidateDelete(_ context.Context, mapper *v1alpha1.HardcodedRoleMapper) (admission.Warnings, error) {
+	hardcodedrolemapperlog.Info("Validation for HardcodedRoleMapper upon deletion", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object deletion.
 

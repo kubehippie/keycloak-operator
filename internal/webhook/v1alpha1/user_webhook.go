@@ -22,10 +22,8 @@ import (
 	"strings"
 
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -35,7 +33,7 @@ var userlog = logf.Log.WithName("user-resource")
 
 // SetupUserWebhookWithManager registers the webhook for User in the manager.
 func SetupUserWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.User{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.User{}).
 		WithValidator(&UserCustomValidator{}).
 		WithDefaulter(&UserCustomDefaulter{}).
 		Complete()
@@ -50,10 +48,11 @@ func SetupUserWebhookWithManager(mgr ctrl.Manager) error {
 // as it is used only for temporary operations and does not need to be deeply copied.
 type UserCustomDefaulter struct{}
 
-var _ webhook.CustomDefaulter = &UserCustomDefaulter{}
+var _ admission.Defaulter[*v1alpha1.User] = &UserCustomDefaulter{}
 
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind User.
-func (d *UserCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
+// Default implements admission.Defaulter so a webhook will be registered for the Kind User.
+func (d *UserCustomDefaulter) Default(_ context.Context, user *v1alpha1.User) error {
+	_ = user
 	return nil
 }
 
@@ -66,30 +65,17 @@ func (d *UserCustomDefaulter) Default(_ context.Context, obj runtime.Object) err
 // as this struct is used only for temporary operations and does not need to be deeply copied.
 type UserCustomValidator struct{}
 
-var _ webhook.CustomValidator = &UserCustomValidator{}
+var _ admission.Validator[*v1alpha1.User] = &UserCustomValidator{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type User.
-func (v *UserCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	user, ok := obj.(*v1alpha1.User)
-	if !ok {
-		return nil, fmt.Errorf("expected a User object but got %T", obj)
-	}
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type User.
+func (v *UserCustomValidator) ValidateCreate(_ context.Context, user *v1alpha1.User) (admission.Warnings, error) {
 	userlog.Info("Validation for User upon creation", "name", user.GetName())
 
 	return nil, v.validate(user)
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type User.
-func (v *UserCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	oldUser, ok := oldObj.(*v1alpha1.User)
-	if !ok {
-		return nil, fmt.Errorf("expected a User object for the oldObj but got %T", oldObj)
-	}
-
-	user, ok := newObj.(*v1alpha1.User)
-	if !ok {
-		return nil, fmt.Errorf("expected a User object for the newObj but got %T", newObj)
-	}
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type User.
+func (v *UserCustomValidator) ValidateUpdate(_ context.Context, oldUser, user *v1alpha1.User) (admission.Warnings, error) {
 	userlog.Info("Validation for User upon update", "name", user.GetName())
 
 	if err := v.validate(user); err != nil {
@@ -103,8 +89,9 @@ func (v *UserCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj r
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type User.
-func (v *UserCustomValidator) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type User.
+func (v *UserCustomValidator) ValidateDelete(_ context.Context, user *v1alpha1.User) (admission.Warnings, error) {
+	_ = user
 	return nil, nil
 }
 

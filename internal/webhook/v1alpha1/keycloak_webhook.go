@@ -24,15 +24,13 @@ import (
 
 	"github.com/kubehippie/keycloak-operator/api/common"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // SetupKeycloakWebhookWithManager registers the webhook for Keycloak in the manager.
 func SetupKeycloakWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.Keycloak{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.Keycloak{}).
 		WithValidator(&KeycloakCustomValidator{}).
 		WithDefaulter(&KeycloakCustomDefaulter{}).
 		Complete()
@@ -47,10 +45,11 @@ func SetupKeycloakWebhookWithManager(mgr ctrl.Manager) error {
 // as it is used only for temporary operations and does not need to be deeply copied.
 type KeycloakCustomDefaulter struct{}
 
-var _ webhook.CustomDefaulter = &KeycloakCustomDefaulter{}
+var _ admission.Defaulter[*v1alpha1.Keycloak] = &KeycloakCustomDefaulter{}
 
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind Keycloak.
-func (d *KeycloakCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
+// Default implements admission.Defaulter so a webhook will be registered for the Kind Keycloak.
+func (d *KeycloakCustomDefaulter) Default(_ context.Context, keycloak *v1alpha1.Keycloak) error {
+	_ = keycloak
 	return nil
 }
 
@@ -63,30 +62,22 @@ func (d *KeycloakCustomDefaulter) Default(_ context.Context, obj runtime.Object)
 // as this struct is used only for temporary operations and does not need to be deeply copied.
 type KeycloakCustomValidator struct{}
 
-var _ webhook.CustomValidator = &KeycloakCustomValidator{}
+var _ admission.Validator[*v1alpha1.Keycloak] = &KeycloakCustomValidator{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type Keycloak.
-func (v *KeycloakCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	keycloak, ok := obj.(*v1alpha1.Keycloak)
-	if !ok {
-		return nil, fmt.Errorf("expected a Keycloak object but got %T", obj)
-	}
-
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type Keycloak.
+func (v *KeycloakCustomValidator) ValidateCreate(_ context.Context, keycloak *v1alpha1.Keycloak) (admission.Warnings, error) {
 	return nil, v.validate(keycloak)
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type Keycloak.
-func (v *KeycloakCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	keycloak, ok := newObj.(*v1alpha1.Keycloak)
-	if !ok {
-		return nil, fmt.Errorf("expected a Keycloak object for the newObj but got %T", newObj)
-	}
-
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type Keycloak.
+func (v *KeycloakCustomValidator) ValidateUpdate(_ context.Context, oldKeycloak, keycloak *v1alpha1.Keycloak) (admission.Warnings, error) {
+	_ = oldKeycloak
 	return nil, v.validate(keycloak)
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type Keycloak.
-func (v *KeycloakCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type Keycloak.
+func (v *KeycloakCustomValidator) ValidateDelete(_ context.Context, keycloak *v1alpha1.Keycloak) (admission.Warnings, error) {
+	_ = keycloak
 	return nil, nil
 }
 

@@ -18,13 +18,10 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -34,7 +31,7 @@ var clientscopelog = logf.Log.WithName("clientscope-resource")
 
 // SetupClientScopeWebhookWithManager registers the webhook for ClientScope in the manager.
 func SetupClientScopeWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.ClientScope{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.ClientScope{}).
 		WithValidator(&ClientScopeCustomValidator{}).
 		WithDefaulter(&ClientScopeCustomDefaulter{}).
 		Complete()
@@ -53,16 +50,11 @@ type ClientScopeCustomDefaulter struct {
 	// TODO(user): Add more fields as needed for defaulting
 }
 
-var _ webhook.CustomDefaulter = &ClientScopeCustomDefaulter{}
+var _ admission.Defaulter[*v1alpha1.ClientScope] = &ClientScopeCustomDefaulter{}
 
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind ClientScope.
-func (d *ClientScopeCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	clientscope, ok := obj.(*v1alpha1.ClientScope)
-
-	if !ok {
-		return fmt.Errorf("expected an ClientScope object but got %T", obj)
-	}
-	clientscopelog.Info("Defaulting for ClientScope", "name", clientscope.GetName())
+// Default implements admission.Defaulter so a webhook will be registered for the Kind ClientScope.
+func (d *ClientScopeCustomDefaulter) Default(_ context.Context, clientScope *v1alpha1.ClientScope) error {
+	clientscopelog.Info("Defaulting for ClientScope", "name", clientScope.GetName())
 
 	// TODO(user): fill in your defaulting logic.
 
@@ -82,41 +74,30 @@ type ClientScopeCustomValidator struct {
 	// TODO(user): Add more fields as needed for validation
 }
 
-var _ webhook.CustomValidator = &ClientScopeCustomValidator{}
+var _ admission.Validator[*v1alpha1.ClientScope] = &ClientScopeCustomValidator{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type ClientScope.
-func (v *ClientScopeCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	clientscope, ok := obj.(*v1alpha1.ClientScope)
-	if !ok {
-		return nil, fmt.Errorf("expected a ClientScope object but got %T", obj)
-	}
-	clientscopelog.Info("Validation for ClientScope upon creation", "name", clientscope.GetName())
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type ClientScope.
+func (v *ClientScopeCustomValidator) ValidateCreate(_ context.Context, clientScope *v1alpha1.ClientScope) (admission.Warnings, error) {
+	clientscopelog.Info("Validation for ClientScope upon creation", "name", clientScope.GetName())
 
 	// TODO(user): fill in your validation logic upon object creation.
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type ClientScope.
-func (v *ClientScopeCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	clientscope, ok := newObj.(*v1alpha1.ClientScope)
-	if !ok {
-		return nil, fmt.Errorf("expected a ClientScope object for the newObj but got %T", newObj)
-	}
-	clientscopelog.Info("Validation for ClientScope upon update", "name", clientscope.GetName())
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type ClientScope.
+func (v *ClientScopeCustomValidator) ValidateUpdate(_ context.Context, oldClientScope, clientScope *v1alpha1.ClientScope) (admission.Warnings, error) {
+	_ = oldClientScope
+	clientscopelog.Info("Validation for ClientScope upon update", "name", clientScope.GetName())
 
 	// TODO(user): fill in your validation logic upon object update.
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type ClientScope.
-func (v *ClientScopeCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	clientscope, ok := obj.(*v1alpha1.ClientScope)
-	if !ok {
-		return nil, fmt.Errorf("expected a ClientScope object but got %T", obj)
-	}
-	clientscopelog.Info("Validation for ClientScope upon deletion", "name", clientscope.GetName())
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type ClientScope.
+func (v *ClientScopeCustomValidator) ValidateDelete(_ context.Context, clientScope *v1alpha1.ClientScope) (admission.Warnings, error) {
+	clientscopelog.Info("Validation for ClientScope upon deletion", "name", clientScope.GetName())
 
 	// TODO(user): fill in your validation logic upon object deletion.
 
