@@ -13,6 +13,7 @@ name: general
 
 permissions:
   contents: read
+  code-quality: write
 
 jobs:
   lint:
