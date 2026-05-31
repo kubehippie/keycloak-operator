@@ -20,7 +20,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Nerzal/gocloak/v13"
+	"github.com/Nerzal/gocloak/v14"
 	"github.com/kubehippie/keycloak-operator/api/common"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
