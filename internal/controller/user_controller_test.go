@@ -57,7 +57,7 @@ var _ = Describe("User Controller", func() {
 						RealmRef: &common.RealmRef{
 							Name: utils.StandardTestRealmName,
 						},
-						Username: "testuser",
+						Username: testUserUsername,
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
@@ -154,6 +154,9 @@ var _ = Describe("userToGocloak", func() {
 		g := userToGocloak(u)
 		Expect(g.Email).To(BeNil())
 		Expect(g.Enabled).To(BeNil())
+		Expect(g.EmailVerified).To(BeNil())
+		Expect(g.FirstName).To(BeNil())
+		Expect(g.LastName).To(BeNil())
 		Expect(g.Attributes).To(BeNil())
 		Expect(g.RequiredActions).To(BeNil())
 	})
