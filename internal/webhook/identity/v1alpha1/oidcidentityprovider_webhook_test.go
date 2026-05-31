@@ -17,24 +17,22 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
-	// TODO (user): Add any additional imports if needed
 )
 
 var _ = Describe("OIDCIdentityProvider Webhook", func() {
 	var (
-		obj       *identityv1alpha1.OIDCIdentityProvider
-		oldObj    *identityv1alpha1.OIDCIdentityProvider
+		obj       *v1alpha1.OIDCIdentityProvider
+		oldObj    *v1alpha1.OIDCIdentityProvider
 		validator OIDCIdentityProviderCustomValidator
 		defaulter OIDCIdentityProviderCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &identityv1alpha1.OIDCIdentityProvider{}
-		oldObj = &identityv1alpha1.OIDCIdentityProvider{}
+		obj = &v1alpha1.OIDCIdentityProvider{}
+		oldObj = &v1alpha1.OIDCIdentityProvider{}
 		validator = OIDCIdentityProviderCustomValidator{}
 		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		defaulter = OIDCIdentityProviderCustomDefaulter{}

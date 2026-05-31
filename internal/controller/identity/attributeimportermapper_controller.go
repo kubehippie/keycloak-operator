@@ -19,12 +19,11 @@ package identity
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-
-	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 )
 
 // AttributeImporterMapperReconciler reconciles a AttributeImporterMapper object
@@ -57,7 +56,7 @@ func (r *AttributeImporterMapperReconciler) Reconcile(ctx context.Context, req c
 // SetupWithManager sets up the controller with the Manager.
 func (r *AttributeImporterMapperReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&identityv1alpha1.AttributeImporterMapper{}).
+		For(&v1alpha1.AttributeImporterMapper{}).
 		Named("identity-attributeimportermapper").
 		Complete(r)
 }

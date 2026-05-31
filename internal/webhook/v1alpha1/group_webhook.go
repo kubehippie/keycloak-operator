@@ -21,13 +21,12 @@ import (
 	"fmt"
 	"strings"
 
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
 
 // nolint:unused
@@ -36,7 +35,7 @@ var grouplog = logf.Log.WithName("group-resource")
 
 // SetupGroupWebhookWithManager registers the webhook for Group in the manager.
 func SetupGroupWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&keycloakoperatorwebhippiedev1alpha1.Group{}).
+	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.Group{}).
 		WithValidator(&GroupCustomValidator{}).
 		WithDefaulter(&GroupCustomDefaulter{}).
 		Complete()
@@ -71,7 +70,7 @@ var _ webhook.CustomValidator = &GroupCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type Group.
 func (v *GroupCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	group, ok := obj.(*keycloakoperatorwebhippiedev1alpha1.Group)
+	group, ok := obj.(*v1alpha1.Group)
 	if !ok {
 		return nil, fmt.Errorf("expected a Group object but got %T", obj)
 	}
@@ -82,12 +81,12 @@ func (v *GroupCustomValidator) ValidateCreate(_ context.Context, obj runtime.Obj
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type Group.
 func (v *GroupCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	oldGroup, ok := oldObj.(*keycloakoperatorwebhippiedev1alpha1.Group)
+	oldGroup, ok := oldObj.(*v1alpha1.Group)
 	if !ok {
 		return nil, fmt.Errorf("expected a Group object for the oldObj but got %T", oldObj)
 	}
 
-	group, ok := newObj.(*keycloakoperatorwebhippiedev1alpha1.Group)
+	group, ok := newObj.(*v1alpha1.Group)
 	if !ok {
 		return nil, fmt.Errorf("expected a Group object for the newObj but got %T", newObj)
 	}
@@ -109,7 +108,7 @@ func (v *GroupCustomValidator) ValidateDelete(_ context.Context, obj runtime.Obj
 	return nil, nil
 }
 
-func (v *GroupCustomValidator) validate(group *keycloakoperatorwebhippiedev1alpha1.Group) error {
+func (v *GroupCustomValidator) validate(group *v1alpha1.Group) error {
 	if group.Spec.RealmRef == nil || strings.TrimSpace(group.Spec.RealmRef.Name) == "" {
 		return fmt.Errorf("spec.realmRef.name must be set")
 	}

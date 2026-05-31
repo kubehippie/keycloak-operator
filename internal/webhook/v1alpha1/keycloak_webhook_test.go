@@ -17,32 +17,31 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/kubehippie/keycloak-operator/api/common"
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
 
 var _ = Describe("Keycloak Webhook", func() {
 	var (
-		obj       *keycloakoperatorwebhippiedev1alpha1.Keycloak
-		oldObj    *keycloakoperatorwebhippiedev1alpha1.Keycloak
+		obj       *v1alpha1.Keycloak
+		oldObj    *v1alpha1.Keycloak
 		validator KeycloakCustomValidator
 		defaulter KeycloakCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &keycloakoperatorwebhippiedev1alpha1.Keycloak{}
-		oldObj = &keycloakoperatorwebhippiedev1alpha1.Keycloak{}
+		obj = &v1alpha1.Keycloak{}
+		oldObj = &v1alpha1.Keycloak{}
 		validator = KeycloakCustomValidator{}
 		defaulter = KeycloakCustomDefaulter{}
 		Expect(validator).NotTo(BeNil())
 		Expect(defaulter).NotTo(BeNil())
 	})
 
-	validSpec := func() keycloakoperatorwebhippiedev1alpha1.KeycloakSpec {
-		return keycloakoperatorwebhippiedev1alpha1.KeycloakSpec{
+	validSpec := func() v1alpha1.KeycloakSpec {
+		return v1alpha1.KeycloakSpec{
 			URL:       "https://keycloak.example.com",
 			RealmName: "master",
 			Username:  &common.SecretKeyRefOrVal{Value: "admin"},
@@ -65,7 +64,7 @@ var _ = Describe("Keycloak Webhook", func() {
 		})
 
 		It("Should admit creation when credentials are supplied as secret references", func() {
-			obj.Spec = keycloakoperatorwebhippiedev1alpha1.KeycloakSpec{
+			obj.Spec = v1alpha1.KeycloakSpec{
 				URL:       "https://keycloak.example.com",
 				RealmName: "master",
 				Username: &common.SecretKeyRefOrVal{

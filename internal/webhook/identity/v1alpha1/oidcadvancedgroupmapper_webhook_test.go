@@ -17,24 +17,22 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
-	// TODO (user): Add any additional imports if needed
 )
 
 var _ = Describe("OIDCAdvancedGroupMapper Webhook", func() {
 	var (
-		obj       *identityv1alpha1.OIDCAdvancedGroupMapper
-		oldObj    *identityv1alpha1.OIDCAdvancedGroupMapper
+		obj       *v1alpha1.OIDCAdvancedGroupMapper
+		oldObj    *v1alpha1.OIDCAdvancedGroupMapper
 		validator OIDCAdvancedGroupMapperCustomValidator
 		defaulter OIDCAdvancedGroupMapperCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &identityv1alpha1.OIDCAdvancedGroupMapper{}
-		oldObj = &identityv1alpha1.OIDCAdvancedGroupMapper{}
+		obj = &v1alpha1.OIDCAdvancedGroupMapper{}
+		oldObj = &v1alpha1.OIDCAdvancedGroupMapper{}
 		validator = OIDCAdvancedGroupMapperCustomValidator{}
 		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		defaulter = OIDCAdvancedGroupMapperCustomDefaulter{}

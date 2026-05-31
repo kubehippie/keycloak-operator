@@ -21,6 +21,7 @@ import (
 
 	"github.com/kubehippie/keycloak-operator/api/common"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -37,7 +38,7 @@ var _ = Describe("Keycloak Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default",
+			Namespace: utils.StandardTestNamespace,
 		}
 
 		keycloak := &v1alpha1.Keycloak{}
@@ -49,13 +50,13 @@ var _ = Describe("Keycloak Controller", func() {
 				resource := &v1alpha1.Keycloak{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
-						Namespace: "default",
+						Namespace: utils.StandardTestNamespace,
 					},
 					Spec: v1alpha1.KeycloakSpec{
 						URL:       "https://keycloak.example.com",
 						RealmName: "master",
-						Username:  &common.SecretKeyRefOrVal{Value: "admin"},
-						Password:  &common.SecretKeyRefOrVal{Value: "secret"},
+						Username:  &common.SecretKeyRefOrVal{Value: "devops"},
+						Password:  &common.SecretKeyRefOrVal{Value: "p455w0rd"},
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())

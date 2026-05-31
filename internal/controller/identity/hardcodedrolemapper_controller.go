@@ -19,12 +19,11 @@ package identity
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-
-	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 )
 
 // HardcodedRoleMapperReconciler reconciles a HardcodedRoleMapper object
@@ -57,7 +56,7 @@ func (r *HardcodedRoleMapperReconciler) Reconcile(ctx context.Context, req ctrl.
 // SetupWithManager sets up the controller with the Manager.
 func (r *HardcodedRoleMapperReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&identityv1alpha1.HardcodedRoleMapper{}).
+		For(&v1alpha1.HardcodedRoleMapper{}).
 		Named("identity-hardcodedrolemapper").
 		Complete(r)
 }

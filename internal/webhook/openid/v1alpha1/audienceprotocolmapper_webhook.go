@@ -20,13 +20,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 )
 
 // nolint:unused
@@ -35,7 +34,7 @@ var audienceprotocolmapperlog = logf.Log.WithName("audienceprotocolmapper-resour
 
 // SetupAudienceProtocolMapperWebhookWithManager registers the webhook for AudienceProtocolMapper in the manager.
 func SetupAudienceProtocolMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&openidv1alpha1.AudienceProtocolMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.AudienceProtocolMapper{}).
 		WithValidator(&AudienceProtocolMapperCustomValidator{}).
 		WithDefaulter(&AudienceProtocolMapperCustomDefaulter{}).
 		Complete()
@@ -58,7 +57,7 @@ var _ webhook.CustomDefaulter = &AudienceProtocolMapperCustomDefaulter{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind AudienceProtocolMapper.
 func (d *AudienceProtocolMapperCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	audienceprotocolmapper, ok := obj.(*openidv1alpha1.AudienceProtocolMapper)
+	audienceprotocolmapper, ok := obj.(*v1alpha1.AudienceProtocolMapper)
 
 	if !ok {
 		return fmt.Errorf("expected an AudienceProtocolMapper object but got %T", obj)
@@ -87,7 +86,7 @@ var _ webhook.CustomValidator = &AudienceProtocolMapperCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type AudienceProtocolMapper.
 func (v *AudienceProtocolMapperCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	audienceprotocolmapper, ok := obj.(*openidv1alpha1.AudienceProtocolMapper)
+	audienceprotocolmapper, ok := obj.(*v1alpha1.AudienceProtocolMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a AudienceProtocolMapper object but got %T", obj)
 	}
@@ -100,7 +99,7 @@ func (v *AudienceProtocolMapperCustomValidator) ValidateCreate(_ context.Context
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type AudienceProtocolMapper.
 func (v *AudienceProtocolMapperCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	audienceprotocolmapper, ok := newObj.(*openidv1alpha1.AudienceProtocolMapper)
+	audienceprotocolmapper, ok := newObj.(*v1alpha1.AudienceProtocolMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a AudienceProtocolMapper object for the newObj but got %T", newObj)
 	}
@@ -113,7 +112,7 @@ func (v *AudienceProtocolMapperCustomValidator) ValidateUpdate(_ context.Context
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type AudienceProtocolMapper.
 func (v *AudienceProtocolMapperCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	audienceprotocolmapper, ok := obj.(*openidv1alpha1.AudienceProtocolMapper)
+	audienceprotocolmapper, ok := obj.(*v1alpha1.AudienceProtocolMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a AudienceProtocolMapper object but got %T", obj)
 	}

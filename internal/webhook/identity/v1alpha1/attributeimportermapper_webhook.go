@@ -20,13 +20,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
-	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 )
 
 // nolint:unused
@@ -35,7 +34,7 @@ var attributeimportermapperlog = logf.Log.WithName("attributeimportermapper-reso
 
 // SetupAttributeImporterMapperWebhookWithManager registers the webhook for AttributeImporterMapper in the manager.
 func SetupAttributeImporterMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&identityv1alpha1.AttributeImporterMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.AttributeImporterMapper{}).
 		WithValidator(&AttributeImporterMapperCustomValidator{}).
 		WithDefaulter(&AttributeImporterMapperCustomDefaulter{}).
 		Complete()
@@ -58,7 +57,7 @@ var _ webhook.CustomDefaulter = &AttributeImporterMapperCustomDefaulter{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind AttributeImporterMapper.
 func (d *AttributeImporterMapperCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	attributeimportermapper, ok := obj.(*identityv1alpha1.AttributeImporterMapper)
+	attributeimportermapper, ok := obj.(*v1alpha1.AttributeImporterMapper)
 
 	if !ok {
 		return fmt.Errorf("expected an AttributeImporterMapper object but got %T", obj)
@@ -87,7 +86,7 @@ var _ webhook.CustomValidator = &AttributeImporterMapperCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type AttributeImporterMapper.
 func (v *AttributeImporterMapperCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	attributeimportermapper, ok := obj.(*identityv1alpha1.AttributeImporterMapper)
+	attributeimportermapper, ok := obj.(*v1alpha1.AttributeImporterMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a AttributeImporterMapper object but got %T", obj)
 	}
@@ -100,7 +99,7 @@ func (v *AttributeImporterMapperCustomValidator) ValidateCreate(_ context.Contex
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type AttributeImporterMapper.
 func (v *AttributeImporterMapperCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	attributeimportermapper, ok := newObj.(*identityv1alpha1.AttributeImporterMapper)
+	attributeimportermapper, ok := newObj.(*v1alpha1.AttributeImporterMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a AttributeImporterMapper object for the newObj but got %T", newObj)
 	}
@@ -113,7 +112,7 @@ func (v *AttributeImporterMapperCustomValidator) ValidateUpdate(_ context.Contex
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type AttributeImporterMapper.
 func (v *AttributeImporterMapperCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	attributeimportermapper, ok := obj.(*identityv1alpha1.AttributeImporterMapper)
+	attributeimportermapper, ok := obj.(*v1alpha1.AttributeImporterMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a AttributeImporterMapper object but got %T", obj)
 	}

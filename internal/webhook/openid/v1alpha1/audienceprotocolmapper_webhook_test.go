@@ -17,24 +17,22 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	// TODO (user): Add any additional imports if needed
 )
 
 var _ = Describe("AudienceProtocolMapper Webhook", func() {
 	var (
-		obj       *openidv1alpha1.AudienceProtocolMapper
-		oldObj    *openidv1alpha1.AudienceProtocolMapper
+		obj       *v1alpha1.AudienceProtocolMapper
+		oldObj    *v1alpha1.AudienceProtocolMapper
 		validator AudienceProtocolMapperCustomValidator
 		defaulter AudienceProtocolMapperCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &openidv1alpha1.AudienceProtocolMapper{}
-		oldObj = &openidv1alpha1.AudienceProtocolMapper{}
+		obj = &v1alpha1.AudienceProtocolMapper{}
+		oldObj = &v1alpha1.AudienceProtocolMapper{}
 		validator = AudienceProtocolMapperCustomValidator{}
 		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		defaulter = AudienceProtocolMapperCustomDefaulter{}

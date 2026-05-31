@@ -17,24 +17,22 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	// TODO (user): Add any additional imports if needed
 )
 
 var _ = Describe("GroupMembershipProtocolMapper Webhook", func() {
 	var (
-		obj       *openidv1alpha1.GroupMembershipProtocolMapper
-		oldObj    *openidv1alpha1.GroupMembershipProtocolMapper
+		obj       *v1alpha1.GroupMembershipProtocolMapper
+		oldObj    *v1alpha1.GroupMembershipProtocolMapper
 		validator GroupMembershipProtocolMapperCustomValidator
 		defaulter GroupMembershipProtocolMapperCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &openidv1alpha1.GroupMembershipProtocolMapper{}
-		oldObj = &openidv1alpha1.GroupMembershipProtocolMapper{}
+		obj = &v1alpha1.GroupMembershipProtocolMapper{}
+		oldObj = &v1alpha1.GroupMembershipProtocolMapper{}
 		validator = GroupMembershipProtocolMapperCustomValidator{}
 		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		defaulter = GroupMembershipProtocolMapperCustomDefaulter{}

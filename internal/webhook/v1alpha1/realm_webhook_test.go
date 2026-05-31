@@ -17,34 +17,34 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/kubehippie/keycloak-operator/api/common"
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
 
 var _ = Describe("Realm Webhook", func() {
 	var (
-		obj       *keycloakoperatorwebhippiedev1alpha1.Realm
-		oldObj    *keycloakoperatorwebhippiedev1alpha1.Realm
+		obj       *v1alpha1.Realm
+		oldObj    *v1alpha1.Realm
 		validator RealmCustomValidator
 		defaulter RealmCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &keycloakoperatorwebhippiedev1alpha1.Realm{}
-		oldObj = &keycloakoperatorwebhippiedev1alpha1.Realm{}
+		obj = &v1alpha1.Realm{}
+		oldObj = &v1alpha1.Realm{}
 		validator = RealmCustomValidator{}
 		defaulter = RealmCustomDefaulter{}
 		Expect(validator).NotTo(BeNil())
 		Expect(defaulter).NotTo(BeNil())
 	})
 
-	validSpec := func() keycloakoperatorwebhippiedev1alpha1.RealmSpec {
-		return keycloakoperatorwebhippiedev1alpha1.RealmSpec{
-			KeycloakRef: &common.KeycloakRef{Name: "my-kc"},
-			Name:        "test-realm",
+	validSpec := func() v1alpha1.RealmSpec {
+		return v1alpha1.RealmSpec{
+			KeycloakRef: &common.KeycloakRef{Name: utils.StandardTestKeycloakName},
+			Name:        utils.StandardTestRealmName,
 		}
 	}
 

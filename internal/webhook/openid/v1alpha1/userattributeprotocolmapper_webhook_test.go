@@ -17,24 +17,22 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	// TODO (user): Add any additional imports if needed
 )
 
 var _ = Describe("UserAttributeProtocolMapper Webhook", func() {
 	var (
-		obj       *openidv1alpha1.UserAttributeProtocolMapper
-		oldObj    *openidv1alpha1.UserAttributeProtocolMapper
+		obj       *v1alpha1.UserAttributeProtocolMapper
+		oldObj    *v1alpha1.UserAttributeProtocolMapper
 		validator UserAttributeProtocolMapperCustomValidator
 		defaulter UserAttributeProtocolMapperCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &openidv1alpha1.UserAttributeProtocolMapper{}
-		oldObj = &openidv1alpha1.UserAttributeProtocolMapper{}
+		obj = &v1alpha1.UserAttributeProtocolMapper{}
+		oldObj = &v1alpha1.UserAttributeProtocolMapper{}
 		validator = UserAttributeProtocolMapperCustomValidator{}
 		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		defaulter = UserAttributeProtocolMapperCustomDefaulter{}

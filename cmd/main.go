@@ -25,6 +25,15 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
+	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/internal/controller"
+	identitycontroller "github.com/kubehippie/keycloak-operator/internal/controller/identity"
+	openidcontroller "github.com/kubehippie/keycloak-operator/internal/controller/openid"
+	webhookidentityv1alpha1 "github.com/kubehippie/keycloak-operator/internal/webhook/identity/v1alpha1"
+	webhookopenidv1alpha1 "github.com/kubehippie/keycloak-operator/internal/webhook/openid/v1alpha1"
+	webhookv1alpha1 "github.com/kubehippie/keycloak-operator/internal/webhook/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -34,16 +43,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
-
-	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
-	"github.com/kubehippie/keycloak-operator/internal/controller"
-	identitycontroller "github.com/kubehippie/keycloak-operator/internal/controller/identity"
-	openidcontroller "github.com/kubehippie/keycloak-operator/internal/controller/openid"
-	webhookidentityv1alpha1 "github.com/kubehippie/keycloak-operator/internal/webhook/identity/v1alpha1"
-	webhookopenidv1alpha1 "github.com/kubehippie/keycloak-operator/internal/webhook/openid/v1alpha1"
-	webhookv1alpha1 "github.com/kubehippie/keycloak-operator/internal/webhook/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -55,7 +54,7 @@ var (
 func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
-	utilruntime.Must(keycloakoperatorwebhippiedev1alpha1.AddToScheme(scheme))
+	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	utilruntime.Must(identityv1alpha1.AddToScheme(scheme))
 	utilruntime.Must(openidv1alpha1.AddToScheme(scheme))
 	// +kubebuilder:scaffold:scheme

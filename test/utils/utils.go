@@ -31,6 +31,15 @@ import (
 const (
 	defaultKindBinary  = "kind"
 	defaultKindCluster = "kind"
+
+	// StandardTestNamespace defines the standard namespace for test execution.
+	StandardTestNamespace = "default"
+
+	// StandardTestKeycloakName defines the standard keycloak name for test execution.
+	StandardTestKeycloakName = "test-keycloak"
+
+	// StandardTestRealmName defines the standard realm name for test execution.
+	StandardTestRealmName = "test-realm"
 )
 
 // InstallKeycloak deploys Keycloak into the Kind cluster using the codecentric

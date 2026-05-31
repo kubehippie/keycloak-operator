@@ -20,13 +20,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
-	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 )
 
 // nolint:unused
@@ -35,7 +34,7 @@ var oidcidentityproviderlog = logf.Log.WithName("oidcidentityprovider-resource")
 
 // SetupOIDCIdentityProviderWebhookWithManager registers the webhook for OIDCIdentityProvider in the manager.
 func SetupOIDCIdentityProviderWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&identityv1alpha1.OIDCIdentityProvider{}).
+	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.OIDCIdentityProvider{}).
 		WithValidator(&OIDCIdentityProviderCustomValidator{}).
 		WithDefaulter(&OIDCIdentityProviderCustomDefaulter{}).
 		Complete()
@@ -58,7 +57,7 @@ var _ webhook.CustomDefaulter = &OIDCIdentityProviderCustomDefaulter{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind OIDCIdentityProvider.
 func (d *OIDCIdentityProviderCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	oidcidentityprovider, ok := obj.(*identityv1alpha1.OIDCIdentityProvider)
+	oidcidentityprovider, ok := obj.(*v1alpha1.OIDCIdentityProvider)
 
 	if !ok {
 		return fmt.Errorf("expected an OIDCIdentityProvider object but got %T", obj)
@@ -87,7 +86,7 @@ var _ webhook.CustomValidator = &OIDCIdentityProviderCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type OIDCIdentityProvider.
 func (v *OIDCIdentityProviderCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	oidcidentityprovider, ok := obj.(*identityv1alpha1.OIDCIdentityProvider)
+	oidcidentityprovider, ok := obj.(*v1alpha1.OIDCIdentityProvider)
 	if !ok {
 		return nil, fmt.Errorf("expected a OIDCIdentityProvider object but got %T", obj)
 	}
@@ -100,7 +99,7 @@ func (v *OIDCIdentityProviderCustomValidator) ValidateCreate(_ context.Context, 
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type OIDCIdentityProvider.
 func (v *OIDCIdentityProviderCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	oidcidentityprovider, ok := newObj.(*identityv1alpha1.OIDCIdentityProvider)
+	oidcidentityprovider, ok := newObj.(*v1alpha1.OIDCIdentityProvider)
 	if !ok {
 		return nil, fmt.Errorf("expected a OIDCIdentityProvider object for the newObj but got %T", newObj)
 	}
@@ -113,7 +112,7 @@ func (v *OIDCIdentityProviderCustomValidator) ValidateUpdate(_ context.Context, 
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type OIDCIdentityProvider.
 func (v *OIDCIdentityProviderCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	oidcidentityprovider, ok := obj.(*identityv1alpha1.OIDCIdentityProvider)
+	oidcidentityprovider, ok := obj.(*v1alpha1.OIDCIdentityProvider)
 	if !ok {
 		return nil, fmt.Errorf("expected a OIDCIdentityProvider object but got %T", obj)
 	}

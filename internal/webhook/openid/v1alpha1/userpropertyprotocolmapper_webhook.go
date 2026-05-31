@@ -20,13 +20,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 )
 
 // nolint:unused
@@ -35,7 +34,7 @@ var userpropertyprotocolmapperlog = logf.Log.WithName("userpropertyprotocolmappe
 
 // SetupUserPropertyProtocolMapperWebhookWithManager registers the webhook for UserPropertyProtocolMapper in the manager.
 func SetupUserPropertyProtocolMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&openidv1alpha1.UserPropertyProtocolMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.UserPropertyProtocolMapper{}).
 		WithValidator(&UserPropertyProtocolMapperCustomValidator{}).
 		WithDefaulter(&UserPropertyProtocolMapperCustomDefaulter{}).
 		Complete()
@@ -58,7 +57,7 @@ var _ webhook.CustomDefaulter = &UserPropertyProtocolMapperCustomDefaulter{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind UserPropertyProtocolMapper.
 func (d *UserPropertyProtocolMapperCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	userpropertyprotocolmapper, ok := obj.(*openidv1alpha1.UserPropertyProtocolMapper)
+	userpropertyprotocolmapper, ok := obj.(*v1alpha1.UserPropertyProtocolMapper)
 
 	if !ok {
 		return fmt.Errorf("expected an UserPropertyProtocolMapper object but got %T", obj)
@@ -87,7 +86,7 @@ var _ webhook.CustomValidator = &UserPropertyProtocolMapperCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type UserPropertyProtocolMapper.
 func (v *UserPropertyProtocolMapperCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	userpropertyprotocolmapper, ok := obj.(*openidv1alpha1.UserPropertyProtocolMapper)
+	userpropertyprotocolmapper, ok := obj.(*v1alpha1.UserPropertyProtocolMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a UserPropertyProtocolMapper object but got %T", obj)
 	}
@@ -100,7 +99,7 @@ func (v *UserPropertyProtocolMapperCustomValidator) ValidateCreate(_ context.Con
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type UserPropertyProtocolMapper.
 func (v *UserPropertyProtocolMapperCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	userpropertyprotocolmapper, ok := newObj.(*openidv1alpha1.UserPropertyProtocolMapper)
+	userpropertyprotocolmapper, ok := newObj.(*v1alpha1.UserPropertyProtocolMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a UserPropertyProtocolMapper object for the newObj but got %T", newObj)
 	}
@@ -113,7 +112,7 @@ func (v *UserPropertyProtocolMapperCustomValidator) ValidateUpdate(_ context.Con
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type UserPropertyProtocolMapper.
 func (v *UserPropertyProtocolMapperCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	userpropertyprotocolmapper, ok := obj.(*openidv1alpha1.UserPropertyProtocolMapper)
+	userpropertyprotocolmapper, ok := obj.(*v1alpha1.UserPropertyProtocolMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a UserPropertyProtocolMapper object but got %T", obj)
 	}

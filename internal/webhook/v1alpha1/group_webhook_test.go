@@ -17,33 +17,33 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/kubehippie/keycloak-operator/api/common"
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
 
 var _ = Describe("Group Webhook", func() {
 	var (
-		obj       *keycloakoperatorwebhippiedev1alpha1.Group
-		oldObj    *keycloakoperatorwebhippiedev1alpha1.Group
+		obj       *v1alpha1.Group
+		oldObj    *v1alpha1.Group
 		validator GroupCustomValidator
 		defaulter GroupCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &keycloakoperatorwebhippiedev1alpha1.Group{}
-		oldObj = &keycloakoperatorwebhippiedev1alpha1.Group{}
+		obj = &v1alpha1.Group{}
+		oldObj = &v1alpha1.Group{}
 		validator = GroupCustomValidator{}
 		defaulter = GroupCustomDefaulter{}
 		Expect(validator).NotTo(BeNil())
 		Expect(defaulter).NotTo(BeNil())
 	})
 
-	validSpec := func() keycloakoperatorwebhippiedev1alpha1.GroupSpec {
-		return keycloakoperatorwebhippiedev1alpha1.GroupSpec{
-			RealmRef: &common.RealmRef{Kind: "Realm", Name: "my-realm"},
+	validSpec := func() v1alpha1.GroupSpec {
+		return v1alpha1.GroupSpec{
+			RealmRef: &common.RealmRef{Name: utils.StandardTestRealmName},
 			Name:     "admins",
 		}
 	}

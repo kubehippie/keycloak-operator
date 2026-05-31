@@ -19,12 +19,11 @@ package identity
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-
-	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 )
 
 // OIDCAdvancedGroupMapperReconciler reconciles a OIDCAdvancedGroupMapper object
@@ -57,7 +56,7 @@ func (r *OIDCAdvancedGroupMapperReconciler) Reconcile(ctx context.Context, req c
 // SetupWithManager sets up the controller with the Manager.
 func (r *OIDCAdvancedGroupMapperReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&identityv1alpha1.OIDCAdvancedGroupMapper{}).
+		For(&v1alpha1.OIDCAdvancedGroupMapper{}).
 		Named("identity-oidcadvancedgroupmapper").
 		Complete(r)
 }

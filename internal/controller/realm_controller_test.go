@@ -19,16 +19,15 @@ package controller
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/common"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/kubehippie/keycloak-operator/api/common"
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
 
 var _ = Describe("Realm Controller", func() {
@@ -39,24 +38,24 @@ var _ = Describe("Realm Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default",
+			Namespace: utils.StandardTestNamespace,
 		}
-		realm := &keycloakoperatorwebhippiedev1alpha1.Realm{}
+		realm := &v1alpha1.Realm{}
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind Realm")
 			err := k8sClient.Get(ctx, typeNamespacedName, realm)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &keycloakoperatorwebhippiedev1alpha1.Realm{
+				resource := &v1alpha1.Realm{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
-						Namespace: "default",
+						Namespace: utils.StandardTestNamespace,
 					},
-					Spec: keycloakoperatorwebhippiedev1alpha1.RealmSpec{
+					Spec: v1alpha1.RealmSpec{
 						KeycloakRef: &common.KeycloakRef{
-							Name: "test-keycloak",
+							Name: utils.StandardTestKeycloakName,
 						},
-						Name: "test-realm",
+						Name: utils.StandardTestRealmName,
 					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
@@ -64,7 +63,7 @@ var _ = Describe("Realm Controller", func() {
 		})
 
 		AfterEach(func() {
-			resource := &keycloakoperatorwebhippiedev1alpha1.Realm{}
+			resource := &v1alpha1.Realm{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 

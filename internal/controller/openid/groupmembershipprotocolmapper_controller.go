@@ -19,12 +19,11 @@ package openid
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 )
 
 // GroupMembershipProtocolMapperReconciler reconciles a GroupMembershipProtocolMapper object
@@ -57,7 +56,7 @@ func (r *GroupMembershipProtocolMapperReconciler) Reconcile(ctx context.Context,
 // SetupWithManager sets up the controller with the Manager.
 func (r *GroupMembershipProtocolMapperReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&openidv1alpha1.GroupMembershipProtocolMapper{}).
+		For(&v1alpha1.GroupMembershipProtocolMapper{}).
 		Named("openid-groupmembershipprotocolmapper").
 		Complete(r)
 }

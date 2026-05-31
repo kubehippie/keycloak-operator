@@ -27,10 +27,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"github.com/kubehippie/keycloak-operator/test/utils"
 )
 
 var (

@@ -19,15 +19,14 @@ package openid
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 )
 
 var _ = Describe("DefaultScopes Controller", func() {
@@ -38,18 +37,18 @@ var _ = Describe("DefaultScopes Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: utils.StandardTestNamespace,
 		}
-		defaultscopes := &openidv1alpha1.DefaultScopes{}
+		defaultscopes := &v1alpha1.DefaultScopes{}
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind DefaultScopes")
 			err := k8sClient.Get(ctx, typeNamespacedName, defaultscopes)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &openidv1alpha1.DefaultScopes{
+				resource := &v1alpha1.DefaultScopes{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
-						Namespace: "default",
+						Namespace: utils.StandardTestNamespace,
 					},
 					// TODO(user): Specify other spec details if needed.
 				}
@@ -59,7 +58,7 @@ var _ = Describe("DefaultScopes Controller", func() {
 
 		AfterEach(func() {
 			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &openidv1alpha1.DefaultScopes{}
+			resource := &v1alpha1.DefaultScopes{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 

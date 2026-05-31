@@ -20,13 +20,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 )
 
 // nolint:unused
@@ -35,7 +34,7 @@ var userattributeprotocolmapperlog = logf.Log.WithName("userattributeprotocolmap
 
 // SetupUserAttributeProtocolMapperWebhookWithManager registers the webhook for UserAttributeProtocolMapper in the manager.
 func SetupUserAttributeProtocolMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&openidv1alpha1.UserAttributeProtocolMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.UserAttributeProtocolMapper{}).
 		WithValidator(&UserAttributeProtocolMapperCustomValidator{}).
 		WithDefaulter(&UserAttributeProtocolMapperCustomDefaulter{}).
 		Complete()
@@ -58,7 +57,7 @@ var _ webhook.CustomDefaulter = &UserAttributeProtocolMapperCustomDefaulter{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind UserAttributeProtocolMapper.
 func (d *UserAttributeProtocolMapperCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	userattributeprotocolmapper, ok := obj.(*openidv1alpha1.UserAttributeProtocolMapper)
+	userattributeprotocolmapper, ok := obj.(*v1alpha1.UserAttributeProtocolMapper)
 
 	if !ok {
 		return fmt.Errorf("expected an UserAttributeProtocolMapper object but got %T", obj)
@@ -87,7 +86,7 @@ var _ webhook.CustomValidator = &UserAttributeProtocolMapperCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type UserAttributeProtocolMapper.
 func (v *UserAttributeProtocolMapperCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	userattributeprotocolmapper, ok := obj.(*openidv1alpha1.UserAttributeProtocolMapper)
+	userattributeprotocolmapper, ok := obj.(*v1alpha1.UserAttributeProtocolMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a UserAttributeProtocolMapper object but got %T", obj)
 	}
@@ -100,7 +99,7 @@ func (v *UserAttributeProtocolMapperCustomValidator) ValidateCreate(_ context.Co
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type UserAttributeProtocolMapper.
 func (v *UserAttributeProtocolMapperCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	userattributeprotocolmapper, ok := newObj.(*openidv1alpha1.UserAttributeProtocolMapper)
+	userattributeprotocolmapper, ok := newObj.(*v1alpha1.UserAttributeProtocolMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a UserAttributeProtocolMapper object for the newObj but got %T", newObj)
 	}
@@ -113,7 +112,7 @@ func (v *UserAttributeProtocolMapperCustomValidator) ValidateUpdate(_ context.Co
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type UserAttributeProtocolMapper.
 func (v *UserAttributeProtocolMapperCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	userattributeprotocolmapper, ok := obj.(*openidv1alpha1.UserAttributeProtocolMapper)
+	userattributeprotocolmapper, ok := obj.(*v1alpha1.UserAttributeProtocolMapper)
 	if !ok {
 		return nil, fmt.Errorf("expected a UserAttributeProtocolMapper object but got %T", obj)
 	}

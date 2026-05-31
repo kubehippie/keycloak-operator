@@ -19,17 +19,20 @@ package controller
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/common"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/kubehippie/keycloak-operator/api/common"
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
+
+const testGroupName = "admins"
+const testGroupAdminRole = "admin"
+const testGroupViewerRole = "viewer"
 
 var _ = Describe("Group Controller", func() {
 	Context("When reconciling a resource", func() {
@@ -39,22 +42,22 @@ var _ = Describe("Group Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default",
+			Namespace: utils.StandardTestNamespace,
 		}
-		group := &keycloakoperatorwebhippiedev1alpha1.Group{}
+		group := &v1alpha1.Group{}
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind Group")
 			err := k8sClient.Get(ctx, typeNamespacedName, group)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &keycloakoperatorwebhippiedev1alpha1.Group{
+				resource := &v1alpha1.Group{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
-						Namespace: "default",
+						Namespace: utils.StandardTestNamespace,
 					},
-					Spec: keycloakoperatorwebhippiedev1alpha1.GroupSpec{
+					Spec: v1alpha1.GroupSpec{
 						RealmRef: &common.RealmRef{
-							Name: "test-realm",
+							Name: utils.StandardTestRealmName,
 						},
 						Name: "test-group",
 					},
@@ -64,7 +67,7 @@ var _ = Describe("Group Controller", func() {
 		})
 
 		AfterEach(func() {
-			resource := &keycloakoperatorwebhippiedev1alpha1.Group{}
+			resource := &v1alpha1.Group{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -89,18 +92,18 @@ var _ = Describe("Group Controller", func() {
 
 var _ = Describe("groupToGocloak", func() {
 	It("maps name", func() {
-		g := &keycloakoperatorwebhippiedev1alpha1.Group{
-			Spec: keycloakoperatorwebhippiedev1alpha1.GroupSpec{Name: "admins"},
+		g := &v1alpha1.Group{
+			Spec: v1alpha1.GroupSpec{Name: testGroupName},
 		}
 		got := groupToGocloak(g)
 		Expect(got.Name).NotTo(BeNil())
-		Expect(*got.Name).To(Equal("admins"))
+		Expect(*got.Name).To(Equal(testGroupName))
 	})
 
 	It("maps attributes when set", func() {
-		g := &keycloakoperatorwebhippiedev1alpha1.Group{
-			Spec: keycloakoperatorwebhippiedev1alpha1.GroupSpec{
-				Name:       "admins",
+		g := &v1alpha1.Group{
+			Spec: v1alpha1.GroupSpec{
+				Name:       testGroupName,
 				Attributes: map[string][]string{"team": {"platform"}},
 			},
 		}
@@ -110,21 +113,21 @@ var _ = Describe("groupToGocloak", func() {
 	})
 
 	It("maps realmRoles when set", func() {
-		g := &keycloakoperatorwebhippiedev1alpha1.Group{
-			Spec: keycloakoperatorwebhippiedev1alpha1.GroupSpec{
-				Name:       "admins",
-				RealmRoles: []string{"admin", "viewer"},
+		g := &v1alpha1.Group{
+			Spec: v1alpha1.GroupSpec{
+				Name:       testGroupName,
+				RealmRoles: []string{testGroupAdminRole, testGroupViewerRole},
 			},
 		}
 		got := groupToGocloak(g)
 		Expect(got.RealmRoles).NotTo(BeNil())
-		Expect(*got.RealmRoles).To(ConsistOf("admin", "viewer"))
+		Expect(*got.RealmRoles).To(ConsistOf(testGroupAdminRole, testGroupViewerRole))
 	})
 
 	It("maps clientRoles when set", func() {
-		g := &keycloakoperatorwebhippiedev1alpha1.Group{
-			Spec: keycloakoperatorwebhippiedev1alpha1.GroupSpec{
-				Name:        "admins",
+		g := &v1alpha1.Group{
+			Spec: v1alpha1.GroupSpec{
+				Name:        testGroupName,
 				ClientRoles: map[string][]string{"my-client": {"role-a"}},
 			},
 		}
@@ -134,8 +137,8 @@ var _ = Describe("groupToGocloak", func() {
 	})
 
 	It("leaves optional fields nil when not set", func() {
-		g := &keycloakoperatorwebhippiedev1alpha1.Group{
-			Spec: keycloakoperatorwebhippiedev1alpha1.GroupSpec{Name: "empty"},
+		g := &v1alpha1.Group{
+			Spec: v1alpha1.GroupSpec{Name: "empty"},
 		}
 		got := groupToGocloak(g)
 		Expect(got.Attributes).To(BeNil())

@@ -21,6 +21,7 @@ import (
 
 	"github.com/kubehippie/keycloak-operator/api/common"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
@@ -51,25 +52,26 @@ var _ = Describe("keycloak_client helpers", func() {
 
 		It("errors when secretKeyRef.name is empty", func() {
 			_, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
-				SecretKeyRef: &common.SecretKeySelector{Key: "mykey"},
+				SecretKeyRef: &common.SecretKeySelector{Key: "just-key-without-name"},
 			}, testNS)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("errors when secretKeyRef.key is empty", func() {
 			_, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
-				SecretKeyRef: &common.SecretKeySelector{Name: "some-secret"},
+				SecretKeyRef: &common.SecretKeySelector{Name: "just-name-without-key"},
 			}, testNS)
 			Expect(err).To(HaveOccurred())
 		})
 
 		Context("with a backing Secret", func() {
 			const secretName = "kclient-test-secret"
+			const keyName = "mykey"
 
 			BeforeEach(func() {
 				secret := &corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{Name: secretName, Namespace: testNS},
-					Data:       map[string][]byte{"mykey": []byte("myvalue")},
+					Data:       map[string][]byte{keyName: []byte("myvalue")},
 				}
 				err := k8sClient.Create(ctx, secret)
 				if err != nil {
@@ -84,7 +86,7 @@ var _ = Describe("keycloak_client helpers", func() {
 
 			It("reads value from Secret using namespace fallback when ref.Namespace is empty", func() {
 				val, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
-					SecretKeyRef: &common.SecretKeySelector{Name: secretName, Key: "mykey"},
+					SecretKeyRef: &common.SecretKeySelector{Name: secretName, Key: keyName},
 				}, testNS)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(val).To(Equal("myvalue"))
@@ -92,7 +94,7 @@ var _ = Describe("keycloak_client helpers", func() {
 
 			It("reads value from Secret when namespace is given explicitly in the ref", func() {
 				val, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
-					SecretKeyRef: &common.SecretKeySelector{Name: secretName, Key: "mykey", Namespace: testNS},
+					SecretKeyRef: &common.SecretKeySelector{Name: secretName, Key: keyName, Namespace: testNS},
 				}, "other-ns")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(val).To(Equal("myvalue"))
@@ -107,7 +109,7 @@ var _ = Describe("keycloak_client helpers", func() {
 
 			It("errors when the Secret does not exist in the resolved namespace", func() {
 				_, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
-					SecretKeyRef: &common.SecretKeySelector{Name: "no-such-secret", Key: "mykey"},
+					SecretKeyRef: &common.SecretKeySelector{Name: "no-such-secret", Key: keyName},
 				}, testNS)
 				Expect(err).To(HaveOccurred())
 			})
@@ -122,9 +124,9 @@ var _ = Describe("keycloak_client helpers", func() {
 				ObjectMeta: metav1.ObjectMeta{Name: kcName, Namespace: testNS},
 				Spec: v1alpha1.KeycloakSpec{
 					URL:       "http://127.0.0.1:19999",
-					RealmName: "master",
-					Username:  &common.SecretKeyRefOrVal{Value: "admin"},
-					Password:  &common.SecretKeyRefOrVal{Value: "admin"},
+					RealmName: utils.StandardTestRealmName,
+					Username:  &common.SecretKeyRefOrVal{Value: "root"},
+					Password:  &common.SecretKeyRefOrVal{Value: "r4nd0m"},
 				},
 			}
 			err := k8sClient.Create(ctx, kc)
@@ -170,9 +172,9 @@ var _ = Describe("keycloak_client helpers", func() {
 				ObjectMeta: metav1.ObjectMeta{Name: kcName, Namespace: testNS},
 				Spec: v1alpha1.KeycloakSpec{
 					URL:       "http://127.0.0.1:19999",
-					RealmName: "master",
-					Username:  &common.SecretKeyRefOrVal{Value: "admin"},
-					Password:  &common.SecretKeyRefOrVal{Value: "admin"},
+					RealmName: utils.StandardTestRealmName,
+					Username:  &common.SecretKeyRefOrVal{Value: "superadmin"},
+					Password:  &common.SecretKeyRefOrVal{Value: "5up3r53cr37"},
 				},
 			}
 			if err := k8sClient.Create(ctx, kc); err != nil {
@@ -184,7 +186,7 @@ var _ = Describe("keycloak_client helpers", func() {
 				Spec: v1alpha1.RealmSpec{
 					// keycloakRef carries no namespace → will fall back to testNS
 					KeycloakRef: &common.KeycloakRef{Name: kcName},
-					Name:        "test-realm",
+					Name:        utils.StandardTestRealmName,
 				},
 			}
 			if err := k8sClient.Create(ctx, realm); err != nil {

@@ -20,13 +20,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 )
 
 // nolint:unused
@@ -35,7 +34,7 @@ var clientscopelog = logf.Log.WithName("clientscope-resource")
 
 // SetupClientScopeWebhookWithManager registers the webhook for ClientScope in the manager.
 func SetupClientScopeWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&openidv1alpha1.ClientScope{}).
+	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.ClientScope{}).
 		WithValidator(&ClientScopeCustomValidator{}).
 		WithDefaulter(&ClientScopeCustomDefaulter{}).
 		Complete()
@@ -58,7 +57,7 @@ var _ webhook.CustomDefaulter = &ClientScopeCustomDefaulter{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind ClientScope.
 func (d *ClientScopeCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	clientscope, ok := obj.(*openidv1alpha1.ClientScope)
+	clientscope, ok := obj.(*v1alpha1.ClientScope)
 
 	if !ok {
 		return fmt.Errorf("expected an ClientScope object but got %T", obj)
@@ -87,7 +86,7 @@ var _ webhook.CustomValidator = &ClientScopeCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type ClientScope.
 func (v *ClientScopeCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	clientscope, ok := obj.(*openidv1alpha1.ClientScope)
+	clientscope, ok := obj.(*v1alpha1.ClientScope)
 	if !ok {
 		return nil, fmt.Errorf("expected a ClientScope object but got %T", obj)
 	}
@@ -100,7 +99,7 @@ func (v *ClientScopeCustomValidator) ValidateCreate(_ context.Context, obj runti
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type ClientScope.
 func (v *ClientScopeCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	clientscope, ok := newObj.(*openidv1alpha1.ClientScope)
+	clientscope, ok := newObj.(*v1alpha1.ClientScope)
 	if !ok {
 		return nil, fmt.Errorf("expected a ClientScope object for the newObj but got %T", newObj)
 	}
@@ -113,7 +112,7 @@ func (v *ClientScopeCustomValidator) ValidateUpdate(_ context.Context, oldObj, n
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type ClientScope.
 func (v *ClientScopeCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	clientscope, ok := obj.(*openidv1alpha1.ClientScope)
+	clientscope, ok := obj.(*v1alpha1.ClientScope)
 	if !ok {
 		return nil, fmt.Errorf("expected a ClientScope object but got %T", obj)
 	}

@@ -21,13 +21,12 @@ import (
 	"fmt"
 	"strings"
 
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
 
 // nolint:unused
@@ -36,7 +35,7 @@ var userlog = logf.Log.WithName("user-resource")
 
 // SetupUserWebhookWithManager registers the webhook for User in the manager.
 func SetupUserWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&keycloakoperatorwebhippiedev1alpha1.User{}).
+	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.User{}).
 		WithValidator(&UserCustomValidator{}).
 		WithDefaulter(&UserCustomDefaulter{}).
 		Complete()
@@ -71,7 +70,7 @@ var _ webhook.CustomValidator = &UserCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type User.
 func (v *UserCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	user, ok := obj.(*keycloakoperatorwebhippiedev1alpha1.User)
+	user, ok := obj.(*v1alpha1.User)
 	if !ok {
 		return nil, fmt.Errorf("expected a User object but got %T", obj)
 	}
@@ -82,12 +81,12 @@ func (v *UserCustomValidator) ValidateCreate(_ context.Context, obj runtime.Obje
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type User.
 func (v *UserCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	oldUser, ok := oldObj.(*keycloakoperatorwebhippiedev1alpha1.User)
+	oldUser, ok := oldObj.(*v1alpha1.User)
 	if !ok {
 		return nil, fmt.Errorf("expected a User object for the oldObj but got %T", oldObj)
 	}
 
-	user, ok := newObj.(*keycloakoperatorwebhippiedev1alpha1.User)
+	user, ok := newObj.(*v1alpha1.User)
 	if !ok {
 		return nil, fmt.Errorf("expected a User object for the newObj but got %T", newObj)
 	}
@@ -109,7 +108,7 @@ func (v *UserCustomValidator) ValidateDelete(_ context.Context, obj runtime.Obje
 	return nil, nil
 }
 
-func (v *UserCustomValidator) validate(user *keycloakoperatorwebhippiedev1alpha1.User) error {
+func (v *UserCustomValidator) validate(user *v1alpha1.User) error {
 	if user.Spec.RealmRef == nil || strings.TrimSpace(user.Spec.RealmRef.Name) == "" {
 		return fmt.Errorf("spec.realmRef.name must be set")
 	}

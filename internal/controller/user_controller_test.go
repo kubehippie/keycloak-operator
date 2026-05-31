@@ -19,17 +19,18 @@ package controller
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/common"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/kubehippie/keycloak-operator/api/common"
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
+
+const testUserUsername = "alice"
 
 var _ = Describe("User Controller", func() {
 	Context("When reconciling a resource", func() {
@@ -39,22 +40,22 @@ var _ = Describe("User Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default",
+			Namespace: utils.StandardTestNamespace,
 		}
-		user := &keycloakoperatorwebhippiedev1alpha1.User{}
+		user := &v1alpha1.User{}
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind User")
 			err := k8sClient.Get(ctx, typeNamespacedName, user)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &keycloakoperatorwebhippiedev1alpha1.User{
+				resource := &v1alpha1.User{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
-						Namespace: "default",
+						Namespace: utils.StandardTestNamespace,
 					},
-					Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{
+					Spec: v1alpha1.UserSpec{
 						RealmRef: &common.RealmRef{
-							Name: "test-realm",
+							Name: utils.StandardTestRealmName,
 						},
 						Username: "testuser",
 					},
@@ -64,7 +65,7 @@ var _ = Describe("User Controller", func() {
 		})
 
 		AfterEach(func() {
-			resource := &keycloakoperatorwebhippiedev1alpha1.User{}
+			resource := &v1alpha1.User{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -89,12 +90,12 @@ var _ = Describe("User Controller", func() {
 
 var _ = Describe("userToGocloak", func() {
 	It("maps username", func() {
-		u := &keycloakoperatorwebhippiedev1alpha1.User{
-			Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{Username: "alice"},
+		u := &v1alpha1.User{
+			Spec: v1alpha1.UserSpec{Username: testUserUsername},
 		}
 		g := userToGocloak(u)
 		Expect(g.Username).NotTo(BeNil())
-		Expect(*g.Username).To(Equal("alice"))
+		Expect(*g.Username).To(Equal(testUserUsername))
 	})
 
 	It("maps optional fields when set", func() {
@@ -104,9 +105,9 @@ var _ = Describe("userToGocloak", func() {
 		first := "Alice"
 		last := "Smith"
 
-		u := &keycloakoperatorwebhippiedev1alpha1.User{
-			Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{
-				Username:      "alice",
+		u := &v1alpha1.User{
+			Spec: v1alpha1.UserSpec{
+				Username:      testUserUsername,
 				Email:         &email,
 				Enabled:       &enabled,
 				EmailVerified: &verified,
@@ -123,9 +124,9 @@ var _ = Describe("userToGocloak", func() {
 	})
 
 	It("maps attributes when set", func() {
-		u := &keycloakoperatorwebhippiedev1alpha1.User{
-			Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{
-				Username:   "alice",
+		u := &v1alpha1.User{
+			Spec: v1alpha1.UserSpec{
+				Username:   testUserUsername,
 				Attributes: map[string][]string{"department": {"engineering"}},
 			},
 		}
@@ -135,9 +136,9 @@ var _ = Describe("userToGocloak", func() {
 	})
 
 	It("maps requiredActions when set", func() {
-		u := &keycloakoperatorwebhippiedev1alpha1.User{
-			Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{
-				Username:        "alice",
+		u := &v1alpha1.User{
+			Spec: v1alpha1.UserSpec{
+				Username:        testUserUsername,
 				RequiredActions: []string{"UPDATE_PASSWORD"},
 			},
 		}
@@ -147,8 +148,8 @@ var _ = Describe("userToGocloak", func() {
 	})
 
 	It("leaves optional fields nil when not set", func() {
-		u := &keycloakoperatorwebhippiedev1alpha1.User{
-			Spec: keycloakoperatorwebhippiedev1alpha1.UserSpec{Username: "bob"},
+		u := &v1alpha1.User{
+			Spec: v1alpha1.UserSpec{Username: "bob"},
 		}
 		g := userToGocloak(u)
 		Expect(g.Email).To(BeNil())

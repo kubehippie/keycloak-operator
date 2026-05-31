@@ -17,24 +17,22 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
-	// TODO (user): Add any additional imports if needed
 )
 
 var _ = Describe("HardcodedRoleMapper Webhook", func() {
 	var (
-		obj       *identityv1alpha1.HardcodedRoleMapper
-		oldObj    *identityv1alpha1.HardcodedRoleMapper
+		obj       *v1alpha1.HardcodedRoleMapper
+		oldObj    *v1alpha1.HardcodedRoleMapper
 		validator HardcodedRoleMapperCustomValidator
 		defaulter HardcodedRoleMapperCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &identityv1alpha1.HardcodedRoleMapper{}
-		oldObj = &identityv1alpha1.HardcodedRoleMapper{}
+		obj = &v1alpha1.HardcodedRoleMapper{}
+		oldObj = &v1alpha1.HardcodedRoleMapper{}
 		validator = HardcodedRoleMapperCustomValidator{}
 		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		defaulter = HardcodedRoleMapperCustomDefaulter{}

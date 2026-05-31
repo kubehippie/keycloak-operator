@@ -19,15 +19,14 @@ package identity
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 )
 
 var _ = Describe("OIDCIdentityProvider Controller", func() {
@@ -38,18 +37,18 @@ var _ = Describe("OIDCIdentityProvider Controller", func() {
 
 		typeNamespacedName := types.NamespacedName{
 			Name:      resourceName,
-			Namespace: "default", // TODO(user):Modify as needed
+			Namespace: utils.StandardTestNamespace,
 		}
-		oidcidentityprovider := &identityv1alpha1.OIDCIdentityProvider{}
+		oidcidentityprovider := &v1alpha1.OIDCIdentityProvider{}
 
 		BeforeEach(func() {
 			By("creating the custom resource for the Kind OIDCIdentityProvider")
 			err := k8sClient.Get(ctx, typeNamespacedName, oidcidentityprovider)
 			if err != nil && errors.IsNotFound(err) {
-				resource := &identityv1alpha1.OIDCIdentityProvider{
+				resource := &v1alpha1.OIDCIdentityProvider{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      resourceName,
-						Namespace: "default",
+						Namespace: utils.StandardTestNamespace,
 					},
 					// TODO(user): Specify other spec details if needed.
 				}
@@ -59,7 +58,7 @@ var _ = Describe("OIDCIdentityProvider Controller", func() {
 
 		AfterEach(func() {
 			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &identityv1alpha1.OIDCIdentityProvider{}
+			resource := &v1alpha1.OIDCIdentityProvider{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
 

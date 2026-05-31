@@ -17,24 +17,22 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	// TODO (user): Add any additional imports if needed
 )
 
 var _ = Describe("ClientScope Webhook", func() {
 	var (
-		obj       *openidv1alpha1.ClientScope
-		oldObj    *openidv1alpha1.ClientScope
+		obj       *v1alpha1.ClientScope
+		oldObj    *v1alpha1.ClientScope
 		validator ClientScopeCustomValidator
 		defaulter ClientScopeCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &openidv1alpha1.ClientScope{}
-		oldObj = &openidv1alpha1.ClientScope{}
+		obj = &v1alpha1.ClientScope{}
+		oldObj = &v1alpha1.ClientScope{}
 		validator = ClientScopeCustomValidator{}
 		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		defaulter = ClientScopeCustomDefaulter{}

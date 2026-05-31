@@ -20,14 +20,13 @@ import (
 	"context"
 	"fmt"
 
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
 
 // nolint:unused
@@ -36,7 +35,7 @@ var realmlog = logf.Log.WithName("realm-resource")
 
 // SetupRealmWebhookWithManager registers the webhook for Realm in the manager.
 func SetupRealmWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&keycloakoperatorwebhippiedev1alpha1.Realm{}).
+	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.Realm{}).
 		WithValidator(&RealmCustomValidator{}).
 		WithDefaulter(&RealmCustomDefaulter{}).
 		Complete()
@@ -55,7 +54,7 @@ var _ webhook.CustomDefaulter = &RealmCustomDefaulter{}
 
 // Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind Realm.
 func (d *RealmCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	realm, ok := obj.(*keycloakoperatorwebhippiedev1alpha1.Realm)
+	realm, ok := obj.(*v1alpha1.Realm)
 	if !ok {
 		return fmt.Errorf("expected an Realm object but got %T", obj)
 	}
@@ -76,7 +75,7 @@ var _ webhook.CustomValidator = &RealmCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type Realm.
 func (v *RealmCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	realm, ok := obj.(*keycloakoperatorwebhippiedev1alpha1.Realm)
+	realm, ok := obj.(*v1alpha1.Realm)
 	if !ok {
 		return nil, fmt.Errorf("expected a Realm object but got %T", obj)
 	}
@@ -91,12 +90,12 @@ func (v *RealmCustomValidator) ValidateCreate(_ context.Context, obj runtime.Obj
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type Realm.
 func (v *RealmCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	oldRealm, ok := oldObj.(*keycloakoperatorwebhippiedev1alpha1.Realm)
+	oldRealm, ok := oldObj.(*v1alpha1.Realm)
 	if !ok {
 		return nil, fmt.Errorf("expected a Realm object for the oldObj but got %T", oldObj)
 	}
 
-	newRealm, ok := newObj.(*keycloakoperatorwebhippiedev1alpha1.Realm)
+	newRealm, ok := newObj.(*v1alpha1.Realm)
 	if !ok {
 		return nil, fmt.Errorf("expected a Realm object for the newObj but got %T", newObj)
 	}
@@ -125,7 +124,7 @@ func (v *RealmCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj 
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type Realm.
 func (v *RealmCustomValidator) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	realm, ok := obj.(*keycloakoperatorwebhippiedev1alpha1.Realm)
+	realm, ok := obj.(*v1alpha1.Realm)
 	if !ok {
 		return nil, fmt.Errorf("expected a Realm object but got %T", obj)
 	}
@@ -133,7 +132,7 @@ func (v *RealmCustomValidator) ValidateDelete(_ context.Context, obj runtime.Obj
 	return nil, nil
 }
 
-func validateRealm(realm *keycloakoperatorwebhippiedev1alpha1.Realm) field.ErrorList {
+func validateRealm(realm *v1alpha1.Realm) field.ErrorList {
 	var errs field.ErrorList
 
 	if realm.Spec.KeycloakRef == nil {

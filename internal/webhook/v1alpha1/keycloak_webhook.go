@@ -22,18 +22,17 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/kubehippie/keycloak-operator/api/common"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
-
-	"github.com/kubehippie/keycloak-operator/api/common"
-	keycloakoperatorwebhippiedev1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 )
 
 // SetupKeycloakWebhookWithManager registers the webhook for Keycloak in the manager.
 func SetupKeycloakWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&keycloakoperatorwebhippiedev1alpha1.Keycloak{}).
+	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.Keycloak{}).
 		WithValidator(&KeycloakCustomValidator{}).
 		WithDefaulter(&KeycloakCustomDefaulter{}).
 		Complete()
@@ -68,7 +67,7 @@ var _ webhook.CustomValidator = &KeycloakCustomValidator{}
 
 // ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type Keycloak.
 func (v *KeycloakCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	keycloak, ok := obj.(*keycloakoperatorwebhippiedev1alpha1.Keycloak)
+	keycloak, ok := obj.(*v1alpha1.Keycloak)
 	if !ok {
 		return nil, fmt.Errorf("expected a Keycloak object but got %T", obj)
 	}
@@ -78,7 +77,7 @@ func (v *KeycloakCustomValidator) ValidateCreate(_ context.Context, obj runtime.
 
 // ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type Keycloak.
 func (v *KeycloakCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	keycloak, ok := newObj.(*keycloakoperatorwebhippiedev1alpha1.Keycloak)
+	keycloak, ok := newObj.(*v1alpha1.Keycloak)
 	if !ok {
 		return nil, fmt.Errorf("expected a Keycloak object for the newObj but got %T", newObj)
 	}
@@ -91,7 +90,7 @@ func (v *KeycloakCustomValidator) ValidateDelete(ctx context.Context, obj runtim
 	return nil, nil
 }
 
-func (v *KeycloakCustomValidator) validate(keycloak *keycloakoperatorwebhippiedev1alpha1.Keycloak) error {
+func (v *KeycloakCustomValidator) validate(keycloak *v1alpha1.Keycloak) error {
 	spec := keycloak.Spec
 
 	parsed, err := url.ParseRequestURI(

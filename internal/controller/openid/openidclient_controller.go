@@ -19,12 +19,11 @@ package openid
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-
-	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 )
 
 // OpenIDClientReconciler reconciles a OpenIDClient object
@@ -57,7 +56,7 @@ func (r *OpenIDClientReconciler) Reconcile(ctx context.Context, req ctrl.Request
 // SetupWithManager sets up the controller with the Manager.
 func (r *OpenIDClientReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&openidv1alpha1.OpenIDClient{}).
+		For(&v1alpha1.OpenIDClient{}).
 		Named("openid-openidclient").
 		Complete(r)
 }
