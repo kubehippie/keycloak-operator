@@ -157,17 +157,17 @@ func groupToGocloak(g *v1alpha1.Group) gocloak.Group {
 
 	if g.Spec.Attributes != nil {
 		attrs := g.Spec.Attributes
-		group.Attributes = &attrs
+		group.Attributes = attrs
 	}
 
 	if g.Spec.RealmRoles != nil {
 		roles := g.Spec.RealmRoles
-		group.RealmRoles = &roles
+		group.RealmRoles = roles
 	}
 
 	if g.Spec.ClientRoles != nil {
 		cr := g.Spec.ClientRoles
-		group.ClientRoles = &cr
+		group.ClientRoles = cr
 	}
 
 	return group
