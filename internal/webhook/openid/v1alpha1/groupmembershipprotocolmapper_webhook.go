@@ -18,13 +18,10 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -34,7 +31,7 @@ var groupmembershipprotocolmapperlog = logf.Log.WithName("groupmembershipprotoco
 
 // SetupGroupMembershipProtocolMapperWebhookWithManager registers the webhook for GroupMembershipProtocolMapper in the manager.
 func SetupGroupMembershipProtocolMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.GroupMembershipProtocolMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.GroupMembershipProtocolMapper{}).
 		WithValidator(&GroupMembershipProtocolMapperCustomValidator{}).
 		WithDefaulter(&GroupMembershipProtocolMapperCustomDefaulter{}).
 		Complete()
@@ -53,16 +50,11 @@ type GroupMembershipProtocolMapperCustomDefaulter struct {
 	// TODO(user): Add more fields as needed for defaulting
 }
 
-var _ webhook.CustomDefaulter = &GroupMembershipProtocolMapperCustomDefaulter{}
+var _ admission.Defaulter[*v1alpha1.GroupMembershipProtocolMapper] = &GroupMembershipProtocolMapperCustomDefaulter{}
 
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind GroupMembershipProtocolMapper.
-func (d *GroupMembershipProtocolMapperCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	groupmembershipprotocolmapper, ok := obj.(*v1alpha1.GroupMembershipProtocolMapper)
-
-	if !ok {
-		return fmt.Errorf("expected an GroupMembershipProtocolMapper object but got %T", obj)
-	}
-	groupmembershipprotocolmapperlog.Info("Defaulting for GroupMembershipProtocolMapper", "name", groupmembershipprotocolmapper.GetName())
+// Default implements admission.Defaulter so a webhook will be registered for the Kind GroupMembershipProtocolMapper.
+func (d *GroupMembershipProtocolMapperCustomDefaulter) Default(_ context.Context, mapper *v1alpha1.GroupMembershipProtocolMapper) error {
+	groupmembershipprotocolmapperlog.Info("Defaulting for GroupMembershipProtocolMapper", "name", mapper.GetName())
 
 	// TODO(user): fill in your defaulting logic.
 
@@ -82,41 +74,30 @@ type GroupMembershipProtocolMapperCustomValidator struct {
 	// TODO(user): Add more fields as needed for validation
 }
 
-var _ webhook.CustomValidator = &GroupMembershipProtocolMapperCustomValidator{}
+var _ admission.Validator[*v1alpha1.GroupMembershipProtocolMapper] = &GroupMembershipProtocolMapperCustomValidator{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type GroupMembershipProtocolMapper.
-func (v *GroupMembershipProtocolMapperCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	groupmembershipprotocolmapper, ok := obj.(*v1alpha1.GroupMembershipProtocolMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a GroupMembershipProtocolMapper object but got %T", obj)
-	}
-	groupmembershipprotocolmapperlog.Info("Validation for GroupMembershipProtocolMapper upon creation", "name", groupmembershipprotocolmapper.GetName())
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type GroupMembershipProtocolMapper.
+func (v *GroupMembershipProtocolMapperCustomValidator) ValidateCreate(_ context.Context, mapper *v1alpha1.GroupMembershipProtocolMapper) (admission.Warnings, error) {
+	groupmembershipprotocolmapperlog.Info("Validation for GroupMembershipProtocolMapper upon creation", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object creation.
 
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type GroupMembershipProtocolMapper.
-func (v *GroupMembershipProtocolMapperCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	groupmembershipprotocolmapper, ok := newObj.(*v1alpha1.GroupMembershipProtocolMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a GroupMembershipProtocolMapper object for the newObj but got %T", newObj)
-	}
-	groupmembershipprotocolmapperlog.Info("Validation for GroupMembershipProtocolMapper upon update", "name", groupmembershipprotocolmapper.GetName())
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type GroupMembershipProtocolMapper.
+func (v *GroupMembershipProtocolMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *v1alpha1.GroupMembershipProtocolMapper) (admission.Warnings, error) {
+	_ = oldMapper
+	groupmembershipprotocolmapperlog.Info("Validation for GroupMembershipProtocolMapper upon update", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object update.
 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type GroupMembershipProtocolMapper.
-func (v *GroupMembershipProtocolMapperCustomValidator) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
-	groupmembershipprotocolmapper, ok := obj.(*v1alpha1.GroupMembershipProtocolMapper)
-	if !ok {
-		return nil, fmt.Errorf("expected a GroupMembershipProtocolMapper object but got %T", obj)
-	}
-	groupmembershipprotocolmapperlog.Info("Validation for GroupMembershipProtocolMapper upon deletion", "name", groupmembershipprotocolmapper.GetName())
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type GroupMembershipProtocolMapper.
+func (v *GroupMembershipProtocolMapperCustomValidator) ValidateDelete(_ context.Context, mapper *v1alpha1.GroupMembershipProtocolMapper) (admission.Warnings, error) {
+	groupmembershipprotocolmapperlog.Info("Validation for GroupMembershipProtocolMapper upon deletion", "name", mapper.GetName())
 
 	// TODO(user): fill in your validation logic upon object deletion.
 

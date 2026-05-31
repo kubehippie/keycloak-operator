@@ -18,14 +18,11 @@ package v1alpha1
 
 import (
 	"context"
-	"fmt"
 
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -35,7 +32,7 @@ var realmlog = logf.Log.WithName("realm-resource")
 
 // SetupRealmWebhookWithManager registers the webhook for Realm in the manager.
 func SetupRealmWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr).For(&v1alpha1.Realm{}).
+	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.Realm{}).
 		WithValidator(&RealmCustomValidator{}).
 		WithDefaulter(&RealmCustomDefaulter{}).
 		Complete()
@@ -50,14 +47,10 @@ func SetupRealmWebhookWithManager(mgr ctrl.Manager) error {
 // as it is used only for temporary operations and does not need to be deeply copied.
 type RealmCustomDefaulter struct{}
 
-var _ webhook.CustomDefaulter = &RealmCustomDefaulter{}
+var _ admission.Defaulter[*v1alpha1.Realm] = &RealmCustomDefaulter{}
 
-// Default implements webhook.CustomDefaulter so a webhook will be registered for the Kind Realm.
-func (d *RealmCustomDefaulter) Default(_ context.Context, obj runtime.Object) error {
-	realm, ok := obj.(*v1alpha1.Realm)
-	if !ok {
-		return fmt.Errorf("expected an Realm object but got %T", obj)
-	}
+// Default implements admission.Defaulter so a webhook will be registered for the Kind Realm.
+func (d *RealmCustomDefaulter) Default(_ context.Context, realm *v1alpha1.Realm) error {
 	realmlog.Info("Defaulting for Realm", "name", realm.GetName())
 	return nil
 }
@@ -71,14 +64,10 @@ func (d *RealmCustomDefaulter) Default(_ context.Context, obj runtime.Object) er
 // as this struct is used only for temporary operations and does not need to be deeply copied.
 type RealmCustomValidator struct{}
 
-var _ webhook.CustomValidator = &RealmCustomValidator{}
+var _ admission.Validator[*v1alpha1.Realm] = &RealmCustomValidator{}
 
-// ValidateCreate implements webhook.CustomValidator so a webhook will be registered for the type Realm.
-func (v *RealmCustomValidator) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	realm, ok := obj.(*v1alpha1.Realm)
-	if !ok {
-		return nil, fmt.Errorf("expected a Realm object but got %T", obj)
-	}
+// ValidateCreate implements admission.Validator so a webhook will be registered for the type Realm.
+func (v *RealmCustomValidator) ValidateCreate(_ context.Context, realm *v1alpha1.Realm) (admission.Warnings, error) {
 	realmlog.Info("Validation for Realm upon creation", "name", realm.GetName())
 
 	if errs := validateRealm(realm); len(errs) > 0 {
@@ -88,27 +77,17 @@ func (v *RealmCustomValidator) ValidateCreate(_ context.Context, obj runtime.Obj
 	return nil, nil
 }
 
-// ValidateUpdate implements webhook.CustomValidator so a webhook will be registered for the type Realm.
-func (v *RealmCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
-	oldRealm, ok := oldObj.(*v1alpha1.Realm)
-	if !ok {
-		return nil, fmt.Errorf("expected a Realm object for the oldObj but got %T", oldObj)
-	}
-
-	newRealm, ok := newObj.(*v1alpha1.Realm)
-	if !ok {
-		return nil, fmt.Errorf("expected a Realm object for the newObj but got %T", newObj)
-	}
-
-	realmlog.Info("Validation for Realm upon update", "name", newRealm.GetName())
+// ValidateUpdate implements admission.Validator so a webhook will be registered for the type Realm.
+func (v *RealmCustomValidator) ValidateUpdate(_ context.Context, oldRealm, realm *v1alpha1.Realm) (admission.Warnings, error) {
+	realmlog.Info("Validation for Realm upon update", "name", realm.GetName())
 
 	var allErrs field.ErrorList
 
-	if errs := validateRealm(newRealm); len(errs) > 0 {
+	if errs := validateRealm(realm); len(errs) > 0 {
 		allErrs = append(allErrs, errs...)
 	}
 
-	if oldRealm.Spec.Name != newRealm.Spec.Name {
+	if oldRealm.Spec.Name != realm.Spec.Name {
 		allErrs = append(allErrs, field.Forbidden(
 			field.NewPath("spec", "name"),
 			"name is immutable and cannot be changed after creation",
@@ -122,12 +101,8 @@ func (v *RealmCustomValidator) ValidateUpdate(_ context.Context, oldObj, newObj 
 	return nil, nil
 }
 
-// ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type Realm.
-func (v *RealmCustomValidator) ValidateDelete(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
-	realm, ok := obj.(*v1alpha1.Realm)
-	if !ok {
-		return nil, fmt.Errorf("expected a Realm object but got %T", obj)
-	}
+// ValidateDelete implements admission.Validator so a webhook will be registered for the type Realm.
+func (v *RealmCustomValidator) ValidateDelete(_ context.Context, realm *v1alpha1.Realm) (admission.Warnings, error) {
 	realmlog.Info("Validation for Realm upon deletion", "name", realm.GetName())
 	return nil, nil
 }
