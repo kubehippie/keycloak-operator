@@ -56,6 +56,10 @@ rulesets:
               integration_id: 15368
             - context: docker
               integration_id: 15368
+            - context: e2e (25.0)
+              integration_id: 15368
+            - context: e2e (26.6)
+              integration_id: 15368
     bypass_actors:
       - actor_id: 1
         actor_type: OrganizationAdmin
