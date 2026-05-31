@@ -30,66 +30,6 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-identity-keycloak-operator-webhippie-de-v1alpha1-hardcodedrolemapper
-  failurePolicy: Fail
-  name: mhardcodedrolemapper-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - identity.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - hardcodedrolemappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-identity-keycloak-operator-webhippie-de-v1alpha1-oidcadvancedgroupmapper
-  failurePolicy: Fail
-  name: moidcadvancedgroupmapper-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - identity.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - oidcadvancedgroupmappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-identity-keycloak-operator-webhippie-de-v1alpha1-oidcidentityprovider
-  failurePolicy: Fail
-  name: moidcidentityprovider-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - identity.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - oidcidentityproviders
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
       path: /mutate-openid-keycloak-operator-webhippie-de-v1alpha1-audienceprotocolmapper
   failurePolicy: Fail
   name: maudienceprotocolmapper-v1alpha1.kb.io
@@ -170,86 +110,6 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /mutate-openid-keycloak-operator-webhippie-de-v1alpha1-groupmembershipprotocolmapper
-  failurePolicy: Fail
-  name: mgroupmembershipprotocolmapper-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - openid.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - groupmembershipprotocolmappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-openid-keycloak-operator-webhippie-de-v1alpha1-openidclient
-  failurePolicy: Fail
-  name: mopenidclient-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - openid.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - openidclients
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-openid-keycloak-operator-webhippie-de-v1alpha1-userattributeprotocolmapper
-  failurePolicy: Fail
-  name: muserattributeprotocolmapper-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - openid.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - userattributeprotocolmappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /mutate-openid-keycloak-operator-webhippie-de-v1alpha1-userpropertyprotocolmapper
-  failurePolicy: Fail
-  name: muserpropertyprotocolmapper-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - openid.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - userpropertyprotocolmappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
       path: /mutate-keycloak-operator-webhippie-de-v1alpha1-group
   failurePolicy: Fail
   name: mgroup-v1alpha1.kb.io
@@ -270,6 +130,46 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-openid-keycloak-operator-webhippie-de-v1alpha1-groupmembershipprotocolmapper
+  failurePolicy: Fail
+  name: mgroupmembershipprotocolmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - groupmembershipprotocolmappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-identity-keycloak-operator-webhippie-de-v1alpha1-hardcodedrolemapper
+  failurePolicy: Fail
+  name: mhardcodedrolemapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - hardcodedrolemappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-keycloak-operator-webhippie-de-v1alpha1-keycloak
   failurePolicy: Fail
   name: mkeycloak-v1alpha1.kb.io
@@ -283,6 +183,66 @@ webhooks:
     - UPDATE
     resources:
     - keycloaks
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-identity-keycloak-operator-webhippie-de-v1alpha1-oidcadvancedgroupmapper
+  failurePolicy: Fail
+  name: moidcadvancedgroupmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - oidcadvancedgroupmappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-identity-keycloak-operator-webhippie-de-v1alpha1-oidcidentityprovider
+  failurePolicy: Fail
+  name: moidcidentityprovider-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - oidcidentityproviders
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-openid-keycloak-operator-webhippie-de-v1alpha1-openidclient
+  failurePolicy: Fail
+  name: mopenidclient-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - openidclients
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -324,6 +284,46 @@ webhooks:
     resources:
     - users
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-openid-keycloak-operator-webhippie-de-v1alpha1-userattributeprotocolmapper
+  failurePolicy: Fail
+  name: muserattributeprotocolmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - userattributeprotocolmappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-openid-keycloak-operator-webhippie-de-v1alpha1-userpropertyprotocolmapper
+  failurePolicy: Fail
+  name: muserpropertyprotocolmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - userpropertyprotocolmappers
+  sideEffects: None
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
@@ -349,66 +349,6 @@ webhooks:
     - UPDATE
     resources:
     - attributeimportermappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-hardcodedrolemapper
-  failurePolicy: Fail
-  name: vhardcodedrolemapper-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - identity.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - hardcodedrolemappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-oidcadvancedgroupmapper
-  failurePolicy: Fail
-  name: voidcadvancedgroupmapper-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - identity.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - oidcadvancedgroupmappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-oidcidentityprovider
-  failurePolicy: Fail
-  name: voidcidentityprovider-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - identity.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - oidcidentityproviders
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -496,86 +436,6 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-groupmembershipprotocolmapper
-  failurePolicy: Fail
-  name: vgroupmembershipprotocolmapper-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - openid.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - groupmembershipprotocolmappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-openidclient
-  failurePolicy: Fail
-  name: vopenidclient-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - openid.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - openidclients
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-userattributeprotocolmapper
-  failurePolicy: Fail
-  name: vuserattributeprotocolmapper-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - openid.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - userattributeprotocolmappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-userpropertyprotocolmapper
-  failurePolicy: Fail
-  name: vuserpropertyprotocolmapper-v1alpha1.kb.io
-  rules:
-  - apiGroups:
-    - openid.keycloak-operator.webhippie.de
-    apiVersions:
-    - v1alpha1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - userpropertyprotocolmappers
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
       path: /validate-keycloak-operator-webhippie-de-v1alpha1-group
   failurePolicy: Fail
   name: vgroup-v1alpha1.kb.io
@@ -596,6 +456,46 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-groupmembershipprotocolmapper
+  failurePolicy: Fail
+  name: vgroupmembershipprotocolmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - groupmembershipprotocolmappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-hardcodedrolemapper
+  failurePolicy: Fail
+  name: vhardcodedrolemapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - hardcodedrolemappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-keycloak-operator-webhippie-de-v1alpha1-keycloak
   failurePolicy: Fail
   name: vkeycloak-v1alpha1.kb.io
@@ -609,6 +509,66 @@ webhooks:
     - UPDATE
     resources:
     - keycloaks
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-oidcadvancedgroupmapper
+  failurePolicy: Fail
+  name: voidcadvancedgroupmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - oidcadvancedgroupmappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-oidcidentityprovider
+  failurePolicy: Fail
+  name: voidcidentityprovider-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - oidcidentityproviders
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-openidclient
+  failurePolicy: Fail
+  name: vopenidclient-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - openidclients
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -649,4 +609,44 @@ webhooks:
     - UPDATE
     resources:
     - users
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-userattributeprotocolmapper
+  failurePolicy: Fail
+  name: vuserattributeprotocolmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - userattributeprotocolmappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-userpropertyprotocolmapper
+  failurePolicy: Fail
+  name: vuserpropertyprotocolmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - userpropertyprotocolmappers
   sideEffects: None
