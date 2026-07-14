@@ -56,10 +56,10 @@ func (r *GroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, fmt.Errorf("unable to fetch: %w", err)
 	}
 
-	session, err := keycloakSessionForRealm(ctx, r.Client, instance.Spec.RealmRef, req.Namespace)
+	session, err := KeycloakSessionForRealm(ctx, r.Client, instance.Spec.RealmRef, req.Namespace)
 	if err != nil {
 		log.Error(err, "Unable to get Keycloak session")
-		return ctrl.Result{RequeueAfter: failedKeycloakConnectionRetryPeriod}, nil
+		return ctrl.Result{RequeueAfter: FailedKeycloakConnectionRetryPeriod}, nil
 	}
 
 	if !instance.DeletionTimestamp.IsZero() {
@@ -77,7 +77,7 @@ func (r *GroupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return r.reconcileGroup(ctx, instance, session)
 }
 
-func (r *GroupReconciler) handleDeletion(ctx context.Context, instance *v1alpha1.Group, session *keycloakSession) (ctrl.Result, error) {
+func (r *GroupReconciler) handleDeletion(ctx context.Context, instance *v1alpha1.Group, session *KeycloakSession) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
 	if !controllerutil.ContainsFinalizer(instance, groupFinalizer) {
@@ -99,7 +99,7 @@ func (r *GroupReconciler) handleDeletion(ctx context.Context, instance *v1alpha1
 	return ctrl.Result{}, nil
 }
 
-func (r *GroupReconciler) reconcileGroup(ctx context.Context, instance *v1alpha1.Group, session *keycloakSession) (ctrl.Result, error) {
+func (r *GroupReconciler) reconcileGroup(ctx context.Context, instance *v1alpha1.Group, session *KeycloakSession) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
 	desired := groupToGocloak(instance)
@@ -123,7 +123,7 @@ func (r *GroupReconciler) reconcileGroup(ctx context.Context, instance *v1alpha1
 
 		if match != nil {
 			log.Info("Adopting existing Keycloak group", "id", *match.ID)
-			if err := updateKeycloakIDStatus(ctx, r.Client, instance, match.ID); err != nil {
+			if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, match.ID); err != nil {
 				return ctrl.Result{}, err
 			}
 		} else {
@@ -132,7 +132,7 @@ func (r *GroupReconciler) reconcileGroup(ctx context.Context, instance *v1alpha1
 				return ctrl.Result{}, fmt.Errorf("failed to create group in Keycloak: %w", err)
 			}
 			log.Info("Group created in Keycloak", "id", id)
-			if err := updateKeycloakIDStatus(ctx, r.Client, instance, &id); err != nil {
+			if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, &id); err != nil {
 				return ctrl.Result{}, err
 			}
 			return ctrl.Result{}, nil

@@ -18,88 +18,97 @@ package v1alpha1
 
 import (
 	"context"
+	"strings"
 
-	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// nolint:unused
-// log is for logging in this package.
 var audienceprotocolmapperlog = logf.Log.WithName("audienceprotocolmapper-resource")
 
-// SetupAudienceProtocolMapperWebhookWithManager registers the webhook for AudienceProtocolMapper in the manager.
 func SetupAudienceProtocolMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.AudienceProtocolMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr, &openidv1alpha1.AudienceProtocolMapper{}).
 		WithValidator(&AudienceProtocolMapperCustomValidator{}).
 		WithDefaulter(&AudienceProtocolMapperCustomDefaulter{}).
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
 // +kubebuilder:webhook:path=/mutate-openid-keycloak-operator-webhippie-de-v1alpha1-audienceprotocolmapper,mutating=true,failurePolicy=fail,sideEffects=None,groups=openid.keycloak-operator.webhippie.de,resources=audienceprotocolmappers,verbs=create;update,versions=v1alpha1,name=maudienceprotocolmapper-v1alpha1.kb.io,admissionReviewVersions=v1
 
-// AudienceProtocolMapperCustomDefaulter struct is responsible for setting default values on the custom resource of the
-// Kind AudienceProtocolMapper when those are created or updated.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as it is used only for temporary operations and does not need to be deeply copied.
-type AudienceProtocolMapperCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
-}
+type AudienceProtocolMapperCustomDefaulter struct{}
 
-var _ admission.Defaulter[*v1alpha1.AudienceProtocolMapper] = &AudienceProtocolMapperCustomDefaulter{}
+var _ admission.Defaulter[*openidv1alpha1.AudienceProtocolMapper] = &AudienceProtocolMapperCustomDefaulter{}
 
-// Default implements admission.Defaulter so a webhook will be registered for the Kind AudienceProtocolMapper.
-func (d *AudienceProtocolMapperCustomDefaulter) Default(_ context.Context, mapper *v1alpha1.AudienceProtocolMapper) error {
+func (d *AudienceProtocolMapperCustomDefaulter) Default(_ context.Context, mapper *openidv1alpha1.AudienceProtocolMapper) error {
 	audienceprotocolmapperlog.Info("Defaulting for AudienceProtocolMapper", "name", mapper.GetName())
 
-	// TODO(user): fill in your defaulting logic.
+	setDefaultTrue(&mapper.Spec.AddToIDToken)
+	setDefaultTrue(&mapper.Spec.AddToAccessToken)
+	setDefaultTrue(&mapper.Spec.AddToTokenIntrospection)
 
 	return nil
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: If you want to customise the 'path', use the flags '--defaulting-path' or '--validation-path'.
 // +kubebuilder:webhook:path=/validate-openid-keycloak-operator-webhippie-de-v1alpha1-audienceprotocolmapper,mutating=false,failurePolicy=fail,sideEffects=None,groups=openid.keycloak-operator.webhippie.de,resources=audienceprotocolmappers,verbs=create;update,versions=v1alpha1,name=vaudienceprotocolmapper-v1alpha1.kb.io,admissionReviewVersions=v1
 
-// AudienceProtocolMapperCustomValidator struct is responsible for validating the AudienceProtocolMapper resource
-// when it is created, updated, or deleted.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as this struct is used only for temporary operations and does not need to be deeply copied.
-type AudienceProtocolMapperCustomValidator struct {
-	// TODO(user): Add more fields as needed for validation
-}
+type AudienceProtocolMapperCustomValidator struct{}
 
-var _ admission.Validator[*v1alpha1.AudienceProtocolMapper] = &AudienceProtocolMapperCustomValidator{}
+var _ admission.Validator[*openidv1alpha1.AudienceProtocolMapper] = &AudienceProtocolMapperCustomValidator{}
 
-// ValidateCreate implements admission.Validator so a webhook will be registered for the type AudienceProtocolMapper.
-func (v *AudienceProtocolMapperCustomValidator) ValidateCreate(_ context.Context, mapper *v1alpha1.AudienceProtocolMapper) (admission.Warnings, error) {
+func (v *AudienceProtocolMapperCustomValidator) ValidateCreate(_ context.Context, mapper *openidv1alpha1.AudienceProtocolMapper) (admission.Warnings, error) {
 	audienceprotocolmapperlog.Info("Validation for AudienceProtocolMapper upon creation", "name", mapper.GetName())
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if errs := validateAudienceProtocolMapper(mapper); len(errs) > 0 {
+		return nil, errs.ToAggregate()
+	}
 
 	return nil, nil
 }
 
-// ValidateUpdate implements admission.Validator so a webhook will be registered for the type AudienceProtocolMapper.
-func (v *AudienceProtocolMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *v1alpha1.AudienceProtocolMapper) (admission.Warnings, error) {
-	_ = oldMapper
+func (v *AudienceProtocolMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *openidv1alpha1.AudienceProtocolMapper) (admission.Warnings, error) {
 	audienceprotocolmapperlog.Info("Validation for AudienceProtocolMapper upon update", "name", mapper.GetName())
 
-	// TODO(user): fill in your validation logic upon object update.
+	var allErrs field.ErrorList
+	allErrs = append(allErrs, validateAudienceProtocolMapper(mapper)...)
+
+	if !clientRefEqual(oldMapper.Spec.ClientRef, mapper.Spec.ClientRef) {
+		allErrs = append(allErrs, field.Forbidden(
+			field.NewPath("spec", "clientRef"),
+			"clientRef is immutable and cannot be changed after creation",
+		))
+	}
+
+	if len(allErrs) > 0 {
+		return nil, allErrs.ToAggregate()
+	}
 
 	return nil, nil
 }
 
-// ValidateDelete implements admission.Validator so a webhook will be registered for the type AudienceProtocolMapper.
-func (v *AudienceProtocolMapperCustomValidator) ValidateDelete(_ context.Context, mapper *v1alpha1.AudienceProtocolMapper) (admission.Warnings, error) {
+func (v *AudienceProtocolMapperCustomValidator) ValidateDelete(_ context.Context, mapper *openidv1alpha1.AudienceProtocolMapper) (admission.Warnings, error) {
 	audienceprotocolmapperlog.Info("Validation for AudienceProtocolMapper upon deletion", "name", mapper.GetName())
-
-	// TODO(user): fill in your validation logic upon object deletion.
-
 	return nil, nil
+}
+
+func validateAudienceProtocolMapper(mapper *openidv1alpha1.AudienceProtocolMapper) field.ErrorList {
+	var errs field.ErrorList
+
+	errs = append(errs, validateClientRef(mapper.Spec.ClientRef, field.NewPath("spec", "clientRef"))...)
+	errs = append(errs, validateRequiredString(mapper.Spec.Name, field.NewPath("spec", "name"), "name is required")...)
+
+	hasClientAudience := mapper.Spec.IncludedClientAudience != nil && strings.TrimSpace(*mapper.Spec.IncludedClientAudience) != ""
+	hasCustomAudience := mapper.Spec.IncludedCustomAudience != nil && strings.TrimSpace(*mapper.Spec.IncludedCustomAudience) != ""
+
+	if hasClientAudience == hasCustomAudience {
+		errs = append(errs, field.Invalid(
+			field.NewPath("spec"),
+			mapper.Spec,
+			"exactly one of includedClientAudience or includedCustomAudience must be set",
+		))
+	}
+
+	return errs
 }

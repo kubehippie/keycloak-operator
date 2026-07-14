@@ -17,67 +17,45 @@ limitations under the License.
 package openid
 
 import (
-	"context"
-
-	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	"github.com/kubehippie/keycloak-operator/test/utils"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ = Describe("AudienceProtocolMapper Controller", func() {
-	Context("When reconciling a resource", func() {
-		const resourceName = "test-resource"
-
-		ctx := context.Background()
-
-		typeNamespacedName := types.NamespacedName{
-			Name:      resourceName,
-			Namespace: utils.StandardTestNamespace,
+var _ = Describe("audienceProtocolMapperToGocloak", func() {
+	It("maps included client audience", func() {
+		mapper := &v1alpha1.AudienceProtocolMapper{
+			Spec: v1alpha1.AudienceProtocolMapperSpec{
+				Name:                    "audience",
+				IncludedClientAudience:  stringPtr("account"),
+				AddToIDToken:            boolPtr(false),
+				AddToAccessToken:        boolPtr(true),
+				AddToTokenIntrospection: boolPtr(false),
+			},
 		}
-		audienceprotocolmapper := &v1alpha1.AudienceProtocolMapper{}
 
-		BeforeEach(func() {
-			By("creating the custom resource for the Kind AudienceProtocolMapper")
-			err := k8sClient.Get(ctx, typeNamespacedName, audienceprotocolmapper)
-			if err != nil && errors.IsNotFound(err) {
-				resource := &v1alpha1.AudienceProtocolMapper{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: utils.StandardTestNamespace,
-					},
-					// TODO(user): Specify other spec details if needed.
-				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
-			}
-		})
+		got := audienceProtocolMapperToGocloak(mapper)
+		Expect(*got.ProtocolMapper).To(Equal("oidc-audience-mapper"))
+		Expect(got.Config).To(HaveKeyWithValue("included.client.audience", "account"))
+		Expect(got.Config).NotTo(HaveKey("included.custom.audience"))
+		Expect(got.Config).To(HaveKeyWithValue("id.token.claim", "false"))
+		Expect(got.Config).To(HaveKeyWithValue("access.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("introspection.token.claim", "false"))
+	})
 
-		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &v1alpha1.AudienceProtocolMapper{}
-			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
+	It("maps included custom audience and defaults booleans", func() {
+		mapper := &v1alpha1.AudienceProtocolMapper{
+			Spec: v1alpha1.AudienceProtocolMapperSpec{
+				Name:                   "audience",
+				IncludedCustomAudience: stringPtr("my-api"),
+			},
+		}
 
-			By("Cleanup the specific resource instance AudienceProtocolMapper")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
-		})
-		It("should successfully reconcile the resource", func() {
-			By("Reconciling the created resource")
-			controllerReconciler := &AudienceProtocolMapperReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
-			}
-
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: typeNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
-		})
+		got := audienceProtocolMapperToGocloak(mapper)
+		Expect(got.Config).To(HaveKeyWithValue("included.custom.audience", "my-api"))
+		Expect(got.Config).NotTo(HaveKey("included.client.audience"))
+		Expect(got.Config).To(HaveKeyWithValue("id.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("access.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("introspection.token.claim", "true"))
 	})
 })

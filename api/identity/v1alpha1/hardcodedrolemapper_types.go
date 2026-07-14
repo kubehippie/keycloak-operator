@@ -17,20 +17,36 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// HardcodedRoleMapperSpec defines the desired state of HardcodedRoleMapper
+// HardcodedRoleMapperSpec defines the desired state of HardcodedRoleMapper.
 type HardcodedRoleMapperSpec struct {
-	// foo is an example field of HardcodedRoleMapper. Edit hardcodedrolemapper_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
+	// identityProviderRef references the OIDCIdentityProvider this mapper is attached to.
+	// +required
+	IdentityProviderRef *common.IdentityProviderRef `json:"identityProviderRef"`
+
+	// name is the mapper's name as shown in the Keycloak admin console.
+	// +required
+	Name string `json:"name"`
+
+	// role is the realm or client role to hardcode for federated users
+	// (e.g. "admin" or "myclient.myrole").
+	// +required
+	Role string `json:"role"`
 }
 
 // HardcodedRoleMapperStatus defines the observed state of HardcodedRoleMapper.
 type HardcodedRoleMapperStatus struct {
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+	// keycloakID is the UUID assigned by Keycloak for this identity provider mapper.
+	// It is stored here so that update and delete operations can reference the
+	// mapper directly without an additional lookup by name.
+	// +optional
+	KeycloakID *string `json:"keycloakID,omitempty"`
 
 	// conditions represent the current state of the HardcodedRoleMapper resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
@@ -49,8 +65,12 @@ type HardcodedRoleMapperStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="IdentityProvider",type=string,JSONPath=`.spec.identityProviderRef.name`
+// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
+// +kubebuilder:printcolumn:name="Role",type=string,JSONPath=`.spec.role`
+// +kubebuilder:printcolumn:name="KeycloakID",type=string,JSONPath=`.status.keycloakID`
 
-// HardcodedRoleMapper is the Schema for the hardcodedrolemappers API
+// HardcodedRoleMapper is the Schema for the hardcodedrolemappers API.
 type HardcodedRoleMapper struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -69,7 +89,7 @@ type HardcodedRoleMapper struct {
 
 // +kubebuilder:object:root=true
 
-// HardcodedRoleMapperList contains a list of HardcodedRoleMapper
+// HardcodedRoleMapperList contains a list of HardcodedRoleMapper.
 type HardcodedRoleMapperList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -79,3 +99,9 @@ type HardcodedRoleMapperList struct {
 func init() {
 	SchemeBuilder.Register(&HardcodedRoleMapper{}, &HardcodedRoleMapperList{})
 }
+
+// GetKeycloakID returns the Keycloak-assigned UUID stored in the status.
+func (m *HardcodedRoleMapper) GetKeycloakID() *string { return m.Status.KeycloakID }
+
+// SetKeycloakID stores a Keycloak-assigned UUID in the status.
+func (m *HardcodedRoleMapper) SetKeycloakID(id *string) { m.Status.KeycloakID = id }

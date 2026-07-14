@@ -17,69 +17,114 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/api/common"
+	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("HardcodedRoleMapper Webhook", func() {
 	var (
-		obj       *v1alpha1.HardcodedRoleMapper
-		oldObj    *v1alpha1.HardcodedRoleMapper
+		obj       *identityv1alpha1.HardcodedRoleMapper
+		oldObj    *identityv1alpha1.HardcodedRoleMapper
 		validator HardcodedRoleMapperCustomValidator
 		defaulter HardcodedRoleMapperCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &v1alpha1.HardcodedRoleMapper{}
-		oldObj = &v1alpha1.HardcodedRoleMapper{}
+		obj = &identityv1alpha1.HardcodedRoleMapper{}
+		oldObj = &identityv1alpha1.HardcodedRoleMapper{}
 		validator = HardcodedRoleMapperCustomValidator{}
-		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		defaulter = HardcodedRoleMapperCustomDefaulter{}
-		Expect(defaulter).NotTo(BeNil(), "Expected defaulter to be initialized")
-		Expect(oldObj).NotTo(BeNil(), "Expected oldObj to be initialized")
-		Expect(obj).NotTo(BeNil(), "Expected obj to be initialized")
-		// TODO (user): Add any setup logic common to all tests
+		Expect(validator).NotTo(BeNil())
+		Expect(defaulter).NotTo(BeNil())
 	})
 
-	AfterEach(func() {
-		// TODO (user): Add any teardown logic common to all tests
-	})
+	validSpec := func() identityv1alpha1.HardcodedRoleMapperSpec {
+		return identityv1alpha1.HardcodedRoleMapperSpec{
+			IdentityProviderRef: &common.IdentityProviderRef{Name: testSampleIdentityProviderName},
+			Name:                "hardcoded-admin",
+			Role:                "realm-admin",
+		}
+	}
 
 	Context("When creating HardcodedRoleMapper under Defaulting Webhook", func() {
-		// TODO (user): Add logic for defaulting webhooks
-		// Example:
-		// It("Should apply defaults when a required field is empty", func() {
-		//     By("simulating a scenario where defaults should be applied")
-		//     obj.SomeFieldWithDefault = ""
-		//     By("calling the Default method to apply defaults")
-		//     defaulter.Default(ctx, obj)
-		//     By("checking that the default values are set")
-		//     Expect(obj.SomeFieldWithDefault).To(Equal("default_value"))
-		// })
+		It("Should apply defaults without error", func() {
+			obj.Spec = validSpec()
+			Expect(defaulter.Default(ctx, obj)).To(Succeed())
+		})
 	})
 
-	Context("When creating or updating HardcodedRoleMapper under Validating Webhook", func() {
-		// TODO (user): Add logic for validating webhooks
-		// Example:
-		// It("Should deny creation if a required field is missing", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = ""
-		//     Expect(validator.ValidateCreate(ctx, obj)).Error().To(HaveOccurred())
-		// })
-		//
-		// It("Should admit creation if all required fields are present", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = "valid_value"
-		//     Expect(validator.ValidateCreate(ctx, obj)).To(BeNil())
-		// })
-		//
-		// It("Should validate updates correctly", func() {
-		//     By("simulating a valid update scenario")
-		//     oldObj.SomeRequiredField = "updated_value"
-		//     obj.SomeRequiredField = "updated_value"
-		//     Expect(validator.ValidateUpdate(ctx, oldObj, obj)).To(BeNil())
-		// })
+	Context("When creating HardcodedRoleMapper under Validating Webhook", func() {
+		It("Should admit creation when all required fields are present", func() {
+			obj.Spec = validSpec()
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Should deny creation when identityProviderRef is nil", func() {
+			obj.Spec = validSpec()
+			obj.Spec.IdentityProviderRef = nil
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.identityProviderRef"))
+		})
+
+		It("Should deny creation when identityProviderRef.name is empty", func() {
+			obj.Spec = validSpec()
+			obj.Spec.IdentityProviderRef = &common.IdentityProviderRef{Name: ""}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.identityProviderRef.name"))
+		})
+
+		It("Should deny creation when name is empty", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Name = ""
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.name"))
+		})
+
+		It("Should deny creation when role is empty", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Role = ""
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.role"))
+		})
+
+		It("Should admit deletion", func() {
+			obj.Spec = validSpec()
+			_, err := validator.ValidateDelete(ctx, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
 	})
 
+	Context("When updating HardcodedRoleMapper under Validating Webhook", func() {
+		It("Should admit update when identityProviderRef is unchanged", func() {
+			oldObj.Spec = validSpec()
+			obj.Spec = validSpec()
+			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Should deny update when identityProviderRef is changed", func() {
+			oldObj.Spec = validSpec()
+			obj.Spec = validSpec()
+			obj.Spec.IdentityProviderRef = &common.IdentityProviderRef{Name: testOtherIdentityProviderName}
+			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("immutable"))
+		})
+
+		It("Should deny update when identityProviderRef is removed", func() {
+			oldObj.Spec = validSpec()
+			obj.Spec = validSpec()
+			obj.Spec.IdentityProviderRef = nil
+			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.identityProviderRef"))
+		})
+	})
 })

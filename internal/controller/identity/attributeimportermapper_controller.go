@@ -18,15 +18,23 @@ package identity
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
-	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
+	"github.com/Nerzal/gocloak/v14"
+	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
+	controller "github.com/kubehippie/keycloak-operator/internal/controller"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-// AttributeImporterMapperReconciler reconciles a AttributeImporterMapper object
+const attributeImporterMapperFinalizer = "keycloak-operator.webhippie.de/attributeimportermapper"
+
+// AttributeImporterMapperReconciler reconciles a AttributeImporterMapper object.
 type AttributeImporterMapperReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
@@ -38,25 +46,131 @@ type AttributeImporterMapperReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the AttributeImporterMapper object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.22.1/pkg/reconcile
 func (r *AttributeImporterMapperReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+	log := logf.FromContext(ctx)
+	log.Info("Reconciling")
 
-	// TODO(user): your logic here
+	instance := &identityv1alpha1.AttributeImporterMapper{}
+	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, fmt.Errorf("unable to fetch: %w", err)
+	}
+
+	session, alias, err := controller.KeycloakSessionForIdentityProvider(ctx, r.Client, instance.Spec.IdentityProviderRef, req.Namespace)
+	if err != nil {
+		log.Error(err, "Unable to get Keycloak session")
+		return ctrl.Result{RequeueAfter: controller.FailedKeycloakConnectionRetryPeriod}, nil
+	}
+
+	if !instance.DeletionTimestamp.IsZero() {
+		return r.handleDeletion(ctx, instance, session, alias)
+	}
+
+	if !controllerutil.ContainsFinalizer(instance, attributeImporterMapperFinalizer) {
+		controllerutil.AddFinalizer(instance, attributeImporterMapperFinalizer)
+		if err := r.Update(ctx, instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	return r.reconcileAttributeImporterMapper(ctx, instance, session, alias)
+}
+
+func (r *AttributeImporterMapperReconciler) handleDeletion(ctx context.Context, instance *identityv1alpha1.AttributeImporterMapper, session *controller.KeycloakSession, alias string) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+
+	if !controllerutil.ContainsFinalizer(instance, attributeImporterMapperFinalizer) {
+		return ctrl.Result{}, nil
+	}
+
+	if instance.Status.KeycloakID != nil {
+		log.Info("Deleting identity provider mapper from Keycloak", "id", *instance.Status.KeycloakID)
+		if err := session.Client.DeleteIdentityProviderMapper(ctx, session.Token.AccessToken, session.RealmName, alias, *instance.Status.KeycloakID); err != nil {
+			var apiErr *gocloak.APIError
+			if errors.As(err, &apiErr) && apiErr.Code == 404 {
+				log.Info("Identity provider mapper already absent in Keycloak, skipping delete")
+			} else {
+				return ctrl.Result{}, fmt.Errorf("failed to delete identity provider mapper from Keycloak: %w", err)
+			}
+		}
+	}
+
+	controllerutil.RemoveFinalizer(instance, attributeImporterMapperFinalizer)
+	if err := r.Update(ctx, instance); err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to remove finalizer: %w", err)
+	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *AttributeImporterMapperReconciler) reconcileAttributeImporterMapper(ctx context.Context, instance *identityv1alpha1.AttributeImporterMapper, session *controller.KeycloakSession, alias string) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+
+	desired := attributeImporterMapperToGocloak(instance, alias)
+
+	if instance.Status.KeycloakID == nil {
+		existing, err := session.Client.GetIdentityProviderMappers(ctx, session.Token.AccessToken, session.RealmName, alias)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to search for existing identity provider mapper: %w", err)
+		}
+
+		var match *gocloak.IdentityProviderMapper
+		for _, mapper := range existing {
+			if mapper != nil && mapper.Name != nil && *mapper.Name == instance.Spec.Name {
+				match = mapper
+				break
+			}
+		}
+
+		if match != nil {
+			if match.ID == nil {
+				return ctrl.Result{}, fmt.Errorf("found existing identity provider mapper %q without ID", instance.Spec.Name)
+			}
+			log.Info("Adopting existing Keycloak identity provider mapper", "id", *match.ID)
+			if err := controller.UpdateKeycloakIDStatus(ctx, r.Client, instance, match.ID); err != nil {
+				return ctrl.Result{}, err
+			}
+		} else {
+			id, err := session.Client.CreateIdentityProviderMapper(ctx, session.Token.AccessToken, session.RealmName, alias, desired)
+			if err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to create identity provider mapper in Keycloak: %w", err)
+			}
+			log.Info("Identity provider mapper created in Keycloak", "id", id)
+			if err := controller.UpdateKeycloakIDStatus(ctx, r.Client, instance, &id); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{}, nil
+		}
+	}
+
+	desired.ID = instance.Status.KeycloakID
+	if err := session.Client.UpdateIdentityProviderMapper(ctx, session.Token.AccessToken, session.RealmName, alias, desired); err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to update identity provider mapper in Keycloak: %w", err)
+	}
+
+	log.Info("Identity provider mapper reconciled", "id", *instance.Status.KeycloakID)
+	return ctrl.Result{}, nil
+}
+
+func attributeImporterMapperToGocloak(mapper *identityv1alpha1.AttributeImporterMapper, alias string) gocloak.IdentityProviderMapper {
+	return gocloak.IdentityProviderMapper{
+		Name:                   gocloak.StringP(mapper.Spec.Name),
+		IdentityProviderMapper: gocloak.StringP("oidc-user-attribute-idp-mapper"),
+		IdentityProviderAlias:  gocloak.StringP(alias),
+		Config: map[string]string{
+			"claim":          mapper.Spec.ClaimName,
+			"user.attribute": mapper.Spec.UserAttribute,
+		},
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *AttributeImporterMapperReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&v1alpha1.AttributeImporterMapper{}).
+		For(&identityv1alpha1.AttributeImporterMapper{}).
 		Named("identity-attributeimportermapper").
 		Complete(r)
 }

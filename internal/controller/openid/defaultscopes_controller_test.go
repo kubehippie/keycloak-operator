@@ -17,67 +17,41 @@ limitations under the License.
 package openid
 
 import (
-	"context"
-
-	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	"github.com/kubehippie/keycloak-operator/test/utils"
+	"github.com/Nerzal/gocloak/v14"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ = Describe("DefaultScopes Controller", func() {
-	Context("When reconciling a resource", func() {
-		const resourceName = "test-resource"
-
-		ctx := context.Background()
-
-		typeNamespacedName := types.NamespacedName{
-			Name:      resourceName,
-			Namespace: utils.StandardTestNamespace,
+var _ = Describe("resolveDefaultScopesPlan", func() {
+	It("returns scopes to add and remove by diffing names", func() {
+		realmScopes := map[string]string{
+			testScopeEmail: "scope-email",
+			"profile":      "scope-profile",
+			"roles":        "scope-roles",
 		}
-		defaultscopes := &v1alpha1.DefaultScopes{}
+		currentScopes := []*gocloak.ClientScope{
+			{Name: gocloak.StringP(testScopeEmail), ID: gocloak.StringP("scope-email")},
+			{Name: gocloak.StringP("roles"), ID: gocloak.StringP("scope-roles")},
+		}
 
-		BeforeEach(func() {
-			By("creating the custom resource for the Kind DefaultScopes")
-			err := k8sClient.Get(ctx, typeNamespacedName, defaultscopes)
-			if err != nil && errors.IsNotFound(err) {
-				resource := &v1alpha1.DefaultScopes{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: utils.StandardTestNamespace,
-					},
-					// TODO(user): Specify other spec details if needed.
-				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
-			}
-		})
+		toAdd, toRemove, err := resolveDefaultScopesPlan(realmScopes, []string{testScopeEmail, "profile"}, currentScopes)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(toAdd).To(ConsistOf("scope-profile"))
+		Expect(toRemove).To(ConsistOf("scope-roles"))
+	})
 
-		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &v1alpha1.DefaultScopes{}
-			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
+	It("ignores duplicate desired scope names", func() {
+		realmScopes := map[string]string{testScopeEmail: "scope-email"}
 
-			By("Cleanup the specific resource instance DefaultScopes")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
-		})
-		It("should successfully reconcile the resource", func() {
-			By("Reconciling the created resource")
-			controllerReconciler := &DefaultScopesReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
-			}
+		toAdd, toRemove, err := resolveDefaultScopesPlan(realmScopes, []string{testScopeEmail, testScopeEmail}, nil)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(toAdd).To(ConsistOf("scope-email"))
+		Expect(toRemove).To(BeEmpty())
+	})
 
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: typeNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
-		})
+	It("fails when a desired scope does not exist in the realm", func() {
+		_, _, err := resolveDefaultScopesPlan(map[string]string{}, []string{"missing"}, nil)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("missing"))
 	})
 })

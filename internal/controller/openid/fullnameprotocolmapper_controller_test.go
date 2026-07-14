@@ -17,67 +17,35 @@ limitations under the License.
 package openid
 
 import (
-	"context"
-
-	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	"github.com/kubehippie/keycloak-operator/test/utils"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ = Describe("FullNameProtocolMapper Controller", func() {
-	Context("When reconciling a resource", func() {
-		const resourceName = "test-resource"
-
-		ctx := context.Background()
-
-		typeNamespacedName := types.NamespacedName{
-			Name:      resourceName,
-			Namespace: utils.StandardTestNamespace,
+var _ = Describe("fullNameProtocolMapperToGocloak", func() {
+	It("maps all supported fields", func() {
+		mapper := &v1alpha1.FullNameProtocolMapper{
+			Spec: v1alpha1.FullNameProtocolMapperSpec{
+				Name:             "full-name",
+				AddToIDToken:     boolPtr(false),
+				AddToAccessToken: boolPtr(true),
+				AddToUserInfo:    boolPtr(false),
+			},
 		}
-		fullnameprotocolmapper := &v1alpha1.FullNameProtocolMapper{}
 
-		BeforeEach(func() {
-			By("creating the custom resource for the Kind FullNameProtocolMapper")
-			err := k8sClient.Get(ctx, typeNamespacedName, fullnameprotocolmapper)
-			if err != nil && errors.IsNotFound(err) {
-				resource := &v1alpha1.FullNameProtocolMapper{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: utils.StandardTestNamespace,
-					},
-					// TODO(user): Specify other spec details if needed.
-				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
-			}
-		})
+		got := fullNameProtocolMapperToGocloak(mapper)
+		Expect(*got.ProtocolMapper).To(Equal("oidc-full-name-mapper"))
+		Expect(got.Config).To(HaveKeyWithValue("id.token.claim", "false"))
+		Expect(got.Config).To(HaveKeyWithValue("access.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("userinfo.token.claim", "false"))
+	})
 
-		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &v1alpha1.FullNameProtocolMapper{}
-			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
+	It("defaults token flags to true", func() {
+		mapper := &v1alpha1.FullNameProtocolMapper{Spec: v1alpha1.FullNameProtocolMapperSpec{Name: "full-name"}}
 
-			By("Cleanup the specific resource instance FullNameProtocolMapper")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
-		})
-		It("should successfully reconcile the resource", func() {
-			By("Reconciling the created resource")
-			controllerReconciler := &FullNameProtocolMapperReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
-			}
-
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: typeNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
-		})
+		got := fullNameProtocolMapperToGocloak(mapper)
+		Expect(got.Config).To(HaveKeyWithValue("id.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("access.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("userinfo.token.claim", "true"))
 	})
 })

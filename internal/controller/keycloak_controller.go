@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	failedKeycloakConnectionRetryPeriod  = time.Second * 10
+	FailedKeycloakConnectionRetryPeriod  = time.Second * 10
 	successKeycloakConnectionRetryPeriod = time.Minute * 30
 )
 
@@ -67,7 +67,7 @@ func (r *KeycloakReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	if !instance.Status.Connected {
 		log.Info("Not connected, will retry")
-		return ctrl.Result{RequeueAfter: failedKeycloakConnectionRetryPeriod}, nil
+		return ctrl.Result{RequeueAfter: FailedKeycloakConnectionRetryPeriod}, nil
 	}
 
 	log.Info("Reconciling has been finished")
@@ -90,7 +90,7 @@ func (r *KeycloakReconciler) updateConnectionStatus(ctx context.Context, instanc
 	log.Info("Start updating connection status")
 	connected := false
 
-	_, err := keycloakSessionForKeycloak(
+	_, err := KeycloakSessionForKeycloak(
 		ctx,
 		r.Client,
 		&common.KeycloakRef{

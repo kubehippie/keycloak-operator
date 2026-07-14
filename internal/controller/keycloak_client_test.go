@@ -33,32 +33,32 @@ var _ = Describe("keycloak_client helpers", func() {
 
 	ctx := context.Background()
 
-	Describe("resolveSecretKeyRefOrVal", func() {
+	Describe("ResolveSecretKeyRefOrVal", func() {
 		It("returns inline value directly without any Secret lookup", func() {
-			val, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{Value: "hello"}, testNS)
+			val, err := ResolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{Value: "hello"}, testNS)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(Equal("hello"))
 		})
 
 		It("errors when ref is nil", func() {
-			_, err := resolveSecretKeyRefOrVal(ctx, k8sClient, nil, testNS)
+			_, err := ResolveSecretKeyRefOrVal(ctx, k8sClient, nil, testNS)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("errors when neither value nor secretKeyRef is set", func() {
-			_, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{}, testNS)
+			_, err := ResolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{}, testNS)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("errors when secretKeyRef.name is empty", func() {
-			_, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
+			_, err := ResolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
 				SecretKeyRef: &common.SecretKeySelector{Key: "just-key-without-name"},
 			}, testNS)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("errors when secretKeyRef.key is empty", func() {
-			_, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
+			_, err := ResolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
 				SecretKeyRef: &common.SecretKeySelector{Name: "just-name-without-key"},
 			}, testNS)
 			Expect(err).To(HaveOccurred())
@@ -85,7 +85,7 @@ var _ = Describe("keycloak_client helpers", func() {
 			})
 
 			It("reads value from Secret using namespace fallback when ref.Namespace is empty", func() {
-				val, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
+				val, err := ResolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
 					SecretKeyRef: &common.SecretKeySelector{Name: secretName, Key: keyName},
 				}, testNS)
 				Expect(err).NotTo(HaveOccurred())
@@ -93,7 +93,7 @@ var _ = Describe("keycloak_client helpers", func() {
 			})
 
 			It("reads value from Secret when namespace is given explicitly in the ref", func() {
-				val, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
+				val, err := ResolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
 					SecretKeyRef: &common.SecretKeySelector{Name: secretName, Key: keyName, Namespace: testNS},
 				}, "other-ns")
 				Expect(err).NotTo(HaveOccurred())
@@ -101,14 +101,14 @@ var _ = Describe("keycloak_client helpers", func() {
 			})
 
 			It("errors when the key is absent in the Secret", func() {
-				_, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
+				_, err := ResolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
 					SecretKeyRef: &common.SecretKeySelector{Name: secretName, Key: "notexist"},
 				}, testNS)
 				Expect(err).To(HaveOccurred())
 			})
 
 			It("errors when the Secret does not exist in the resolved namespace", func() {
-				_, err := resolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
+				_, err := ResolveSecretKeyRefOrVal(ctx, k8sClient, &common.SecretKeyRefOrVal{
 					SecretKeyRef: &common.SecretKeySelector{Name: "no-such-secret", Key: keyName},
 				}, testNS)
 				Expect(err).To(HaveOccurred())
@@ -116,7 +116,7 @@ var _ = Describe("keycloak_client helpers", func() {
 		})
 	})
 
-	Describe("keycloakSessionForKeycloak namespace fallback", func() {
+	Describe("KeycloakSessionForKeycloak namespace fallback", func() {
 		const kcName = "ns-fallback-kc"
 
 		BeforeEach(func() {
@@ -145,7 +145,7 @@ var _ = Describe("keycloak_client helpers", func() {
 			// should fall back to defaultNamespace=testNS and find the resource.
 			// The session will still fail (no real Keycloak at 127.0.0.1:19999), but
 			// the error must NOT be a resource-not-found error.
-			_, err := keycloakSessionForKeycloak(ctx, k8sClient,
+			_, err := KeycloakSessionForKeycloak(ctx, k8sClient,
 				&common.KeycloakRef{Name: kcName},
 				testNS,
 			)
@@ -154,7 +154,7 @@ var _ = Describe("keycloak_client helpers", func() {
 		})
 
 		It("fails resource lookup when ref.Namespace points to a different namespace", func() {
-			_, err := keycloakSessionForKeycloak(ctx, k8sClient,
+			_, err := KeycloakSessionForKeycloak(ctx, k8sClient,
 				&common.KeycloakRef{Name: kcName, Namespace: "other-ns"},
 				testNS,
 			)
@@ -163,7 +163,7 @@ var _ = Describe("keycloak_client helpers", func() {
 		})
 	})
 
-	Describe("keycloakSessionForRealm namespace fallback", func() {
+	Describe("KeycloakSessionForRealm namespace fallback", func() {
 		const kcName = "realm-ns-fallback-kc"
 		const realmResName = "realm-ns-fallback-realm"
 
@@ -204,7 +204,7 @@ var _ = Describe("keycloak_client helpers", func() {
 		It("resolves Realm via namespace fallback when ref.Namespace is empty", func() {
 			// Realm lives in testNS; ref carries no namespace → falls back to testNS.
 			// Session creation will fail (no live Keycloak), but NOT with a realm-not-found error.
-			_, err := keycloakSessionForRealm(ctx, k8sClient,
+			_, err := KeycloakSessionForRealm(ctx, k8sClient,
 				&common.RealmRef{Name: realmResName},
 				testNS,
 			)
@@ -213,7 +213,7 @@ var _ = Describe("keycloak_client helpers", func() {
 		})
 
 		It("fails realm lookup when ref.Namespace points to a different namespace", func() {
-			_, err := keycloakSessionForRealm(ctx, k8sClient,
+			_, err := KeycloakSessionForRealm(ctx, k8sClient,
 				&common.RealmRef{Name: realmResName, Namespace: "other-ns"},
 				testNS,
 			)

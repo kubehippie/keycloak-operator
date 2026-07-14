@@ -19,7 +19,9 @@ package openid
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/common"
 	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/internal/controller"
 	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,6 +30,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
+
+const testClientScopeName = "profile-extra"
 
 var _ = Describe("ClientScope Controller", func() {
 	Context("When reconciling a resource", func() {
@@ -50,14 +54,16 @@ var _ = Describe("ClientScope Controller", func() {
 						Name:      resourceName,
 						Namespace: utils.StandardTestNamespace,
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: v1alpha1.ClientScopeSpec{
+						RealmRef: &common.RealmRef{Name: "missing-realm"},
+						Name:     testClientScopeName,
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &v1alpha1.ClientScope{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
@@ -65,19 +71,56 @@ var _ = Describe("ClientScope Controller", func() {
 			By("Cleanup the specific resource instance ClientScope")
 			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 		})
-		It("should successfully reconcile the resource", func() {
+
+		It("should requeue when the realm cannot yet be resolved", func() {
 			By("Reconciling the created resource")
 			controllerReconciler := &ClientScopeReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
 
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+			result, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
+			Expect(result.RequeueAfter).To(Equal(controller.FailedKeycloakConnectionRetryPeriod))
 		})
+	})
+})
+
+var _ = Describe("clientScopeToGocloak", func() {
+	It("maps the client scope payload with defaults", func() {
+		includeInTokenScope := true
+		scope := &v1alpha1.ClientScope{
+			Spec: v1alpha1.ClientScopeSpec{
+				Name:                testClientScopeName,
+				IncludeInTokenScope: &includeInTokenScope,
+			},
+		}
+
+		got := clientScopeToGocloak(scope)
+		Expect(got.Name).NotTo(BeNil())
+		Expect(*got.Name).To(Equal(testClientScopeName))
+		Expect(got.Protocol).NotTo(BeNil())
+		Expect(*got.Protocol).To(Equal("openid-connect"))
+		Expect(got.ClientScopeAttributes.IncludeInTokenScope).NotTo(BeNil())
+		Expect(*got.ClientScopeAttributes.IncludeInTokenScope).To(Equal("true"))
+		Expect(got.ClientScopeAttributes.DisplayOnConsentScreen).NotTo(BeNil())
+		Expect(*got.ClientScopeAttributes.DisplayOnConsentScreen).To(Equal("false"))
+	})
+
+	It("enables the consent screen when consentScreenText is set", func() {
+		consentText := "Grants access to your profile"
+		scope := &v1alpha1.ClientScope{
+			Spec: v1alpha1.ClientScopeSpec{
+				Name:              testClientScopeName,
+				ConsentScreenText: &consentText,
+			},
+		}
+
+		got := clientScopeToGocloak(scope)
+		Expect(got.ClientScopeAttributes.ConsentScreenText).To(Equal(&consentText))
+		Expect(got.ClientScopeAttributes.DisplayOnConsentScreen).NotTo(BeNil())
+		Expect(*got.ClientScopeAttributes.DisplayOnConsentScreen).To(Equal("true"))
 	})
 })

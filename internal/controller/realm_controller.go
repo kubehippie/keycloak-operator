@@ -58,10 +58,10 @@ func (r *RealmReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, fmt.Errorf("unable to fetch: %w", err)
 	}
 
-	session, err := keycloakSessionForKeycloak(ctx, r.Client, instance.Spec.KeycloakRef, req.Namespace)
+	session, err := KeycloakSessionForKeycloak(ctx, r.Client, instance.Spec.KeycloakRef, req.Namespace)
 	if err != nil {
 		log.Error(err, "Unable to get Keycloak session")
-		return ctrl.Result{RequeueAfter: failedKeycloakConnectionRetryPeriod}, nil
+		return ctrl.Result{RequeueAfter: FailedKeycloakConnectionRetryPeriod}, nil
 	}
 
 	if !instance.DeletionTimestamp.IsZero() {
@@ -79,7 +79,7 @@ func (r *RealmReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	return r.reconcileRealm(ctx, instance, session)
 }
 
-func (r *RealmReconciler) handleDeletion(ctx context.Context, instance *v1alpha1.Realm, session *keycloakSession) (ctrl.Result, error) {
+func (r *RealmReconciler) handleDeletion(ctx context.Context, instance *v1alpha1.Realm, session *KeycloakSession) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
 	if !controllerutil.ContainsFinalizer(instance, realmFinalizer) {
@@ -104,7 +104,7 @@ func (r *RealmReconciler) handleDeletion(ctx context.Context, instance *v1alpha1
 	return ctrl.Result{}, nil
 }
 
-func (r *RealmReconciler) reconcileRealm(ctx context.Context, instance *v1alpha1.Realm, session *keycloakSession) (ctrl.Result, error) {
+func (r *RealmReconciler) reconcileRealm(ctx context.Context, instance *v1alpha1.Realm, session *KeycloakSession) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
 	desired, err := realmToGocloak(ctx, r.Client, instance, instance.Namespace)
@@ -124,13 +124,13 @@ func (r *RealmReconciler) reconcileRealm(ctx context.Context, instance *v1alpha1
 			return ctrl.Result{}, fmt.Errorf("failed to create realm in Keycloak: %w", err)
 		}
 		log.Info("Realm created in Keycloak", "id", id)
-		if err := updateKeycloakIDStatus(ctx, r.Client, instance, &id); err != nil {
+		if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, &id); err != nil {
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
 	}
 
-	if err := updateKeycloakIDStatus(ctx, r.Client, instance, existing.ID); err != nil {
+	if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, existing.ID); err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -223,7 +223,7 @@ func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns
 			smtpMap["user"] = *smtp.User
 		}
 		if smtp.Password != nil {
-			password, err := resolveSecretKeyRefOrVal(ctx, cl, smtp.Password, ns)
+			password, err := ResolveSecretKeyRefOrVal(ctx, cl, smtp.Password, ns)
 			if err != nil {
 				return gocloak.RealmRepresentation{}, fmt.Errorf("failed to resolve SMTP password: %w", err)
 			}

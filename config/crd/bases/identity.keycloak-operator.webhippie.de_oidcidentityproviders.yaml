@@ -14,7 +14,17 @@ spec:
     singular: oidcidentityprovider
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.alias
+      name: Alias
+      type: string
+    - jsonPath: .spec.enabled
+      name: Enabled
+      type: boolean
+    - jsonPath: .status.keycloakID
+      name: KeycloakID
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: OIDCIdentityProvider is the Schema for the oidcidentityproviders
@@ -40,10 +50,143 @@ spec:
           spec:
             description: spec defines the desired state of OIDCIdentityProvider
             properties:
-              foo:
-                description: foo is an example field of OIDCIdentityProvider. Edit
-                  oidcidentityprovider_types.go to remove/update
+              alias:
+                description: |-
+                  alias is the unique identifier of the identity provider within the realm.
+                  This field is immutable after creation.
                 type: string
+              authorizationURL:
+                description: authorizationURL is the OIDC authorization endpoint.
+                type: string
+              backchannelSupported:
+                description: |-
+                  backchannelSupported indicates whether the external provider supports
+                  backchannel logout.
+                type: boolean
+              clientID:
+                description: clientID is the OIDC client identifier registered with
+                  the external provider.
+                type: string
+              clientSecret:
+                description: clientSecret references a secret or inline value holding
+                  the OIDC client secret.
+                properties:
+                  secretKeyRef:
+                    description: SecretKeyRef selects a key of a Kubernetes Secret.
+                    properties:
+                      key:
+                        description: Key is the key of the Secret to select from.
+                        type: string
+                      name:
+                        description: Name is the name of the Secret.
+                        type: string
+                      namespace:
+                        description: Namespace of the Secret.
+                        type: string
+                    required:
+                    - key
+                    - name
+                    type: object
+                  value:
+                    description: Value directly specifies the value as a plain string.
+                    type: string
+                type: object
+              defaultScopes:
+                description: |-
+                  defaultScopes is the space-separated list of scopes requested during
+                  authorization. Defaults to "openid" when omitted.
+                type: string
+              displayName:
+                description: displayName is the human-friendly name shown in the login
+                  form.
+                type: string
+              enabled:
+                description: enabled controls whether the identity provider is active.
+                type: boolean
+              firstBrokerLoginFlowAlias:
+                description: |-
+                  firstBrokerLoginFlowAlias is the authentication flow used the first
+                  time a user logs in through this identity provider.
+                type: string
+              hideOnLoginPage:
+                description: hideOnLoginPage hides the identity provider from the
+                  realm's login page.
+                type: boolean
+              issuer:
+                description: issuer is the expected OIDC issuer identifier.
+                type: string
+              jwksURL:
+                description: jwksURL is the JSON Web Key Set URL used to validate
+                  provider signatures.
+                type: string
+              linkOnly:
+                description: |-
+                  linkOnly restricts the identity provider to account linking only,
+                  preventing it from being used for direct authentication.
+                type: boolean
+              logoutURL:
+                description: logoutURL is the OIDC end-session (logout) endpoint.
+                type: string
+              postBrokerLoginFlowAlias:
+                description: |-
+                  postBrokerLoginFlowAlias is the authentication flow executed after
+                  every login through this identity provider.
+                type: string
+              realmRef:
+                description: realmRef is a reference to the Realm this identity provider
+                  belongs to.
+                properties:
+                  kind:
+                    default: Realm
+                    description: Kind specifies the kind of the Realm resource.
+                    enum:
+                    - Realm
+                    type: string
+                  name:
+                    description: Name specifies the name of the Realm resource.
+                    type: string
+                  namespace:
+                    description: Namespace specifies the namespace of the Realm resource.
+                    type: string
+                required:
+                - name
+                type: object
+              storeToken:
+                description: storeToken enables storing tokens issued by the external
+                  provider.
+                type: boolean
+              syncMode:
+                description: |-
+                  syncMode controls when Keycloak imports/synchronizes user data from the
+                  external provider (e.g. "IMPORT", "LEGACY", "FORCE").
+                enum:
+                - IMPORT
+                - LEGACY
+                - FORCE
+                type: string
+              tokenURL:
+                description: tokenURL is the OIDC token endpoint.
+                type: string
+              trustEmail:
+                description: |-
+                  trustEmail trusts email addresses asserted by the external provider,
+                  skipping Keycloak's own email verification.
+                type: boolean
+              userInfoURL:
+                description: userInfoURL is the OIDC user info endpoint.
+                type: string
+              validateSignature:
+                description: |-
+                  validateSignature enables signature validation of tokens issued by the
+                  external provider.
+                type: boolean
+            required:
+            - alias
+            - authorizationURL
+            - clientID
+            - clientSecret
+            - realmRef
+            - tokenURL
             type: object
           status:
             description: status defines the observed state of OIDCIdentityProvider
@@ -117,6 +260,10 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              keycloakID:
+                description: keycloakID is the internal UUID assigned by Keycloak
+                  for this identity provider.
+                type: string
             type: object
         required:
         - spec

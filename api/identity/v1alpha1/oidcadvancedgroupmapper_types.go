@@ -17,20 +17,50 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// OIDCAdvancedGroupMapperSpec defines the desired state of OIDCAdvancedGroupMapper
+// OIDCAdvancedGroupMapperSpec defines the desired state of OIDCAdvancedGroupMapper.
+//
+// This mirrors Keycloak's built-in "Advanced Claim to Group" identity
+// provider mapper (provider ID "oidc-advanced-group-idp-mapper"): if all
+// configured claims match, the federated user is assigned to the given
+// group.
 type OIDCAdvancedGroupMapperSpec struct {
-	// foo is an example field of OIDCAdvancedGroupMapper. Edit oidcadvancedgroupmapper_types.go to remove/update
+	// identityProviderRef references the OIDCIdentityProvider this mapper is attached to.
+	// +required
+	IdentityProviderRef *common.IdentityProviderRef `json:"identityProviderRef"`
+
+	// name is the mapper's name as shown in the Keycloak admin console.
+	// +required
+	Name string `json:"name"`
+
+	// claims maps claim names to the expected value that must be present in
+	// the token for the group assignment to apply. Nested claims may be
+	// referenced using a "." separator (e.g. "address.locality").
+	// +required
+	Claims map[string]string `json:"claims"`
+
+	// claimValuesRegex controls whether the configured claim values are
+	// interpreted as regular expressions. Defaults to false.
 	// +optional
-	Foo *string `json:"foo,omitempty"`
+	ClaimValuesRegex *bool `json:"claimValuesRegex,omitempty"`
+
+	// group is the full path of the Keycloak group to assign the user to
+	// when all claims match (e.g. "/parent/child").
+	// +required
+	Group string `json:"group"`
 }
 
 // OIDCAdvancedGroupMapperStatus defines the observed state of OIDCAdvancedGroupMapper.
 type OIDCAdvancedGroupMapperStatus struct {
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+	// keycloakID is the UUID assigned by Keycloak for this identity provider mapper.
+	// +optional
+	KeycloakID *string `json:"keycloakID,omitempty"`
 
 	// conditions represent the current state of the OIDCAdvancedGroupMapper resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
@@ -49,6 +79,10 @@ type OIDCAdvancedGroupMapperStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="IdentityProvider",type=string,JSONPath=`.spec.identityProviderRef.name`
+// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
+// +kubebuilder:printcolumn:name="Group",type=string,JSONPath=`.spec.group`
+// +kubebuilder:printcolumn:name="KeycloakID",type=string,JSONPath=`.status.keycloakID`
 
 // OIDCAdvancedGroupMapper is the Schema for the oidcadvancedgroupmappers API
 type OIDCAdvancedGroupMapper struct {
@@ -79,3 +113,9 @@ type OIDCAdvancedGroupMapperList struct {
 func init() {
 	SchemeBuilder.Register(&OIDCAdvancedGroupMapper{}, &OIDCAdvancedGroupMapperList{})
 }
+
+// GetKeycloakID returns the Keycloak-assigned UUID stored in the status.
+func (m *OIDCAdvancedGroupMapper) GetKeycloakID() *string { return m.Status.KeycloakID }
+
+// SetKeycloakID stores a Keycloak-assigned UUID in the status.
+func (m *OIDCAdvancedGroupMapper) SetKeycloakID(id *string) { m.Status.KeycloakID = id }

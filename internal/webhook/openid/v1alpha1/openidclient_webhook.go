@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -28,6 +29,12 @@ import (
 // nolint:unused
 // log is for logging in this package.
 var openidclientlog = logf.Log.WithName("openidclient-resource")
+
+const (
+	accessTypeConfidential = "CONFIDENTIAL"
+	accessTypePublic       = "PUBLIC"
+	accessTypeBearerOnly   = "BEARER-ONLY"
+)
 
 // SetupOpenIDClientWebhookWithManager registers the webhook for OpenIDClient in the manager.
 func SetupOpenIDClientWebhookWithManager(mgr ctrl.Manager) error {
@@ -56,7 +63,33 @@ var _ admission.Defaulter[*v1alpha1.OpenIDClient] = &OpenIDClientCustomDefaulter
 func (d *OpenIDClientCustomDefaulter) Default(_ context.Context, client *v1alpha1.OpenIDClient) error {
 	openidclientlog.Info("Defaulting for OpenIDClient", "name", client.GetName())
 
-	// TODO(user): fill in your defaulting logic.
+	if client.Spec.AccessType == "" {
+		client.Spec.AccessType = accessTypeConfidential
+	}
+	if client.Spec.Enabled == nil {
+		client.Spec.Enabled = boolPtr(true)
+	}
+	if client.Spec.StandardFlowEnabled == nil {
+		client.Spec.StandardFlowEnabled = boolPtr(true)
+	}
+	if client.Spec.ImplicitFlowEnabled == nil {
+		client.Spec.ImplicitFlowEnabled = boolPtr(false)
+	}
+	if client.Spec.DirectAccessGrantsEnabled == nil {
+		client.Spec.DirectAccessGrantsEnabled = boolPtr(true)
+	}
+	if client.Spec.ServiceAccountsEnabled == nil {
+		client.Spec.ServiceAccountsEnabled = boolPtr(false)
+	}
+	if client.Spec.FrontChannelLogoutEnabled == nil {
+		client.Spec.FrontChannelLogoutEnabled = boolPtr(false)
+	}
+	if client.Spec.FullScopeAllowed == nil {
+		client.Spec.FullScopeAllowed = boolPtr(true)
+	}
+	if client.Spec.ClientAuthenticatorType == nil {
+		client.Spec.ClientAuthenticatorType = stringPtr("client-secret")
+	}
 
 	return nil
 }
@@ -80,17 +113,20 @@ var _ admission.Validator[*v1alpha1.OpenIDClient] = &OpenIDClientCustomValidator
 func (v *OpenIDClientCustomValidator) ValidateCreate(_ context.Context, client *v1alpha1.OpenIDClient) (admission.Warnings, error) {
 	openidclientlog.Info("Validation for OpenIDClient upon creation", "name", client.GetName())
 
-	// TODO(user): fill in your validation logic upon object creation.
-
-	return nil, nil
+	return nil, validateOpenIDClient(client)
 }
 
 // ValidateUpdate implements admission.Validator so a webhook will be registered for the type OpenIDClient.
 func (v *OpenIDClientCustomValidator) ValidateUpdate(_ context.Context, oldClient, client *v1alpha1.OpenIDClient) (admission.Warnings, error) {
-	_ = oldClient
 	openidclientlog.Info("Validation for OpenIDClient upon update", "name", client.GetName())
 
-	// TODO(user): fill in your validation logic upon object update.
+	if err := validateOpenIDClient(client); err != nil {
+		return nil, err
+	}
+
+	if oldClient.Spec.ClientID != client.Spec.ClientID {
+		return nil, field.Invalid(field.NewPath("spec").Child("clientID"), client.Spec.ClientID, "clientID is immutable")
+	}
 
 	return nil, nil
 }
@@ -99,7 +135,23 @@ func (v *OpenIDClientCustomValidator) ValidateUpdate(_ context.Context, oldClien
 func (v *OpenIDClientCustomValidator) ValidateDelete(_ context.Context, client *v1alpha1.OpenIDClient) (admission.Warnings, error) {
 	openidclientlog.Info("Validation for OpenIDClient upon deletion", "name", client.GetName())
 
-	// TODO(user): fill in your validation logic upon object deletion.
-
 	return nil, nil
+}
+
+func validateOpenIDClient(client *v1alpha1.OpenIDClient) error {
+	if client.Spec.RealmRef == nil {
+		return field.Required(field.NewPath("spec").Child("realmRef"), "realmRef is required")
+	}
+	if client.Spec.ClientID == "" {
+		return field.Required(field.NewPath("spec").Child("clientID"), "clientID is required")
+	}
+	switch client.Spec.AccessType {
+	case "", accessTypeConfidential, accessTypePublic, accessTypeBearerOnly:
+	default:
+		return field.Invalid(field.NewPath("spec").Child("accessType"), client.Spec.AccessType, "must be one of CONFIDENTIAL, PUBLIC, BEARER-ONLY")
+	}
+	if client.Spec.AccessType == accessTypeConfidential && client.Spec.ClientSecret == nil {
+		return field.Required(field.NewPath("spec").Child("clientSecret"), "clientSecret is required when accessType is CONFIDENTIAL")
+	}
+	return nil
 }

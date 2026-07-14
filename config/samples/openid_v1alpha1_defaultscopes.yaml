@@ -1,9 +1,20 @@
+---
 apiVersion: openid.keycloak-operator.webhippie.de/v1alpha1
 kind: DefaultScopes
+
 metadata:
+  name: defaultscopes-sample
   labels:
     app.kubernetes.io/name: keycloak-operator
     app.kubernetes.io/managed-by: kustomize
-  name: defaultscopes-sample
+
 spec:
-  # TODO(user): Add fields here
+  clientRef:
+    name: openidclient-sample
+
+  defaultScopes:
+    - profile
+    - email
+    - roles
+
+...

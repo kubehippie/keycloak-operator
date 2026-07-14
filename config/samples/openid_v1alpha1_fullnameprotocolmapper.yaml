@@ -1,9 +1,20 @@
+---
 apiVersion: openid.keycloak-operator.webhippie.de/v1alpha1
 kind: FullNameProtocolMapper
+
 metadata:
+  name: fullnameprotocolmapper-sample
   labels:
     app.kubernetes.io/name: keycloak-operator
     app.kubernetes.io/managed-by: kustomize
-  name: fullnameprotocolmapper-sample
+
 spec:
-  # TODO(user): Add fields here
+  clientRef:
+    name: openidclient-sample
+
+  name: full-name
+  addToIDToken: true
+  addToAccessToken: true
+  addToUserInfo: true
+
+...

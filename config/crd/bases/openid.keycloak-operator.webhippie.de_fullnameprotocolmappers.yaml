@@ -14,11 +14,21 @@ spec:
     singular: fullnameprotocolmapper
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.clientRef.name
+      name: Client
+      type: string
+    - jsonPath: .spec.name
+      name: Name
+      type: string
+    - jsonPath: .status.keycloakID
+      name: KeycloakID
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: FullNameProtocolMapper is the Schema for the fullnameprotocolmappers
-          API
+          API.
         properties:
           apiVersion:
             description: |-
@@ -40,10 +50,46 @@ spec:
           spec:
             description: spec defines the desired state of FullNameProtocolMapper
             properties:
-              foo:
-                description: foo is an example field of FullNameProtocolMapper. Edit
-                  fullnameprotocolmapper_types.go to remove/update
+              addToAccessToken:
+                description: addToAccessToken controls whether the claim is included
+                  in access tokens.
+                type: boolean
+              addToIDToken:
+                description: addToIDToken controls whether the claim is included in
+                  ID tokens.
+                type: boolean
+              addToUserInfo:
+                description: addToUserInfo controls whether the claim is included
+                  in the userinfo response.
+                type: boolean
+              clientRef:
+                description: clientRef references the OpenIDClient this protocol mapper
+                  is attached to.
+                properties:
+                  kind:
+                    default: OpenIDClient
+                    description: Kind specifies the kind of the referenced client
+                      resource.
+                    enum:
+                    - OpenIDClient
+                    type: string
+                  name:
+                    description: Name specifies the name of the OpenIDClient resource.
+                    type: string
+                  namespace:
+                    description: Namespace specifies the namespace of the OpenIDClient
+                      resource.
+                    type: string
+                required:
+                - name
+                type: object
+              name:
+                description: name is the mapper's name as shown in the Keycloak admin
+                  console.
                 type: string
+            required:
+            - clientRef
+            - name
             type: object
           status:
             description: status defines the observed state of FullNameProtocolMapper
@@ -117,6 +163,10 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              keycloakID:
+                description: keycloakID is the UUID assigned by Keycloak for this
+                  protocol mapper.
+                type: string
             type: object
         required:
         - spec

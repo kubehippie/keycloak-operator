@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -34,52 +35,80 @@ var _ = Describe("ClientScope Webhook", func() {
 		obj = &v1alpha1.ClientScope{}
 		oldObj = &v1alpha1.ClientScope{}
 		validator = ClientScopeCustomValidator{}
-		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		defaulter = ClientScopeCustomDefaulter{}
-		Expect(defaulter).NotTo(BeNil(), "Expected defaulter to be initialized")
-		Expect(oldObj).NotTo(BeNil(), "Expected oldObj to be initialized")
-		Expect(obj).NotTo(BeNil(), "Expected obj to be initialized")
-		// TODO (user): Add any setup logic common to all tests
+		Expect(validator).NotTo(BeNil())
+		Expect(defaulter).NotTo(BeNil())
 	})
 
-	AfterEach(func() {
-		// TODO (user): Add any teardown logic common to all tests
-	})
+	validSpec := func() v1alpha1.ClientScopeSpec {
+		return v1alpha1.ClientScopeSpec{
+			RealmRef: &common.RealmRef{Name: testSampleRealmName},
+			Name:     "profile-extra",
+		}
+	}
 
 	Context("When creating ClientScope under Defaulting Webhook", func() {
-		// TODO (user): Add logic for defaulting webhooks
-		// Example:
-		// It("Should apply defaults when a required field is empty", func() {
-		//     By("simulating a scenario where defaults should be applied")
-		//     obj.SomeFieldWithDefault = ""
-		//     By("calling the Default method to apply defaults")
-		//     defaulter.Default(ctx, obj)
-		//     By("checking that the default values are set")
-		//     Expect(obj.SomeFieldWithDefault).To(Equal("default_value"))
-		// })
+		It("Should default includeInTokenScope to true", func() {
+			obj.Spec = validSpec()
+			Expect(defaulter.Default(ctx, obj)).To(Succeed())
+			Expect(obj.Spec.IncludeInTokenScope).NotTo(BeNil())
+			Expect(*obj.Spec.IncludeInTokenScope).To(BeTrue())
+		})
 	})
 
-	Context("When creating or updating ClientScope under Validating Webhook", func() {
-		// TODO (user): Add logic for validating webhooks
-		// Example:
-		// It("Should deny creation if a required field is missing", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = ""
-		//     Expect(validator.ValidateCreate(ctx, obj)).Error().To(HaveOccurred())
-		// })
-		//
-		// It("Should admit creation if all required fields are present", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = "valid_value"
-		//     Expect(validator.ValidateCreate(ctx, obj)).To(BeNil())
-		// })
-		//
-		// It("Should validate updates correctly", func() {
-		//     By("simulating a valid update scenario")
-		//     oldObj.SomeRequiredField = "updated_value"
-		//     obj.SomeRequiredField = "updated_value"
-		//     Expect(validator.ValidateUpdate(ctx, oldObj, obj)).To(BeNil())
-		// })
+	Context("When creating ClientScope under Validating Webhook", func() {
+		It("Should admit creation when all required fields are present", func() {
+			obj.Spec = validSpec()
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Should deny creation when realmRef is nil", func() {
+			obj.Spec = validSpec()
+			obj.Spec.RealmRef = nil
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.realmRef"))
+		})
+
+		It("Should deny creation when realmRef.name is empty", func() {
+			obj.Spec = validSpec()
+			obj.Spec.RealmRef = &common.RealmRef{Name: ""}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.realmRef.name"))
+		})
+
+		It("Should deny creation when name is empty", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Name = ""
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.name"))
+		})
+
+		It("Should admit deletion", func() {
+			obj.Spec = validSpec()
+			_, err := validator.ValidateDelete(ctx, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
 	})
 
+	Context("When updating ClientScope under Validating Webhook", func() {
+		It("Should admit update when realmRef is unchanged", func() {
+			oldObj.Spec = validSpec()
+			obj.Spec = validSpec()
+			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Should deny update when realmRef is changed", func() {
+			oldObj.Spec = validSpec()
+			obj.Spec = validSpec()
+			obj.Spec.RealmRef = &common.RealmRef{Name: "other-realm"}
+			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("immutable"))
+		})
+	})
 })

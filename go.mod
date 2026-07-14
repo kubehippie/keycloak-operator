@@ -1,6 +1,6 @@
 module github.com/kubehippie/keycloak-operator
 
-go 1.26.3
+go 1.26.5
 
 require (
 	github.com/Nerzal/gocloak/v14 v14.0.3

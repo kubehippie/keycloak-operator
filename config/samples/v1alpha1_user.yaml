@@ -1,12 +1,18 @@
+---
 apiVersion: keycloak-operator.webhippie.de/v1alpha1
 kind: User
+
 metadata:
+  name: user-sample
+  namespace: keycloak-operator-system
   labels:
     app.kubernetes.io/name: keycloak-operator
     app.kubernetes.io/managed-by: kustomize
-  name: user-sample
-  namespace: keycloak-operator-system
+
 spec:
   realmRef:
     name: realm-sample
+
   username: sample-user
+
+...

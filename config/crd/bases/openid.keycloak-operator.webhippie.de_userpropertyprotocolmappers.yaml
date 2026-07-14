@@ -14,11 +14,21 @@ spec:
     singular: userpropertyprotocolmapper
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.clientRef.name
+      name: Client
+      type: string
+    - jsonPath: .spec.name
+      name: Name
+      type: string
+    - jsonPath: .status.keycloakID
+      name: KeycloakID
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: UserPropertyProtocolMapper is the Schema for the userpropertyprotocolmappers
-          API
+          API.
         properties:
           apiVersion:
             description: |-
@@ -40,10 +50,66 @@ spec:
           spec:
             description: spec defines the desired state of UserPropertyProtocolMapper
             properties:
-              foo:
-                description: foo is an example field of UserPropertyProtocolMapper.
-                  Edit userpropertyprotocolmapper_types.go to remove/update
+              addToAccessToken:
+                description: addToAccessToken controls whether the claim is included
+                  in access tokens.
+                type: boolean
+              addToIDToken:
+                description: addToIDToken controls whether the claim is included in
+                  ID tokens.
+                type: boolean
+              addToUserInfo:
+                description: addToUserInfo controls whether the claim is included
+                  in the userinfo response.
+                type: boolean
+              claimName:
+                description: claimName is the token claim that receives the mapped
+                  value.
                 type: string
+              claimValueType:
+                description: claimValueType defines the JSON type label used for the
+                  claim.
+                enum:
+                - String
+                - JSON
+                - long
+                - int
+                - boolean
+                type: string
+              clientRef:
+                description: clientRef references the OpenIDClient this protocol mapper
+                  is attached to.
+                properties:
+                  kind:
+                    default: OpenIDClient
+                    description: Kind specifies the kind of the referenced client
+                      resource.
+                    enum:
+                    - OpenIDClient
+                    type: string
+                  name:
+                    description: Name specifies the name of the OpenIDClient resource.
+                    type: string
+                  namespace:
+                    description: Namespace specifies the namespace of the OpenIDClient
+                      resource.
+                    type: string
+                required:
+                - name
+                type: object
+              name:
+                description: name is the mapper's name as shown in the Keycloak admin
+                  console.
+                type: string
+              userProperty:
+                description: userProperty is the built-in Keycloak user property to
+                  read.
+                type: string
+            required:
+            - claimName
+            - clientRef
+            - name
+            - userProperty
             type: object
           status:
             description: status defines the observed state of UserPropertyProtocolMapper
@@ -117,6 +183,10 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              keycloakID:
+                description: keycloakID is the UUID assigned by Keycloak for this
+                  protocol mapper.
+                type: string
             type: object
         required:
         - spec

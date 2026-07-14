@@ -14,11 +14,27 @@ spec:
     singular: attributeimportermapper
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.identityProviderRef.name
+      name: IdentityProvider
+      type: string
+    - jsonPath: .spec.name
+      name: Name
+      type: string
+    - jsonPath: .spec.userAttribute
+      name: UserAttribute
+      type: string
+    - jsonPath: .spec.claimName
+      name: ClaimName
+      type: string
+    - jsonPath: .status.keycloakID
+      name: KeycloakID
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: AttributeImporterMapper is the Schema for the attributeimportermappers
-          API
+          API.
         properties:
           apiVersion:
             description: |-
@@ -40,10 +56,45 @@ spec:
           spec:
             description: spec defines the desired state of AttributeImporterMapper
             properties:
-              foo:
-                description: foo is an example field of AttributeImporterMapper. Edit
-                  attributeimportermapper_types.go to remove/update
+              claimName:
+                description: claimName is the name of the OIDC claim to read the value
+                  from.
                 type: string
+              identityProviderRef:
+                description: identityProviderRef references the OIDCIdentityProvider
+                  this mapper is attached to.
+                properties:
+                  kind:
+                    default: OIDCIdentityProvider
+                    description: Kind specifies the kind of the referenced identity
+                      provider resource.
+                    enum:
+                    - OIDCIdentityProvider
+                    type: string
+                  name:
+                    description: Name specifies the name of the OIDCIdentityProvider
+                      resource.
+                    type: string
+                  namespace:
+                    description: Namespace specifies the namespace of the OIDCIdentityProvider
+                      resource.
+                    type: string
+                required:
+                - name
+                type: object
+              name:
+                description: name is the mapper's name as shown in the Keycloak admin
+                  console.
+                type: string
+              userAttribute:
+                description: userAttribute is the Keycloak user attribute (or well-known
+                  property) to populate.
+                type: string
+            required:
+            - claimName
+            - identityProviderRef
+            - name
+            - userAttribute
             type: object
           status:
             description: status defines the observed state of AttributeImporterMapper
@@ -117,6 +168,12 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              keycloakID:
+                description: |-
+                  keycloakID is the UUID assigned by Keycloak for this identity provider mapper.
+                  It is stored here so that update and delete operations can reference the
+                  mapper directly without an additional lookup by name.
+                type: string
             type: object
         required:
         - spec

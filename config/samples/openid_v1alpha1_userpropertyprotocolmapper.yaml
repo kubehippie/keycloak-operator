@@ -1,9 +1,23 @@
+---
 apiVersion: openid.keycloak-operator.webhippie.de/v1alpha1
 kind: UserPropertyProtocolMapper
+
 metadata:
+  name: userpropertyprotocolmapper-sample
   labels:
     app.kubernetes.io/name: keycloak-operator
     app.kubernetes.io/managed-by: kustomize
-  name: userpropertyprotocolmapper-sample
+
 spec:
-  # TODO(user): Add fields here
+  clientRef:
+    name: openidclient-sample
+
+  name: email
+  userProperty: email
+  claimName: email
+  claimValueType: String
+  addToIDToken: true
+  addToAccessToken: true
+  addToUserInfo: true
+
+...

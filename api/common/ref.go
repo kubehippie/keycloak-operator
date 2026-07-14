@@ -34,6 +34,40 @@ type RealmRef struct {
 	Namespace string `json:"namespace,omitempty"`
 }
 
+// IdentityProviderRef is a reference to an OIDCIdentityProvider resource.
+type IdentityProviderRef struct {
+	// Kind specifies the kind of the referenced identity provider resource.
+	// +kubebuilder:validation:Enum=OIDCIdentityProvider
+	// +kubebuilder:default=OIDCIdentityProvider
+	// +optional
+	Kind string `json:"kind,omitempty"`
+
+	// Name specifies the name of the OIDCIdentityProvider resource.
+	// +required
+	Name string `json:"name,omitempty"`
+
+	// Namespace specifies the namespace of the OIDCIdentityProvider resource.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+}
+
+// ClientRef is a reference to an OpenIDClient resource.
+type ClientRef struct {
+	// Kind specifies the kind of the referenced client resource.
+	// +kubebuilder:validation:Enum=OpenIDClient
+	// +kubebuilder:default=OpenIDClient
+	// +optional
+	Kind string `json:"kind,omitempty"`
+
+	// Name specifies the name of the OpenIDClient resource.
+	// +required
+	Name string `json:"name,omitempty"`
+
+	// Namespace specifies the namespace of the OpenIDClient resource.
+	// +optional
+	Namespace string `json:"namespace,omitempty"`
+}
+
 // ConfigMapKeySelector selects a key of a ConfigMap.
 // +kubebuilder:object:generate=true
 type ConfigMapKeySelector struct {

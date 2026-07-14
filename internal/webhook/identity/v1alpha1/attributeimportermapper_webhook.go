@@ -18,8 +18,11 @@ package v1alpha1
 
 import (
 	"context"
+	"reflect"
+	"strings"
 
-	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
+	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -31,13 +34,11 @@ var attributeimportermapperlog = logf.Log.WithName("attributeimportermapper-reso
 
 // SetupAttributeImporterMapperWebhookWithManager registers the webhook for AttributeImporterMapper in the manager.
 func SetupAttributeImporterMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.AttributeImporterMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr, &identityv1alpha1.AttributeImporterMapper{}).
 		WithValidator(&AttributeImporterMapperCustomValidator{}).
 		WithDefaulter(&AttributeImporterMapperCustomDefaulter{}).
 		Complete()
 }
-
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
 // +kubebuilder:webhook:path=/mutate-identity-keycloak-operator-webhippie-de-v1alpha1-attributeimportermapper,mutating=true,failurePolicy=fail,sideEffects=None,groups=identity.keycloak-operator.webhippie.de,resources=attributeimportermappers,verbs=create;update,versions=v1alpha1,name=mattributeimportermapper-v1alpha1.kb.io,admissionReviewVersions=v1
 
@@ -46,23 +47,16 @@ func SetupAttributeImporterMapperWebhookWithManager(mgr ctrl.Manager) error {
 //
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as it is used only for temporary operations and does not need to be deeply copied.
-type AttributeImporterMapperCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
-}
+type AttributeImporterMapperCustomDefaulter struct{}
 
-var _ admission.Defaulter[*v1alpha1.AttributeImporterMapper] = &AttributeImporterMapperCustomDefaulter{}
+var _ admission.Defaulter[*identityv1alpha1.AttributeImporterMapper] = &AttributeImporterMapperCustomDefaulter{}
 
 // Default implements admission.Defaulter so a webhook will be registered for the Kind AttributeImporterMapper.
-func (d *AttributeImporterMapperCustomDefaulter) Default(_ context.Context, mapper *v1alpha1.AttributeImporterMapper) error {
+func (d *AttributeImporterMapperCustomDefaulter) Default(_ context.Context, mapper *identityv1alpha1.AttributeImporterMapper) error {
 	attributeimportermapperlog.Info("Defaulting for AttributeImporterMapper", "name", mapper.GetName())
-
-	// TODO(user): fill in your defaulting logic.
-
 	return nil
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: If you want to customise the 'path', use the flags '--defaulting-path' or '--validation-path'.
 // +kubebuilder:webhook:path=/validate-identity-keycloak-operator-webhippie-de-v1alpha1-attributeimportermapper,mutating=false,failurePolicy=fail,sideEffects=None,groups=identity.keycloak-operator.webhippie.de,resources=attributeimportermappers,verbs=create;update,versions=v1alpha1,name=vattributeimportermapper-v1alpha1.kb.io,admissionReviewVersions=v1
 
 // AttributeImporterMapperCustomValidator struct is responsible for validating the AttributeImporterMapper resource
@@ -70,36 +64,86 @@ func (d *AttributeImporterMapperCustomDefaulter) Default(_ context.Context, mapp
 //
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as this struct is used only for temporary operations and does not need to be deeply copied.
-type AttributeImporterMapperCustomValidator struct {
-	// TODO(user): Add more fields as needed for validation
-}
+type AttributeImporterMapperCustomValidator struct{}
 
-var _ admission.Validator[*v1alpha1.AttributeImporterMapper] = &AttributeImporterMapperCustomValidator{}
+var _ admission.Validator[*identityv1alpha1.AttributeImporterMapper] = &AttributeImporterMapperCustomValidator{}
 
 // ValidateCreate implements admission.Validator so a webhook will be registered for the type AttributeImporterMapper.
-func (v *AttributeImporterMapperCustomValidator) ValidateCreate(_ context.Context, mapper *v1alpha1.AttributeImporterMapper) (admission.Warnings, error) {
+func (v *AttributeImporterMapperCustomValidator) ValidateCreate(_ context.Context, mapper *identityv1alpha1.AttributeImporterMapper) (admission.Warnings, error) {
 	attributeimportermapperlog.Info("Validation for AttributeImporterMapper upon creation", "name", mapper.GetName())
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if errs := validateAttributeImporterMapper(mapper); len(errs) > 0 {
+		return nil, errs.ToAggregate()
+	}
 
 	return nil, nil
 }
 
 // ValidateUpdate implements admission.Validator so a webhook will be registered for the type AttributeImporterMapper.
-func (v *AttributeImporterMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *v1alpha1.AttributeImporterMapper) (admission.Warnings, error) {
-	_ = oldMapper
+func (v *AttributeImporterMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *identityv1alpha1.AttributeImporterMapper) (admission.Warnings, error) {
 	attributeimportermapperlog.Info("Validation for AttributeImporterMapper upon update", "name", mapper.GetName())
 
-	// TODO(user): fill in your validation logic upon object update.
+	var allErrs field.ErrorList
+
+	if errs := validateAttributeImporterMapper(mapper); len(errs) > 0 {
+		allErrs = append(allErrs, errs...)
+	}
+
+	if !reflect.DeepEqual(oldMapper.Spec.IdentityProviderRef, mapper.Spec.IdentityProviderRef) {
+		allErrs = append(allErrs, field.Forbidden(
+			field.NewPath("spec", "identityProviderRef"),
+			"identityProviderRef is immutable and cannot be changed after creation",
+		))
+	}
+
+	if len(allErrs) > 0 {
+		return nil, allErrs.ToAggregate()
+	}
 
 	return nil, nil
 }
 
 // ValidateDelete implements admission.Validator so a webhook will be registered for the type AttributeImporterMapper.
-func (v *AttributeImporterMapperCustomValidator) ValidateDelete(_ context.Context, mapper *v1alpha1.AttributeImporterMapper) (admission.Warnings, error) {
+func (v *AttributeImporterMapperCustomValidator) ValidateDelete(_ context.Context, mapper *identityv1alpha1.AttributeImporterMapper) (admission.Warnings, error) {
 	attributeimportermapperlog.Info("Validation for AttributeImporterMapper upon deletion", "name", mapper.GetName())
-
-	// TODO(user): fill in your validation logic upon object deletion.
-
 	return nil, nil
+}
+
+func validateAttributeImporterMapper(mapper *identityv1alpha1.AttributeImporterMapper) field.ErrorList {
+	var errs field.ErrorList
+
+	if mapper.Spec.IdentityProviderRef == nil {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "identityProviderRef"),
+			"identityProviderRef is required",
+		))
+	} else if strings.TrimSpace(mapper.Spec.IdentityProviderRef.Name) == "" {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "identityProviderRef", "name"),
+			"identityProviderRef.name is required",
+		))
+	}
+
+	if strings.TrimSpace(mapper.Spec.Name) == "" {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "name"),
+			"name is required",
+		))
+	}
+
+	if strings.TrimSpace(mapper.Spec.UserAttribute) == "" {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "userAttribute"),
+			"userAttribute is required",
+		))
+	}
+
+	if strings.TrimSpace(mapper.Spec.ClaimName) == "" {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "claimName"),
+			"claimName is required",
+		))
+	}
+
+	return errs
 }

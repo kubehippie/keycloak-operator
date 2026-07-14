@@ -18,15 +18,21 @@ package openid
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	controller "github.com/kubehippie/keycloak-operator/internal/controller"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-// DefaultScopesReconciler reconciles a DefaultScopes object
+const defaultScopesFinalizer = "keycloak-operator.webhippie.de/defaultscopes"
+
+// DefaultScopesReconciler reconciles a DefaultScopes object.
 type DefaultScopesReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
@@ -38,18 +44,120 @@ type DefaultScopesReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the DefaultScopes object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.22.1/pkg/reconcile
 func (r *DefaultScopesReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+	log := logf.FromContext(ctx)
+	log.Info("Reconciling")
 
-	// TODO(user): your logic here
+	instance := &v1alpha1.DefaultScopes{}
+	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, fmt.Errorf("unable to fetch: %w", err)
+	}
 
+	session, idOfClient, err := controller.KeycloakSessionForClient(ctx, r.Client, instance.Spec.ClientRef, req.Namespace)
+	if err != nil {
+		log.Error(err, "Unable to get Keycloak session")
+		return ctrl.Result{RequeueAfter: controller.FailedKeycloakConnectionRetryPeriod}, nil
+	}
+
+	if !instance.DeletionTimestamp.IsZero() {
+		return r.handleDeletion(ctx, instance, session, idOfClient)
+	}
+
+	if !controllerutil.ContainsFinalizer(instance, defaultScopesFinalizer) {
+		controllerutil.AddFinalizer(instance, defaultScopesFinalizer)
+		if err := r.Update(ctx, instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	return r.reconcileDefaultScopes(ctx, instance, session, idOfClient)
+}
+
+func (r *DefaultScopesReconciler) handleDeletion(ctx context.Context, instance *v1alpha1.DefaultScopes, session *controller.KeycloakSession, idOfClient string) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+
+	if !controllerutil.ContainsFinalizer(instance, defaultScopesFinalizer) {
+		return ctrl.Result{}, nil
+	}
+
+	currentScopes, err := session.Client.GetClientsDefaultScopes(ctx, session.Token.AccessToken, session.RealmName, idOfClient)
+	if err != nil {
+		if isNotFoundAPIError(err) {
+			log.Info("Client already absent in Keycloak, skipping default scope cleanup")
+		} else {
+			return ctrl.Result{}, fmt.Errorf("failed to read default scopes from Keycloak: %w", err)
+		}
+		currentScopes = nil
+	}
+
+	desiredNames := make(map[string]struct{}, len(instance.Spec.DefaultScopes))
+	for _, scopeName := range instance.Spec.DefaultScopes {
+		desiredNames[scopeName] = struct{}{}
+	}
+
+	for _, scope := range currentScopes {
+		if scope == nil || scope.Name == nil || scope.ID == nil {
+			continue
+		}
+		if _, ok := desiredNames[*scope.Name]; !ok {
+			continue
+		}
+		if err := session.Client.RemoveDefaultScopeFromClient(ctx, session.Token.AccessToken, session.RealmName, idOfClient, *scope.ID); err != nil {
+			log.Error(err, "Failed to remove default scope during deletion", "scope", *scope.Name)
+		}
+	}
+
+	controllerutil.RemoveFinalizer(instance, defaultScopesFinalizer)
+	if err := r.Update(ctx, instance); err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to remove finalizer: %w", err)
+	}
+
+	return ctrl.Result{}, nil
+}
+
+func (r *DefaultScopesReconciler) reconcileDefaultScopes(ctx context.Context, instance *v1alpha1.DefaultScopes, session *controller.KeycloakSession, idOfClient string) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+
+	realmScopes, err := session.Client.GetClientScopes(ctx, session.Token.AccessToken, session.RealmName)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to list client scopes from Keycloak: %w", err)
+	}
+
+	realmScopeIDs := make(map[string]string, len(realmScopes))
+	for _, scope := range realmScopes {
+		if scope == nil || scope.Name == nil || scope.ID == nil {
+			continue
+		}
+		realmScopeIDs[*scope.Name] = *scope.ID
+	}
+
+	currentScopes, err := session.Client.GetClientsDefaultScopes(ctx, session.Token.AccessToken, session.RealmName, idOfClient)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to list current default scopes from Keycloak: %w", err)
+	}
+
+	toAdd, toRemove, err := resolveDefaultScopesPlan(realmScopeIDs, instance.Spec.DefaultScopes, currentScopes)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	for _, scopeID := range toAdd {
+		if err := session.Client.AddDefaultScopeToClient(ctx, session.Token.AccessToken, session.RealmName, idOfClient, scopeID); err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to attach default scope %q: %w", scopeID, err)
+		}
+	}
+
+	for _, scopeID := range toRemove {
+		if err := session.Client.RemoveDefaultScopeFromClient(ctx, session.Token.AccessToken, session.RealmName, idOfClient, scopeID); err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to detach default scope %q: %w", scopeID, err)
+		}
+	}
+
+	log.Info("Default scopes reconciled", "added", len(toAdd), "removed", len(toRemove))
 	return ctrl.Result{}, nil
 }
 

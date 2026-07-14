@@ -17,20 +17,41 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// FullNameProtocolMapperSpec defines the desired state of FullNameProtocolMapper
+// FullNameProtocolMapperSpec defines the desired state of FullNameProtocolMapper.
 type FullNameProtocolMapperSpec struct {
-	// foo is an example field of FullNameProtocolMapper. Edit fullnameprotocolmapper_types.go to remove/update
+	// clientRef references the OpenIDClient this protocol mapper is attached to.
+	// +required
+	ClientRef *common.ClientRef `json:"clientRef"`
+
+	// name is the mapper's name as shown in the Keycloak admin console.
+	// +required
+	Name string `json:"name"`
+
+	// addToIDToken controls whether the claim is included in ID tokens.
 	// +optional
-	Foo *string `json:"foo,omitempty"`
+	AddToIDToken *bool `json:"addToIDToken,omitempty"`
+
+	// addToAccessToken controls whether the claim is included in access tokens.
+	// +optional
+	AddToAccessToken *bool `json:"addToAccessToken,omitempty"`
+
+	// addToUserInfo controls whether the claim is included in the userinfo response.
+	// +optional
+	AddToUserInfo *bool `json:"addToUserInfo,omitempty"`
 }
 
 // FullNameProtocolMapperStatus defines the observed state of FullNameProtocolMapper.
 type FullNameProtocolMapperStatus struct {
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+	// keycloakID is the UUID assigned by Keycloak for this protocol mapper.
+	// +optional
+	KeycloakID *string `json:"keycloakID,omitempty"`
 
 	// conditions represent the current state of the FullNameProtocolMapper resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
@@ -49,8 +70,11 @@ type FullNameProtocolMapperStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Client",type=string,JSONPath=`.spec.clientRef.name`
+// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
+// +kubebuilder:printcolumn:name="KeycloakID",type=string,JSONPath=`.status.keycloakID`
 
-// FullNameProtocolMapper is the Schema for the fullnameprotocolmappers API
+// FullNameProtocolMapper is the Schema for the fullnameprotocolmappers API.
 type FullNameProtocolMapper struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -69,7 +93,7 @@ type FullNameProtocolMapper struct {
 
 // +kubebuilder:object:root=true
 
-// FullNameProtocolMapperList contains a list of FullNameProtocolMapper
+// FullNameProtocolMapperList contains a list of FullNameProtocolMapper.
 type FullNameProtocolMapperList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -79,3 +103,9 @@ type FullNameProtocolMapperList struct {
 func init() {
 	SchemeBuilder.Register(&FullNameProtocolMapper{}, &FullNameProtocolMapperList{})
 }
+
+// GetKeycloakID returns the Keycloak-assigned UUID stored in the status.
+func (m *FullNameProtocolMapper) GetKeycloakID() *string { return m.Status.KeycloakID }
+
+// SetKeycloakID stores a Keycloak-assigned UUID in the status.
+func (m *FullNameProtocolMapper) SetKeycloakID(id *string) { m.Status.KeycloakID = id }

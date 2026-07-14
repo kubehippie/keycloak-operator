@@ -19,87 +19,93 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// nolint:unused
-// log is for logging in this package.
 var userattributeprotocolmapperlog = logf.Log.WithName("userattributeprotocolmapper-resource")
 
-// SetupUserAttributeProtocolMapperWebhookWithManager registers the webhook for UserAttributeProtocolMapper in the manager.
 func SetupUserAttributeProtocolMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.UserAttributeProtocolMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr, &openidv1alpha1.UserAttributeProtocolMapper{}).
 		WithValidator(&UserAttributeProtocolMapperCustomValidator{}).
 		WithDefaulter(&UserAttributeProtocolMapperCustomDefaulter{}).
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
 // +kubebuilder:webhook:path=/mutate-openid-keycloak-operator-webhippie-de-v1alpha1-userattributeprotocolmapper,mutating=true,failurePolicy=fail,sideEffects=None,groups=openid.keycloak-operator.webhippie.de,resources=userattributeprotocolmappers,verbs=create;update,versions=v1alpha1,name=muserattributeprotocolmapper-v1alpha1.kb.io,admissionReviewVersions=v1
 
-// UserAttributeProtocolMapperCustomDefaulter struct is responsible for setting default values on the custom resource of the
-// Kind UserAttributeProtocolMapper when those are created or updated.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as it is used only for temporary operations and does not need to be deeply copied.
-type UserAttributeProtocolMapperCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
-}
+type UserAttributeProtocolMapperCustomDefaulter struct{}
 
-var _ admission.Defaulter[*v1alpha1.UserAttributeProtocolMapper] = &UserAttributeProtocolMapperCustomDefaulter{}
+var _ admission.Defaulter[*openidv1alpha1.UserAttributeProtocolMapper] = &UserAttributeProtocolMapperCustomDefaulter{}
 
-// Default implements admission.Defaulter so a webhook will be registered for the Kind UserAttributeProtocolMapper.
-func (d *UserAttributeProtocolMapperCustomDefaulter) Default(_ context.Context, mapper *v1alpha1.UserAttributeProtocolMapper) error {
+func (d *UserAttributeProtocolMapperCustomDefaulter) Default(_ context.Context, mapper *openidv1alpha1.UserAttributeProtocolMapper) error {
 	userattributeprotocolmapperlog.Info("Defaulting for UserAttributeProtocolMapper", "name", mapper.GetName())
 
-	// TODO(user): fill in your defaulting logic.
+	if mapper.Spec.ClaimValueType == nil {
+		mapper.Spec.ClaimValueType = stringPtr("String")
+	}
+	setDefaultTrue(&mapper.Spec.Multivalued)
+	setDefaultTrue(&mapper.Spec.AggregateAttributes)
+	setDefaultTrue(&mapper.Spec.AddToIDToken)
+	setDefaultTrue(&mapper.Spec.AddToAccessToken)
+	setDefaultTrue(&mapper.Spec.AddToUserInfo)
+	setDefaultTrue(&mapper.Spec.AddToTokenIntrospection)
 
 	return nil
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: If you want to customise the 'path', use the flags '--defaulting-path' or '--validation-path'.
 // +kubebuilder:webhook:path=/validate-openid-keycloak-operator-webhippie-de-v1alpha1-userattributeprotocolmapper,mutating=false,failurePolicy=fail,sideEffects=None,groups=openid.keycloak-operator.webhippie.de,resources=userattributeprotocolmappers,verbs=create;update,versions=v1alpha1,name=vuserattributeprotocolmapper-v1alpha1.kb.io,admissionReviewVersions=v1
 
-// UserAttributeProtocolMapperCustomValidator struct is responsible for validating the UserAttributeProtocolMapper resource
-// when it is created, updated, or deleted.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as this struct is used only for temporary operations and does not need to be deeply copied.
-type UserAttributeProtocolMapperCustomValidator struct {
-	// TODO(user): Add more fields as needed for validation
-}
+type UserAttributeProtocolMapperCustomValidator struct{}
 
-var _ admission.Validator[*v1alpha1.UserAttributeProtocolMapper] = &UserAttributeProtocolMapperCustomValidator{}
+var _ admission.Validator[*openidv1alpha1.UserAttributeProtocolMapper] = &UserAttributeProtocolMapperCustomValidator{}
 
-// ValidateCreate implements admission.Validator so a webhook will be registered for the type UserAttributeProtocolMapper.
-func (v *UserAttributeProtocolMapperCustomValidator) ValidateCreate(_ context.Context, mapper *v1alpha1.UserAttributeProtocolMapper) (admission.Warnings, error) {
+func (v *UserAttributeProtocolMapperCustomValidator) ValidateCreate(_ context.Context, mapper *openidv1alpha1.UserAttributeProtocolMapper) (admission.Warnings, error) {
 	userattributeprotocolmapperlog.Info("Validation for UserAttributeProtocolMapper upon creation", "name", mapper.GetName())
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if errs := validateUserAttributeProtocolMapper(mapper); len(errs) > 0 {
+		return nil, errs.ToAggregate()
+	}
 
 	return nil, nil
 }
 
-// ValidateUpdate implements admission.Validator so a webhook will be registered for the type UserAttributeProtocolMapper.
-func (v *UserAttributeProtocolMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *v1alpha1.UserAttributeProtocolMapper) (admission.Warnings, error) {
-	_ = oldMapper
+func (v *UserAttributeProtocolMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *openidv1alpha1.UserAttributeProtocolMapper) (admission.Warnings, error) {
 	userattributeprotocolmapperlog.Info("Validation for UserAttributeProtocolMapper upon update", "name", mapper.GetName())
 
-	// TODO(user): fill in your validation logic upon object update.
+	var allErrs field.ErrorList
+	allErrs = append(allErrs, validateUserAttributeProtocolMapper(mapper)...)
+
+	if !clientRefEqual(oldMapper.Spec.ClientRef, mapper.Spec.ClientRef) {
+		allErrs = append(allErrs, field.Forbidden(
+			field.NewPath("spec", "clientRef"),
+			"clientRef is immutable and cannot be changed after creation",
+		))
+	}
+
+	if len(allErrs) > 0 {
+		return nil, allErrs.ToAggregate()
+	}
 
 	return nil, nil
 }
 
-// ValidateDelete implements admission.Validator so a webhook will be registered for the type UserAttributeProtocolMapper.
-func (v *UserAttributeProtocolMapperCustomValidator) ValidateDelete(_ context.Context, mapper *v1alpha1.UserAttributeProtocolMapper) (admission.Warnings, error) {
+func (v *UserAttributeProtocolMapperCustomValidator) ValidateDelete(_ context.Context, mapper *openidv1alpha1.UserAttributeProtocolMapper) (admission.Warnings, error) {
 	userattributeprotocolmapperlog.Info("Validation for UserAttributeProtocolMapper upon deletion", "name", mapper.GetName())
-
-	// TODO(user): fill in your validation logic upon object deletion.
-
 	return nil, nil
+}
+
+func validateUserAttributeProtocolMapper(mapper *openidv1alpha1.UserAttributeProtocolMapper) field.ErrorList {
+	errs := make(field.ErrorList, 0, 5)
+
+	errs = append(errs, validateClientRef(mapper.Spec.ClientRef, field.NewPath("spec", "clientRef"))...)
+	errs = append(errs, validateRequiredString(mapper.Spec.Name, field.NewPath("spec", "name"), "name is required")...)
+	errs = append(errs, validateRequiredString(mapper.Spec.UserAttribute, field.NewPath("spec", "userAttribute"), "userAttribute is required")...)
+	errs = append(errs, validateRequiredString(mapper.Spec.ClaimName, field.NewPath("spec", "claimName"), "claimName is required")...)
+	errs = append(errs, validateClaimValueType(mapper.Spec.ClaimValueType, field.NewPath("spec", "claimValueType"))...)
+
+	return errs
 }

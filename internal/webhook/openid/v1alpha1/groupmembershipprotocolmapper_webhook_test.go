@@ -17,69 +17,89 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/api/common"
+	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("GroupMembershipProtocolMapper Webhook", func() {
 	var (
-		obj       *v1alpha1.GroupMembershipProtocolMapper
-		oldObj    *v1alpha1.GroupMembershipProtocolMapper
+		obj       *openidv1alpha1.GroupMembershipProtocolMapper
+		oldObj    *openidv1alpha1.GroupMembershipProtocolMapper
 		validator GroupMembershipProtocolMapperCustomValidator
 		defaulter GroupMembershipProtocolMapperCustomDefaulter
 	)
 
+	validSpec := func() openidv1alpha1.GroupMembershipProtocolMapperSpec {
+		return openidv1alpha1.GroupMembershipProtocolMapperSpec{
+			ClientRef: &common.ClientRef{Name: testSampleOpenIDClientName},
+			Name:      "groups",
+			ClaimName: "groups",
+			FullPath:  nil,
+		}
+	}
+
 	BeforeEach(func() {
-		obj = &v1alpha1.GroupMembershipProtocolMapper{}
-		oldObj = &v1alpha1.GroupMembershipProtocolMapper{}
+		obj = &openidv1alpha1.GroupMembershipProtocolMapper{}
+		oldObj = &openidv1alpha1.GroupMembershipProtocolMapper{}
 		validator = GroupMembershipProtocolMapperCustomValidator{}
-		Expect(validator).NotTo(BeNil(), "Expected validator to be initialized")
 		defaulter = GroupMembershipProtocolMapperCustomDefaulter{}
-		Expect(defaulter).NotTo(BeNil(), "Expected defaulter to be initialized")
-		Expect(oldObj).NotTo(BeNil(), "Expected oldObj to be initialized")
-		Expect(obj).NotTo(BeNil(), "Expected obj to be initialized")
-		// TODO (user): Add any setup logic common to all tests
 	})
 
-	AfterEach(func() {
-		// TODO (user): Add any teardown logic common to all tests
+	It("defaults all booleans to true", func() {
+		obj.Spec = validSpec()
+		Expect(defaulter.Default(ctx, obj)).To(Succeed())
+		Expect(*obj.Spec.FullPath).To(BeTrue())
+		Expect(*obj.Spec.AddToIDToken).To(BeTrue())
+		Expect(*obj.Spec.AddToAccessToken).To(BeTrue())
+		Expect(*obj.Spec.AddToUserInfo).To(BeTrue())
+		Expect(*obj.Spec.AddToTokenIntrospection).To(BeTrue())
 	})
 
-	Context("When creating GroupMembershipProtocolMapper under Defaulting Webhook", func() {
-		// TODO (user): Add logic for defaulting webhooks
-		// Example:
-		// It("Should apply defaults when a required field is empty", func() {
-		//     By("simulating a scenario where defaults should be applied")
-		//     obj.SomeFieldWithDefault = ""
-		//     By("calling the Default method to apply defaults")
-		//     defaulter.Default(ctx, obj)
-		//     By("checking that the default values are set")
-		//     Expect(obj.SomeFieldWithDefault).To(Equal("default_value"))
-		// })
+	It("admits a valid create", func() {
+		obj.Spec = validSpec()
+		_, err := validator.ValidateCreate(ctx, obj)
+		Expect(err).NotTo(HaveOccurred())
 	})
 
-	Context("When creating or updating GroupMembershipProtocolMapper under Validating Webhook", func() {
-		// TODO (user): Add logic for validating webhooks
-		// Example:
-		// It("Should deny creation if a required field is missing", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = ""
-		//     Expect(validator.ValidateCreate(ctx, obj)).Error().To(HaveOccurred())
-		// })
-		//
-		// It("Should admit creation if all required fields are present", func() {
-		//     By("simulating an invalid creation scenario")
-		//     obj.SomeRequiredField = "valid_value"
-		//     Expect(validator.ValidateCreate(ctx, obj)).To(BeNil())
-		// })
-		//
-		// It("Should validate updates correctly", func() {
-		//     By("simulating a valid update scenario")
-		//     oldObj.SomeRequiredField = "updated_value"
-		//     obj.SomeRequiredField = "updated_value"
-		//     Expect(validator.ValidateUpdate(ctx, oldObj, obj)).To(BeNil())
-		// })
+	It("rejects missing clientRef", func() {
+		obj.Spec = validSpec()
+		obj.Spec.ClientRef = nil
+		_, err := validator.ValidateCreate(ctx, obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.clientRef"))
 	})
 
+	It("rejects empty name", func() {
+		obj.Spec = validSpec()
+		obj.Spec.Name = ""
+		_, err := validator.ValidateCreate(ctx, obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.name"))
+	})
+
+	It("rejects empty claimName", func() {
+		obj.Spec = validSpec()
+		obj.Spec.ClaimName = "  "
+		_, err := validator.ValidateCreate(ctx, obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("spec.claimName"))
+	})
+
+	It("admits updates when clientRef is unchanged", func() {
+		oldObj.Spec = validSpec()
+		obj.Spec = validSpec()
+		_, err := validator.ValidateUpdate(ctx, oldObj, obj)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("rejects clientRef changes on update", func() {
+		oldObj.Spec = validSpec()
+		obj.Spec = validSpec()
+		obj.Spec.ClientRef = &common.ClientRef{Name: testOtherClientName}
+		_, err := validator.ValidateUpdate(ctx, oldObj, obj)
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("immutable"))
+	})
 })

@@ -17,6 +17,7 @@ rules:
   - identity.keycloak-operator.webhippie.de
   resources:
   - attributeimportermappers
+  - customprovidermappers
   - hardcodedrolemappers
   - oidcadvancedgroupmappers
   - oidcidentityproviders
@@ -32,6 +33,7 @@ rules:
   - identity.keycloak-operator.webhippie.de
   resources:
   - attributeimportermappers/finalizers
+  - customprovidermappers/finalizers
   - hardcodedrolemappers/finalizers
   - oidcadvancedgroupmappers/finalizers
   - oidcidentityproviders/finalizers
@@ -41,6 +43,7 @@ rules:
   - identity.keycloak-operator.webhippie.de
   resources:
   - attributeimportermappers/status
+  - customprovidermappers/status
   - hardcodedrolemappers/status
   - oidcadvancedgroupmappers/status
   - oidcidentityproviders/status

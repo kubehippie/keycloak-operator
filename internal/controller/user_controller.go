@@ -56,10 +56,10 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		return ctrl.Result{}, fmt.Errorf("unable to fetch: %w", err)
 	}
 
-	session, err := keycloakSessionForRealm(ctx, r.Client, instance.Spec.RealmRef, req.Namespace)
+	session, err := KeycloakSessionForRealm(ctx, r.Client, instance.Spec.RealmRef, req.Namespace)
 	if err != nil {
 		log.Error(err, "Unable to get Keycloak session")
-		return ctrl.Result{RequeueAfter: failedKeycloakConnectionRetryPeriod}, nil
+		return ctrl.Result{RequeueAfter: FailedKeycloakConnectionRetryPeriod}, nil
 	}
 
 	if !instance.DeletionTimestamp.IsZero() {
@@ -77,7 +77,7 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 	return r.reconcileUser(ctx, instance, session)
 }
 
-func (r *UserReconciler) handleDeletion(ctx context.Context, instance *v1alpha1.User, session *keycloakSession) (ctrl.Result, error) {
+func (r *UserReconciler) handleDeletion(ctx context.Context, instance *v1alpha1.User, session *KeycloakSession) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
 	if !controllerutil.ContainsFinalizer(instance, userFinalizer) {
@@ -99,7 +99,7 @@ func (r *UserReconciler) handleDeletion(ctx context.Context, instance *v1alpha1.
 	return ctrl.Result{}, nil
 }
 
-func (r *UserReconciler) reconcileUser(ctx context.Context, instance *v1alpha1.User, session *keycloakSession) (ctrl.Result, error) {
+func (r *UserReconciler) reconcileUser(ctx context.Context, instance *v1alpha1.User, session *KeycloakSession) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
 	desired := userToGocloak(instance)
@@ -115,7 +115,7 @@ func (r *UserReconciler) reconcileUser(ctx context.Context, instance *v1alpha1.U
 
 		if len(users) > 0 {
 			log.Info("Adopting existing Keycloak user", "id", *users[0].ID)
-			if err := updateKeycloakIDStatus(ctx, r.Client, instance, users[0].ID); err != nil {
+			if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, users[0].ID); err != nil {
 				return ctrl.Result{}, err
 			}
 		} else {
@@ -124,7 +124,7 @@ func (r *UserReconciler) reconcileUser(ctx context.Context, instance *v1alpha1.U
 				return ctrl.Result{}, fmt.Errorf("failed to create user in Keycloak: %w", err)
 			}
 			log.Info("User created in Keycloak", "id", id)
-			if err := updateKeycloakIDStatus(ctx, r.Client, instance, &id); err != nil {
+			if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, &id); err != nil {
 				return ctrl.Result{}, err
 			}
 			return ctrl.Result{}, nil

@@ -1,9 +1,21 @@
+---
 apiVersion: openid.keycloak-operator.webhippie.de/v1alpha1
 kind: AudienceProtocolMapper
+
 metadata:
+  name: audienceprotocolmapper-sample
   labels:
     app.kubernetes.io/name: keycloak-operator
     app.kubernetes.io/managed-by: kustomize
-  name: audienceprotocolmapper-sample
+
 spec:
-  # TODO(user): Add fields here
+  clientRef:
+    name: openidclient-sample
+
+  name: audience
+  includedClientAudience: account
+  addToIDToken: true
+  addToAccessToken: true
+  addToTokenIntrospection: true
+
+...

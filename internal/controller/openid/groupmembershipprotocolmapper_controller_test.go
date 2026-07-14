@@ -17,67 +17,47 @@ limitations under the License.
 package openid
 
 import (
-	"context"
-
-	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	"github.com/kubehippie/keycloak-operator/test/utils"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ = Describe("GroupMembershipProtocolMapper Controller", func() {
-	Context("When reconciling a resource", func() {
-		const resourceName = "test-resource"
-
-		ctx := context.Background()
-
-		typeNamespacedName := types.NamespacedName{
-			Name:      resourceName,
-			Namespace: utils.StandardTestNamespace,
+var _ = Describe("groupMembershipProtocolMapperToGocloak", func() {
+	It("maps all supported fields", func() {
+		mapper := &v1alpha1.GroupMembershipProtocolMapper{
+			Spec: v1alpha1.GroupMembershipProtocolMapperSpec{
+				Name:                    testGroupName,
+				ClaimName:               testGroupName,
+				FullPath:                boolPtr(false),
+				AddToIDToken:            boolPtr(true),
+				AddToAccessToken:        boolPtr(false),
+				AddToUserInfo:           boolPtr(true),
+				AddToTokenIntrospection: boolPtr(false),
+			},
 		}
-		groupmembershipprotocolmapper := &v1alpha1.GroupMembershipProtocolMapper{}
 
-		BeforeEach(func() {
-			By("creating the custom resource for the Kind GroupMembershipProtocolMapper")
-			err := k8sClient.Get(ctx, typeNamespacedName, groupmembershipprotocolmapper)
-			if err != nil && errors.IsNotFound(err) {
-				resource := &v1alpha1.GroupMembershipProtocolMapper{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: utils.StandardTestNamespace,
-					},
-					// TODO(user): Specify other spec details if needed.
-				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
-			}
-		})
+		got := groupMembershipProtocolMapperToGocloak(mapper)
+		Expect(*got.Name).To(Equal(testGroupName))
+		Expect(*got.Protocol).To(Equal("openid-connect"))
+		Expect(*got.ProtocolMapper).To(Equal("oidc-group-membership-mapper"))
+		Expect(got.Config).To(HaveKeyWithValue("full.path", "false"))
+		Expect(got.Config).To(HaveKeyWithValue("claim.name", testGroupName))
+		Expect(got.Config).To(HaveKeyWithValue("id.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("access.token.claim", "false"))
+		Expect(got.Config).To(HaveKeyWithValue("userinfo.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("introspection.token.claim", "false"))
+	})
 
-		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &v1alpha1.GroupMembershipProtocolMapper{}
-			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
+	It("applies true defaults for nil booleans", func() {
+		mapper := &v1alpha1.GroupMembershipProtocolMapper{
+			Spec: v1alpha1.GroupMembershipProtocolMapperSpec{Name: testGroupName, ClaimName: testGroupName},
+		}
 
-			By("Cleanup the specific resource instance GroupMembershipProtocolMapper")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
-		})
-		It("should successfully reconcile the resource", func() {
-			By("Reconciling the created resource")
-			controllerReconciler := &GroupMembershipProtocolMapperReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
-			}
-
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: typeNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
-		})
+		got := groupMembershipProtocolMapperToGocloak(mapper)
+		Expect(got.Config).To(HaveKeyWithValue("full.path", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("id.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("access.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("userinfo.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("introspection.token.claim", "true"))
 	})
 })

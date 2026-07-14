@@ -1,9 +1,25 @@
+---
 apiVersion: identity.keycloak-operator.webhippie.de/v1alpha1
 kind: OIDCIdentityProvider
+
 metadata:
+  name: oidcidentityprovider-sample
   labels:
     app.kubernetes.io/name: keycloak-operator
     app.kubernetes.io/managed-by: kustomize
-  name: oidcidentityprovider-sample
+
 spec:
-  # TODO(user): Add fields here
+  realmRef:
+    name: realm-sample
+
+  alias: sample-oidc-idp
+  displayName: Sample OIDC Provider
+  authorizationURL: "https://idp.example.com/oauth2/authorize"
+  tokenURL: "https://idp.example.com/oauth2/token"
+  defaultScopes: "openid profile email"
+
+  clientID: sample-client-id
+  clientSecret:
+    value: change-me
+
+...

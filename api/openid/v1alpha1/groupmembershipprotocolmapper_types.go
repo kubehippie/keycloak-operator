@@ -17,20 +17,53 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GroupMembershipProtocolMapperSpec defines the desired state of GroupMembershipProtocolMapper
+// GroupMembershipProtocolMapperSpec defines the desired state of GroupMembershipProtocolMapper.
 type GroupMembershipProtocolMapperSpec struct {
-	// foo is an example field of GroupMembershipProtocolMapper. Edit groupmembershipprotocolmapper_types.go to remove/update
+	// clientRef references the OpenIDClient this protocol mapper is attached to.
+	// +required
+	ClientRef *common.ClientRef `json:"clientRef"`
+
+	// name is the mapper's name as shown in the Keycloak admin console.
+	// +required
+	Name string `json:"name"`
+
+	// claimName is the token claim that receives the group membership data.
+	// +required
+	ClaimName string `json:"claimName"`
+
+	// fullPath controls whether full group paths are emitted instead of simple names.
 	// +optional
-	Foo *string `json:"foo,omitempty"`
+	FullPath *bool `json:"fullPath,omitempty"`
+
+	// addToIDToken controls whether the claim is included in ID tokens.
+	// +optional
+	AddToIDToken *bool `json:"addToIDToken,omitempty"`
+
+	// addToAccessToken controls whether the claim is included in access tokens.
+	// +optional
+	AddToAccessToken *bool `json:"addToAccessToken,omitempty"`
+
+	// addToUserInfo controls whether the claim is included in the userinfo response.
+	// +optional
+	AddToUserInfo *bool `json:"addToUserInfo,omitempty"`
+
+	// addToTokenIntrospection controls whether the claim is included in token introspection responses.
+	// +optional
+	AddToTokenIntrospection *bool `json:"addToTokenIntrospection,omitempty"`
 }
 
 // GroupMembershipProtocolMapperStatus defines the observed state of GroupMembershipProtocolMapper.
 type GroupMembershipProtocolMapperStatus struct {
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+	// keycloakID is the UUID assigned by Keycloak for this protocol mapper.
+	// +optional
+	KeycloakID *string `json:"keycloakID,omitempty"`
 
 	// conditions represent the current state of the GroupMembershipProtocolMapper resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
@@ -49,8 +82,11 @@ type GroupMembershipProtocolMapperStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Client",type=string,JSONPath=`.spec.clientRef.name`
+// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
+// +kubebuilder:printcolumn:name="KeycloakID",type=string,JSONPath=`.status.keycloakID`
 
-// GroupMembershipProtocolMapper is the Schema for the groupmembershipprotocolmappers API
+// GroupMembershipProtocolMapper is the Schema for the groupmembershipprotocolmappers API.
 type GroupMembershipProtocolMapper struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -69,7 +105,7 @@ type GroupMembershipProtocolMapper struct {
 
 // +kubebuilder:object:root=true
 
-// GroupMembershipProtocolMapperList contains a list of GroupMembershipProtocolMapper
+// GroupMembershipProtocolMapperList contains a list of GroupMembershipProtocolMapper.
 type GroupMembershipProtocolMapperList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -79,3 +115,9 @@ type GroupMembershipProtocolMapperList struct {
 func init() {
 	SchemeBuilder.Register(&GroupMembershipProtocolMapper{}, &GroupMembershipProtocolMapperList{})
 }
+
+// GetKeycloakID returns the Keycloak-assigned UUID stored in the status.
+func (m *GroupMembershipProtocolMapper) GetKeycloakID() *string { return m.Status.KeycloakID }
+
+// SetKeycloakID stores a Keycloak-assigned UUID in the status.
+func (m *GroupMembershipProtocolMapper) SetKeycloakID(id *string) { m.Status.KeycloakID = id }

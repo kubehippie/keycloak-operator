@@ -14,7 +14,20 @@ spec:
     singular: oidcadvancedgroupmapper
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.identityProviderRef.name
+      name: IdentityProvider
+      type: string
+    - jsonPath: .spec.name
+      name: Name
+      type: string
+    - jsonPath: .spec.group
+      name: Group
+      type: string
+    - jsonPath: .status.keycloakID
+      name: KeycloakID
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: OIDCAdvancedGroupMapper is the Schema for the oidcadvancedgroupmappers
@@ -40,10 +53,55 @@ spec:
           spec:
             description: spec defines the desired state of OIDCAdvancedGroupMapper
             properties:
-              foo:
-                description: foo is an example field of OIDCAdvancedGroupMapper. Edit
-                  oidcadvancedgroupmapper_types.go to remove/update
+              claimValuesRegex:
+                description: |-
+                  claimValuesRegex controls whether the configured claim values are
+                  interpreted as regular expressions. Defaults to false.
+                type: boolean
+              claims:
+                additionalProperties:
+                  type: string
+                description: |-
+                  claims maps claim names to the expected value that must be present in
+                  the token for the group assignment to apply. Nested claims may be
+                  referenced using a "." separator (e.g. "address.locality").
+                type: object
+              group:
+                description: |-
+                  group is the full path of the Keycloak group to assign the user to
+                  when all claims match (e.g. "/parent/child").
                 type: string
+              identityProviderRef:
+                description: identityProviderRef references the OIDCIdentityProvider
+                  this mapper is attached to.
+                properties:
+                  kind:
+                    default: OIDCIdentityProvider
+                    description: Kind specifies the kind of the referenced identity
+                      provider resource.
+                    enum:
+                    - OIDCIdentityProvider
+                    type: string
+                  name:
+                    description: Name specifies the name of the OIDCIdentityProvider
+                      resource.
+                    type: string
+                  namespace:
+                    description: Namespace specifies the namespace of the OIDCIdentityProvider
+                      resource.
+                    type: string
+                required:
+                - name
+                type: object
+              name:
+                description: name is the mapper's name as shown in the Keycloak admin
+                  console.
+                type: string
+            required:
+            - claims
+            - group
+            - identityProviderRef
+            - name
             type: object
           status:
             description: status defines the observed state of OIDCAdvancedGroupMapper
@@ -117,6 +175,10 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              keycloakID:
+                description: keycloakID is the UUID assigned by Keycloak for this
+                  identity provider mapper.
+                type: string
             type: object
         required:
         - spec

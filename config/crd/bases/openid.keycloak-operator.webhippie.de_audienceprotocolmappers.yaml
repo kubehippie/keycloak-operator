@@ -14,11 +14,21 @@ spec:
     singular: audienceprotocolmapper
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.clientRef.name
+      name: Client
+      type: string
+    - jsonPath: .spec.name
+      name: Name
+      type: string
+    - jsonPath: .status.keycloakID
+      name: KeycloakID
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: AudienceProtocolMapper is the Schema for the audienceprotocolmappers
-          API
+          API.
         properties:
           apiVersion:
             description: |-
@@ -40,10 +50,54 @@ spec:
           spec:
             description: spec defines the desired state of AudienceProtocolMapper
             properties:
-              foo:
-                description: foo is an example field of AudienceProtocolMapper. Edit
-                  audienceprotocolmapper_types.go to remove/update
+              addToAccessToken:
+                description: addToAccessToken controls whether the audience is included
+                  in access tokens.
+                type: boolean
+              addToIDToken:
+                description: addToIDToken controls whether the audience is included
+                  in ID tokens.
+                type: boolean
+              addToTokenIntrospection:
+                description: addToTokenIntrospection controls whether the audience
+                  is included in token introspection responses.
+                type: boolean
+              clientRef:
+                description: clientRef references the OpenIDClient this protocol mapper
+                  is attached to.
+                properties:
+                  kind:
+                    default: OpenIDClient
+                    description: Kind specifies the kind of the referenced client
+                      resource.
+                    enum:
+                    - OpenIDClient
+                    type: string
+                  name:
+                    description: Name specifies the name of the OpenIDClient resource.
+                    type: string
+                  namespace:
+                    description: Namespace specifies the namespace of the OpenIDClient
+                      resource.
+                    type: string
+                required:
+                - name
+                type: object
+              includedClientAudience:
+                description: includedClientAudience references another client that
+                  should appear in the aud claim.
                 type: string
+              includedCustomAudience:
+                description: includedCustomAudience is a literal audience value that
+                  should appear in the aud claim.
+                type: string
+              name:
+                description: name is the mapper's name as shown in the Keycloak admin
+                  console.
+                type: string
+            required:
+            - clientRef
+            - name
             type: object
           status:
             description: status defines the observed state of AudienceProtocolMapper
@@ -117,6 +171,10 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              keycloakID:
+                description: keycloakID is the UUID assigned by Keycloak for this
+                  protocol mapper.
+                type: string
             type: object
         required:
         - spec

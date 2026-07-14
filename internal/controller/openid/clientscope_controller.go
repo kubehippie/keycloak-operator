@@ -18,15 +18,23 @@ package openid
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
+	"github.com/Nerzal/gocloak/v14"
 	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/internal/controller"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
-// ClientScopeReconciler reconciles a ClientScope object
+const clientScopeFinalizer = "keycloak-operator.webhippie.de/clientscope"
+
+// ClientScopeReconciler reconciles a ClientScope object.
 type ClientScopeReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
@@ -38,19 +46,137 @@ type ClientScopeReconciler struct {
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
-// TODO(user): Modify the Reconcile function to compare the state specified by
-// the ClientScope object against the actual cluster state, and then
-// perform operations to make the cluster state reflect the state specified by
-// the user.
-//
-// For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.22.1/pkg/reconcile
 func (r *ClientScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = logf.FromContext(ctx)
+	log := logf.FromContext(ctx)
+	log.Info("Reconciling")
 
-	// TODO(user): your logic here
+	instance := &v1alpha1.ClientScope{}
+	if err := r.Get(ctx, req.NamespacedName, instance); err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+		return ctrl.Result{}, fmt.Errorf("unable to fetch: %w", err)
+	}
+
+	session, err := controller.KeycloakSessionForRealm(ctx, r.Client, instance.Spec.RealmRef, req.Namespace)
+	if err != nil {
+		log.Error(err, "Unable to get Keycloak session")
+		return ctrl.Result{RequeueAfter: controller.FailedKeycloakConnectionRetryPeriod}, nil
+	}
+
+	if !instance.DeletionTimestamp.IsZero() {
+		return r.handleDeletion(ctx, instance, session)
+	}
+
+	if !controllerutil.ContainsFinalizer(instance, clientScopeFinalizer) {
+		controllerutil.AddFinalizer(instance, clientScopeFinalizer)
+		if err := r.Update(ctx, instance); err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
+	return r.reconcileClientScope(ctx, instance, session)
+}
+
+func (r *ClientScopeReconciler) handleDeletion(ctx context.Context, instance *v1alpha1.ClientScope, session *controller.KeycloakSession) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+
+	if !controllerutil.ContainsFinalizer(instance, clientScopeFinalizer) {
+		return ctrl.Result{}, nil
+	}
+
+	if instance.Status.KeycloakID != nil {
+		log.Info("Deleting client scope from Keycloak", "id", *instance.Status.KeycloakID)
+		if err := session.Client.DeleteClientScope(ctx, session.Token.AccessToken, session.RealmName, *instance.Status.KeycloakID); err != nil {
+			var apiErr *gocloak.APIError
+			if errors.As(err, &apiErr) && apiErr.Code == 404 {
+				log.Info("Client scope already absent in Keycloak, skipping delete")
+			} else {
+				return ctrl.Result{}, fmt.Errorf("failed to delete client scope from Keycloak: %w", err)
+			}
+		}
+	}
+
+	controllerutil.RemoveFinalizer(instance, clientScopeFinalizer)
+	if err := r.Update(ctx, instance); err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to remove finalizer: %w", err)
+	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *ClientScopeReconciler) reconcileClientScope(ctx context.Context, instance *v1alpha1.ClientScope, session *controller.KeycloakSession) (ctrl.Result, error) {
+	log := logf.FromContext(ctx)
+
+	desired := clientScopeToGocloak(instance)
+
+	if instance.Status.KeycloakID == nil {
+		scopes, err := session.Client.GetClientScopes(ctx, session.Token.AccessToken, session.RealmName)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to search for existing client scope: %w", err)
+		}
+
+		var existing *gocloak.ClientScope
+		for _, scope := range scopes {
+			if scope != nil && scope.Name != nil && *scope.Name == instance.Spec.Name {
+				existing = scope
+				break
+			}
+		}
+
+		if existing != nil {
+			if existing.ID == nil {
+				return ctrl.Result{}, fmt.Errorf("found existing client scope %q without ID", instance.Spec.Name)
+			}
+			log.Info("Adopting existing Keycloak client scope", "id", *existing.ID)
+			if err := controller.UpdateKeycloakIDStatus(ctx, r.Client, instance, existing.ID); err != nil {
+				return ctrl.Result{}, err
+			}
+		} else {
+			id, err := session.Client.CreateClientScope(ctx, session.Token.AccessToken, session.RealmName, desired)
+			if err != nil {
+				return ctrl.Result{}, fmt.Errorf("failed to create client scope in Keycloak: %w", err)
+			}
+			log.Info("Client scope created in Keycloak", "id", id)
+			if err := controller.UpdateKeycloakIDStatus(ctx, r.Client, instance, &id); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{}, nil
+		}
+	}
+
+	desired.ID = instance.Status.KeycloakID
+	if err := session.Client.UpdateClientScope(ctx, session.Token.AccessToken, session.RealmName, desired); err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to update client scope in Keycloak: %w", err)
+	}
+
+	log.Info("Client scope reconciled", "id", *instance.Status.KeycloakID)
+	return ctrl.Result{}, nil
+}
+
+func clientScopeToGocloak(o *v1alpha1.ClientScope) gocloak.ClientScope {
+	includeInTokenScope := boolStringDefaultTrue(o.Spec.IncludeInTokenScope)
+
+	attributes := &gocloak.ClientScopeAttributes{
+		IncludeInTokenScope: &includeInTokenScope,
+	}
+
+	if o.Spec.ConsentScreenText != nil {
+		attributes.ConsentScreenText = o.Spec.ConsentScreenText
+		displayOnConsentScreen := "true"
+		attributes.DisplayOnConsentScreen = &displayOnConsentScreen
+	} else {
+		displayOnConsentScreen := "false"
+		attributes.DisplayOnConsentScreen = &displayOnConsentScreen
+	}
+
+	return gocloak.ClientScope{
+		Name:                  gocloak.StringP(o.Spec.Name),
+		Description:           o.Spec.Description,
+		Protocol:              gocloak.StringP(openidConnectProtocol),
+		ClientScopeAttributes: attributes,
+	}
 }
 
 // SetupWithManager sets up the controller with the Manager.

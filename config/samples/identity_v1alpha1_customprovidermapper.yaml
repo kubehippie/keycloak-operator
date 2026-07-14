@@ -1,0 +1,22 @@
+---
+apiVersion: identity.keycloak-operator.webhippie.de/v1alpha1
+kind: CustomProviderMapper
+
+metadata:
+  name: customprovidermapper-sample
+  labels:
+    app.kubernetes.io/name: keycloak-operator
+    app.kubernetes.io/managed-by: kustomize
+
+spec:
+  identityProviderRef:
+    name: oidcidentityprovider-sample
+
+  name: custom-username-mapper
+  mapperType: oidc-username-idp-mapper
+
+  config:
+    template: "${CLAIM.preferred_username}"
+    target: LOCAL
+
+...

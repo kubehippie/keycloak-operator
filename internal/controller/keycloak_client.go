@@ -21,6 +21,9 @@ import (
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v14"
+	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
+	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+
 	"github.com/kubehippie/keycloak-operator/api/common"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -28,19 +31,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// keycloakIDObject is implemented by any CR whose status exposes the
+// KeycloakIDObject is implemented by any CR whose status exposes the
 // Keycloak-assigned UUID so it can be read and written generically.
-type keycloakIDObject interface {
+type KeycloakIDObject interface {
 	client.Object
 	GetKeycloakID() *string
 	SetKeycloakID(id *string)
 }
 
-// updateKeycloakIDStatus sets status.keycloakID to newID and persists the
+// UpdateKeycloakIDStatus sets status.keycloakID to newID and persists the
 // change via the status subresource. When the current value already equals
 // newID the API call is skipped and nil is returned, mirroring the
 // no-op behaviour of updateConnectionStatus in the Keycloak controller.
-func updateKeycloakIDStatus(ctx context.Context, c client.Client, obj keycloakIDObject, newID *string) error {
+func UpdateKeycloakIDStatus(ctx context.Context, c client.Client, obj KeycloakIDObject, newID *string) error {
 	current := obj.GetKeycloakID()
 	if current != nil && newID != nil && *current == *newID {
 		return nil
@@ -52,19 +55,19 @@ func updateKeycloakIDStatus(ctx context.Context, c client.Client, obj keycloakID
 	return nil
 }
 
-// keycloakSession holds an authenticated GoCloak client together with the
+// KeycloakSession holds an authenticated GoCloak client together with the
 // access token and the target realm name derived from the referenced Realm CR.
-type keycloakSession struct {
+type KeycloakSession struct {
 	Client    *gocloak.GoCloak
 	Token     *gocloak.JWT
 	RealmName string
 }
 
-// keycloakSessionForRealm resolves a RealmRef to an authenticated Keycloak
+// KeycloakSessionForRealm resolves a RealmRef to an authenticated Keycloak
 // API session. It walks RealmRef → Realm → KeycloakRef → Keycloak, reads
 // credentials, and returns a ready-to-use session.
 // defaultNamespace is used when a ref carries no explicit namespace.
-func keycloakSessionForRealm(ctx context.Context, c client.Client, realmRef *common.RealmRef, defaultNamespace string) (*keycloakSession, error) {
+func KeycloakSessionForRealm(ctx context.Context, c client.Client, realmRef *common.RealmRef, defaultNamespace string) (*KeycloakSession, error) {
 	realmNS := realmRef.Namespace
 	if realmNS == "" {
 		realmNS = defaultNamespace
@@ -75,7 +78,7 @@ func keycloakSessionForRealm(ctx context.Context, c client.Client, realmRef *com
 		return nil, fmt.Errorf("unable to fetch realm %s/%s: %w", realmNS, realmRef.Name, err)
 	}
 
-	session, err := keycloakSessionForKeycloak(ctx, c, realm.Spec.KeycloakRef, realmNS)
+	session, err := KeycloakSessionForKeycloak(ctx, c, realm.Spec.KeycloakRef, realmNS)
 	if err != nil {
 		return nil, err
 	}
@@ -84,11 +87,64 @@ func keycloakSessionForRealm(ctx context.Context, c client.Client, realmRef *com
 	return session, nil
 }
 
-// keycloakSessionForKeycloak creates an authenticated Keycloak API session
+// KeycloakSessionForIdentityProvider resolves an IdentityProviderRef to an
+// authenticated Keycloak API session. It walks IdentityProviderRef →
+// OIDCIdentityProvider → RealmRef → Realm → KeycloakRef → Keycloak, and
+// returns the ready-to-use session together with the identity provider's
+// alias. defaultNamespace is used when a ref carries no explicit namespace.
+func KeycloakSessionForIdentityProvider(ctx context.Context, c client.Client, idpRef *common.IdentityProviderRef, defaultNamespace string) (*KeycloakSession, string, error) {
+	idpNS := idpRef.Namespace
+	if idpNS == "" {
+		idpNS = defaultNamespace
+	}
+
+	idp := &identityv1alpha1.OIDCIdentityProvider{}
+	if err := c.Get(ctx, types.NamespacedName{Namespace: idpNS, Name: idpRef.Name}, idp); err != nil {
+		return nil, "", fmt.Errorf("unable to fetch identity provider %s/%s: %w", idpNS, idpRef.Name, err)
+	}
+
+	session, err := KeycloakSessionForRealm(ctx, c, idp.Spec.RealmRef, idpNS)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return session, idp.Spec.Alias, nil
+}
+
+// KeycloakSessionForClient resolves a ClientRef to an authenticated Keycloak
+// API session. It walks ClientRef → OpenIDClient → RealmRef → Realm →
+// KeycloakRef → Keycloak, and returns the ready-to-use session together with
+// the client's Keycloak-assigned internal ID. defaultNamespace is used when a
+// ref carries no explicit namespace. An error is returned when the referenced
+// OpenIDClient has not yet been reconciled (i.e. has no Keycloak ID).
+func KeycloakSessionForClient(ctx context.Context, c client.Client, clientRef *common.ClientRef, defaultNamespace string) (*KeycloakSession, string, error) {
+	clientNS := clientRef.Namespace
+	if clientNS == "" {
+		clientNS = defaultNamespace
+	}
+
+	openIDClient := &openidv1alpha1.OpenIDClient{}
+	if err := c.Get(ctx, types.NamespacedName{Namespace: clientNS, Name: clientRef.Name}, openIDClient); err != nil {
+		return nil, "", fmt.Errorf("unable to fetch client %s/%s: %w", clientNS, clientRef.Name, err)
+	}
+
+	if openIDClient.Status.KeycloakID == nil {
+		return nil, "", fmt.Errorf("client %s/%s is not yet reconciled in Keycloak", clientNS, clientRef.Name)
+	}
+
+	session, err := KeycloakSessionForRealm(ctx, c, openIDClient.Spec.RealmRef, clientNS)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return session, *openIDClient.Status.KeycloakID, nil
+}
+
+// KeycloakSessionForKeycloak creates an authenticated Keycloak API session
 // directly from a KeycloakRef. The RealmName field in the returned session is
 // left empty; callers supply the target realm name themselves.
 // defaultNamespace is used when the ref carries no explicit namespace.
-func keycloakSessionForKeycloak(ctx context.Context, c client.Client, kcRef *common.KeycloakRef, defaultNamespace string) (*keycloakSession, error) {
+func KeycloakSessionForKeycloak(ctx context.Context, c client.Client, kcRef *common.KeycloakRef, defaultNamespace string) (*KeycloakSession, error) {
 	kcNS := kcRef.Namespace
 	if kcNS == "" {
 		kcNS = defaultNamespace
@@ -99,12 +155,12 @@ func keycloakSessionForKeycloak(ctx context.Context, c client.Client, kcRef *com
 		return nil, fmt.Errorf("unable to fetch keycloak %s/%s: %w", kcNS, kcRef.Name, err)
 	}
 
-	username, err := resolveSecretKeyRefOrVal(ctx, c, kc.Spec.Username, kcNS)
+	username, err := ResolveSecretKeyRefOrVal(ctx, c, kc.Spec.Username, kcNS)
 	if err != nil {
 		return nil, fmt.Errorf("unable to resolve username: %w", err)
 	}
 
-	password, err := resolveSecretKeyRefOrVal(ctx, c, kc.Spec.Password, kcNS)
+	password, err := ResolveSecretKeyRefOrVal(ctx, c, kc.Spec.Password, kcNS)
 	if err != nil {
 		return nil, fmt.Errorf("unable to resolve password: %w", err)
 	}
@@ -116,16 +172,16 @@ func keycloakSessionForKeycloak(ctx context.Context, c client.Client, kcRef *com
 		return nil, fmt.Errorf("failed to authenticate with keycloak: %w", err)
 	}
 
-	return &keycloakSession{
+	return &KeycloakSession{
 		Client: kcClient,
 		Token:  token,
 	}, nil
 }
 
-// resolveSecretKeyRefOrVal returns the string value from a SecretKeyRefOrVal.
+// ResolveSecretKeyRefOrVal returns the string value from a SecretKeyRefOrVal.
 // If the inline Value field is non-empty it is returned directly; otherwise
 // the value is read from the referenced Kubernetes Secret.
-func resolveSecretKeyRefOrVal(ctx context.Context, c client.Client, ref *common.SecretKeyRefOrVal, defaultNamespace string) (string, error) {
+func ResolveSecretKeyRefOrVal(ctx context.Context, c client.Client, ref *common.SecretKeyRefOrVal, defaultNamespace string) (string, error) {
 	if ref == nil {
 		return "", fmt.Errorf("ref is nil")
 	}

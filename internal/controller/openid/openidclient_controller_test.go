@@ -19,7 +19,9 @@ package openid
 import (
 	"context"
 
+	"github.com/kubehippie/keycloak-operator/api/common"
 	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	controller "github.com/kubehippie/keycloak-operator/internal/controller"
 	"github.com/kubehippie/keycloak-operator/test/utils"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,6 +30,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
+
+const testOpenIDClientClientID = "sample-client"
 
 var _ = Describe("OpenIDClient Controller", func() {
 	Context("When reconciling a resource", func() {
@@ -50,14 +54,20 @@ var _ = Describe("OpenIDClient Controller", func() {
 						Name:      resourceName,
 						Namespace: utils.StandardTestNamespace,
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: v1alpha1.OpenIDClientSpec{
+						RealmRef:   &common.RealmRef{Name: "missing-realm"},
+						ClientID:   testOpenIDClientClientID,
+						AccessType: "CONFIDENTIAL",
+						ClientSecret: &common.SecretKeyRefOrVal{
+							Value: "sample-secret",
+						},
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &v1alpha1.OpenIDClient{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
@@ -65,19 +75,59 @@ var _ = Describe("OpenIDClient Controller", func() {
 			By("Cleanup the specific resource instance OpenIDClient")
 			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
 		})
-		It("should successfully reconcile the resource", func() {
+
+		It("should requeue when the Keycloak realm cannot yet be resolved", func() {
 			By("Reconciling the created resource")
 			controllerReconciler := &OpenIDClientReconciler{
 				Client: k8sClient,
 				Scheme: k8sClient.Scheme(),
 			}
 
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+			result, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
+			Expect(result.RequeueAfter).To(Equal(controller.FailedKeycloakConnectionRetryPeriod))
 		})
+	})
+})
+
+var _ = Describe("openIDClientToGocloak", func() {
+	It("maps the client payload", func() {
+		client := &v1alpha1.OpenIDClient{
+			Spec: v1alpha1.OpenIDClientSpec{
+				ClientID:   testOpenIDClientClientID,
+				AccessType: "CONFIDENTIAL",
+				ClientSecret: &common.SecretKeyRefOrVal{
+					Value: "sample-secret",
+				},
+			},
+		}
+
+		got, err := openIDClientToGocloak(context.Background(), k8sClient, client, utils.StandardTestNamespace)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(got.ClientID).NotTo(BeNil())
+		Expect(*got.ClientID).To(Equal(testOpenIDClientClientID))
+		Expect(got.Secret).NotTo(BeNil())
+		Expect(*got.Secret).To(Equal("sample-secret"))
+		Expect(got.PublicClient).NotTo(BeNil())
+		Expect(*got.PublicClient).To(BeFalse())
+		Expect(got.BearerOnly).NotTo(BeNil())
+		Expect(*got.BearerOnly).To(BeFalse())
+	})
+
+	It("maps a public client without a secret", func() {
+		client := &v1alpha1.OpenIDClient{
+			Spec: v1alpha1.OpenIDClientSpec{
+				ClientID:   testOpenIDClientClientID,
+				AccessType: "PUBLIC",
+			},
+		}
+
+		got, err := openIDClientToGocloak(context.Background(), k8sClient, client, utils.StandardTestNamespace)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(got.PublicClient).NotTo(BeNil())
+		Expect(*got.PublicClient).To(BeTrue())
+		Expect(got.Secret).To(BeNil())
 	})
 })

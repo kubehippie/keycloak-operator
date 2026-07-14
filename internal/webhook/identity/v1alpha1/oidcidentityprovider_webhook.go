@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -46,9 +47,7 @@ func SetupOIDCIdentityProviderWebhookWithManager(mgr ctrl.Manager) error {
 //
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as it is used only for temporary operations and does not need to be deeply copied.
-type OIDCIdentityProviderCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
-}
+type OIDCIdentityProviderCustomDefaulter struct{}
 
 var _ admission.Defaulter[*v1alpha1.OIDCIdentityProvider] = &OIDCIdentityProviderCustomDefaulter{}
 
@@ -56,7 +55,10 @@ var _ admission.Defaulter[*v1alpha1.OIDCIdentityProvider] = &OIDCIdentityProvide
 func (d *OIDCIdentityProviderCustomDefaulter) Default(_ context.Context, provider *v1alpha1.OIDCIdentityProvider) error {
 	oidcidentityproviderlog.Info("Defaulting for OIDCIdentityProvider", "name", provider.GetName())
 
-	// TODO(user): fill in your defaulting logic.
+	if provider.Spec.DefaultScopes == nil {
+		scopes := "openid"
+		provider.Spec.DefaultScopes = &scopes
+	}
 
 	return nil
 }
@@ -70,9 +72,7 @@ func (d *OIDCIdentityProviderCustomDefaulter) Default(_ context.Context, provide
 //
 // NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
 // as this struct is used only for temporary operations and does not need to be deeply copied.
-type OIDCIdentityProviderCustomValidator struct {
-	// TODO(user): Add more fields as needed for validation
-}
+type OIDCIdentityProviderCustomValidator struct{}
 
 var _ admission.Validator[*v1alpha1.OIDCIdentityProvider] = &OIDCIdentityProviderCustomValidator{}
 
@@ -80,17 +80,33 @@ var _ admission.Validator[*v1alpha1.OIDCIdentityProvider] = &OIDCIdentityProvide
 func (v *OIDCIdentityProviderCustomValidator) ValidateCreate(_ context.Context, provider *v1alpha1.OIDCIdentityProvider) (admission.Warnings, error) {
 	oidcidentityproviderlog.Info("Validation for OIDCIdentityProvider upon creation", "name", provider.GetName())
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if errs := validateOIDCIdentityProvider(provider); len(errs) > 0 {
+		return nil, errs.ToAggregate()
+	}
 
 	return nil, nil
 }
 
 // ValidateUpdate implements admission.Validator so a webhook will be registered for the type OIDCIdentityProvider.
 func (v *OIDCIdentityProviderCustomValidator) ValidateUpdate(_ context.Context, oldProvider, provider *v1alpha1.OIDCIdentityProvider) (admission.Warnings, error) {
-	_ = oldProvider
 	oidcidentityproviderlog.Info("Validation for OIDCIdentityProvider upon update", "name", provider.GetName())
 
-	// TODO(user): fill in your validation logic upon object update.
+	var allErrs field.ErrorList
+
+	if errs := validateOIDCIdentityProvider(provider); len(errs) > 0 {
+		allErrs = append(allErrs, errs...)
+	}
+
+	if oldProvider.Spec.Alias != provider.Spec.Alias {
+		allErrs = append(allErrs, field.Forbidden(
+			field.NewPath("spec", "alias"),
+			"alias is immutable and cannot be changed after creation",
+		))
+	}
+
+	if len(allErrs) > 0 {
+		return nil, allErrs.ToAggregate()
+	}
 
 	return nil, nil
 }
@@ -98,8 +114,63 @@ func (v *OIDCIdentityProviderCustomValidator) ValidateUpdate(_ context.Context, 
 // ValidateDelete implements admission.Validator so a webhook will be registered for the type OIDCIdentityProvider.
 func (v *OIDCIdentityProviderCustomValidator) ValidateDelete(_ context.Context, provider *v1alpha1.OIDCIdentityProvider) (admission.Warnings, error) {
 	oidcidentityproviderlog.Info("Validation for OIDCIdentityProvider upon deletion", "name", provider.GetName())
-
-	// TODO(user): fill in your validation logic upon object deletion.
-
 	return nil, nil
+}
+
+func validateOIDCIdentityProvider(provider *v1alpha1.OIDCIdentityProvider) field.ErrorList {
+	var errs field.ErrorList
+
+	if provider.Spec.RealmRef == nil {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "realmRef"),
+			"realmRef is required",
+		))
+	} else if provider.Spec.RealmRef.Name == "" {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "realmRef", "name"),
+			"realmRef.name is required",
+		))
+	}
+
+	if provider.Spec.Alias == "" {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "alias"),
+			"alias is required",
+		))
+	}
+
+	if provider.Spec.AuthorizationURL == "" {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "authorizationURL"),
+			"authorizationURL is required",
+		))
+	}
+
+	if provider.Spec.TokenURL == "" {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "tokenURL"),
+			"tokenURL is required",
+		))
+	}
+
+	if provider.Spec.ClientID == "" {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "clientID"),
+			"clientID is required",
+		))
+	}
+
+	if provider.Spec.ClientSecret == nil {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "clientSecret"),
+			"clientSecret is required",
+		))
+	} else if provider.Spec.ClientSecret.Value == "" && provider.Spec.ClientSecret.SecretKeyRef == nil {
+		errs = append(errs, field.Required(
+			field.NewPath("spec", "clientSecret"),
+			"either clientSecret.value or clientSecret.secretKeyRef must be set",
+		))
+	}
+
+	return errs
 }

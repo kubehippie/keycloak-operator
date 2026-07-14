@@ -17,20 +17,45 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ClientScopeSpec defines the desired state of ClientScope
+// ClientScopeSpec defines the desired state of ClientScope, modeled after
+// the terraform-provider-keycloak "keycloak_openid_client_scope" resource.
 type ClientScopeSpec struct {
-	// foo is an example field of ClientScope. Edit clientscope_types.go to remove/update
+	// realmRef references the Realm this client scope belongs to. Immutable
+	// after creation.
+	// +required
+	RealmRef *common.RealmRef `json:"realmRef"`
+
+	// name is the name of the client scope.
+	// +required
+	Name string `json:"name"`
+
+	// description is a human-readable description of the client scope.
 	// +optional
-	Foo *string `json:"foo,omitempty"`
+	Description *string `json:"description,omitempty"`
+
+	// consentScreenText is the text displayed on the consent screen when
+	// this scope is requested. Setting this implies displayOnConsentScreen.
+	// +optional
+	ConsentScreenText *string `json:"consentScreenText,omitempty"`
+
+	// includeInTokenScope controls whether this client scope is included in
+	// the access token's "scope" claim. Defaults to true.
+	// +optional
+	IncludeInTokenScope *bool `json:"includeInTokenScope,omitempty"`
 }
 
 // ClientScopeStatus defines the observed state of ClientScope.
 type ClientScopeStatus struct {
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+	// keycloakID is the UUID assigned by Keycloak for this client scope.
+	// +optional
+	KeycloakID *string `json:"keycloakID,omitempty"`
 
 	// conditions represent the current state of the ClientScope resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
@@ -49,6 +74,9 @@ type ClientScopeStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Realm",type=string,JSONPath=`.spec.realmRef.name`
+// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
+// +kubebuilder:printcolumn:name="KeycloakID",type=string,JSONPath=`.status.keycloakID`
 
 // ClientScope is the Schema for the clientscopes API
 type ClientScope struct {
@@ -79,3 +107,9 @@ type ClientScopeList struct {
 func init() {
 	SchemeBuilder.Register(&ClientScope{}, &ClientScopeList{})
 }
+
+// GetKeycloakID returns the Keycloak-assigned UUID stored in the status.
+func (c *ClientScope) GetKeycloakID() *string { return c.Status.KeycloakID }
+
+// SetKeycloakID stores a Keycloak-assigned UUID in the status.
+func (c *ClientScope) SetKeycloakID(id *string) { c.Status.KeycloakID = id }

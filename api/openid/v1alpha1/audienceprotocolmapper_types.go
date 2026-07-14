@@ -17,20 +17,49 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// AudienceProtocolMapperSpec defines the desired state of AudienceProtocolMapper
+// AudienceProtocolMapperSpec defines the desired state of AudienceProtocolMapper.
 type AudienceProtocolMapperSpec struct {
-	// foo is an example field of AudienceProtocolMapper. Edit audienceprotocolmapper_types.go to remove/update
+	// clientRef references the OpenIDClient this protocol mapper is attached to.
+	// +required
+	ClientRef *common.ClientRef `json:"clientRef"`
+
+	// name is the mapper's name as shown in the Keycloak admin console.
+	// +required
+	Name string `json:"name"`
+
+	// includedClientAudience references another client that should appear in the aud claim.
 	// +optional
-	Foo *string `json:"foo,omitempty"`
+	IncludedClientAudience *string `json:"includedClientAudience,omitempty"`
+
+	// includedCustomAudience is a literal audience value that should appear in the aud claim.
+	// +optional
+	IncludedCustomAudience *string `json:"includedCustomAudience,omitempty"`
+
+	// addToIDToken controls whether the audience is included in ID tokens.
+	// +optional
+	AddToIDToken *bool `json:"addToIDToken,omitempty"`
+
+	// addToAccessToken controls whether the audience is included in access tokens.
+	// +optional
+	AddToAccessToken *bool `json:"addToAccessToken,omitempty"`
+
+	// addToTokenIntrospection controls whether the audience is included in token introspection responses.
+	// +optional
+	AddToTokenIntrospection *bool `json:"addToTokenIntrospection,omitempty"`
 }
 
 // AudienceProtocolMapperStatus defines the observed state of AudienceProtocolMapper.
 type AudienceProtocolMapperStatus struct {
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+	// keycloakID is the UUID assigned by Keycloak for this protocol mapper.
+	// +optional
+	KeycloakID *string `json:"keycloakID,omitempty"`
 
 	// conditions represent the current state of the AudienceProtocolMapper resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
@@ -49,8 +78,11 @@ type AudienceProtocolMapperStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Client",type=string,JSONPath=`.spec.clientRef.name`
+// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
+// +kubebuilder:printcolumn:name="KeycloakID",type=string,JSONPath=`.status.keycloakID`
 
-// AudienceProtocolMapper is the Schema for the audienceprotocolmappers API
+// AudienceProtocolMapper is the Schema for the audienceprotocolmappers API.
 type AudienceProtocolMapper struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -69,7 +101,7 @@ type AudienceProtocolMapper struct {
 
 // +kubebuilder:object:root=true
 
-// AudienceProtocolMapperList contains a list of AudienceProtocolMapper
+// AudienceProtocolMapperList contains a list of AudienceProtocolMapper.
 type AudienceProtocolMapperList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -79,3 +111,9 @@ type AudienceProtocolMapperList struct {
 func init() {
 	SchemeBuilder.Register(&AudienceProtocolMapper{}, &AudienceProtocolMapperList{})
 }
+
+// GetKeycloakID returns the Keycloak-assigned UUID stored in the status.
+func (m *AudienceProtocolMapper) GetKeycloakID() *string { return m.Status.KeycloakID }
+
+// SetKeycloakID stores a Keycloak-assigned UUID in the status.
+func (m *AudienceProtocolMapper) SetKeycloakID(id *string) { m.Status.KeycloakID = id }

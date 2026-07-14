@@ -18,6 +18,7 @@ resources:
 - bases/openid.keycloak-operator.webhippie.de_userattributeprotocolmappers.yaml
 - bases/openid.keycloak-operator.webhippie.de_fullnameprotocolmappers.yaml
 - bases/openid.keycloak-operator.webhippie.de_audienceprotocolmappers.yaml
+- bases/identity.keycloak-operator.webhippie.de_customprovidermappers.yaml
 # +kubebuilder:scaffold:crdkustomizeresource
 
 patches:

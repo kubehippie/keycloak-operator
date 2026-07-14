@@ -14,10 +14,14 @@ spec:
     singular: defaultscopes
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .spec.clientRef.name
+      name: Client
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: DefaultScopes is the Schema for the defaultscopes API
+        description: DefaultScopes is the Schema for the defaultscopes API.
         properties:
           apiVersion:
             description: |-
@@ -39,10 +43,38 @@ spec:
           spec:
             description: spec defines the desired state of DefaultScopes
             properties:
-              foo:
-                description: foo is an example field of DefaultScopes. Edit defaultscopes_types.go
-                  to remove/update
-                type: string
+              clientRef:
+                description: clientRef references the OpenIDClient whose default client
+                  scopes are managed.
+                properties:
+                  kind:
+                    default: OpenIDClient
+                    description: Kind specifies the kind of the referenced client
+                      resource.
+                    enum:
+                    - OpenIDClient
+                    type: string
+                  name:
+                    description: Name specifies the name of the OpenIDClient resource.
+                    type: string
+                  namespace:
+                    description: Namespace specifies the namespace of the OpenIDClient
+                      resource.
+                    type: string
+                required:
+                - name
+                type: object
+              defaultScopes:
+                description: |-
+                  defaultScopes lists the client scope names that should be attached to the
+                  client as default scopes.
+                items:
+                  type: string
+                minItems: 1
+                type: array
+            required:
+            - clientRef
+            - defaultScopes
             type: object
           status:
             description: status defines the observed state of DefaultScopes

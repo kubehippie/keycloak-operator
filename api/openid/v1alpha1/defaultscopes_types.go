@@ -17,14 +17,21 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// DefaultScopesSpec defines the desired state of DefaultScopes
+// DefaultScopesSpec defines the desired state of DefaultScopes.
 type DefaultScopesSpec struct {
-	// foo is an example field of DefaultScopes. Edit defaultscopes_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
+	// clientRef references the OpenIDClient whose default client scopes are managed.
+	// +required
+	ClientRef *common.ClientRef `json:"clientRef"`
+
+	// defaultScopes lists the client scope names that should be attached to the
+	// client as default scopes.
+	// +kubebuilder:validation:MinItems=1
+	// +required
+	DefaultScopes []string `json:"defaultScopes"`
 }
 
 // DefaultScopesStatus defines the observed state of DefaultScopes.
@@ -49,8 +56,9 @@ type DefaultScopesStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Client",type=string,JSONPath=`.spec.clientRef.name`
 
-// DefaultScopes is the Schema for the defaultscopes API
+// DefaultScopes is the Schema for the defaultscopes API.
 type DefaultScopes struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -69,7 +77,7 @@ type DefaultScopes struct {
 
 // +kubebuilder:object:root=true
 
-// DefaultScopesList contains a list of DefaultScopes
+// DefaultScopesList contains a list of DefaultScopes.
 type DefaultScopesList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

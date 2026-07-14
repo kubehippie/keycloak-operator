@@ -19,87 +19,84 @@ package v1alpha1
 import (
 	"context"
 
-	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// nolint:unused
-// log is for logging in this package.
 var fullnameprotocolmapperlog = logf.Log.WithName("fullnameprotocolmapper-resource")
 
-// SetupFullNameProtocolMapperWebhookWithManager registers the webhook for FullNameProtocolMapper in the manager.
 func SetupFullNameProtocolMapperWebhookWithManager(mgr ctrl.Manager) error {
-	return ctrl.NewWebhookManagedBy(mgr, &v1alpha1.FullNameProtocolMapper{}).
+	return ctrl.NewWebhookManagedBy(mgr, &openidv1alpha1.FullNameProtocolMapper{}).
 		WithValidator(&FullNameProtocolMapperCustomValidator{}).
 		WithDefaulter(&FullNameProtocolMapperCustomDefaulter{}).
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
 // +kubebuilder:webhook:path=/mutate-openid-keycloak-operator-webhippie-de-v1alpha1-fullnameprotocolmapper,mutating=true,failurePolicy=fail,sideEffects=None,groups=openid.keycloak-operator.webhippie.de,resources=fullnameprotocolmappers,verbs=create;update,versions=v1alpha1,name=mfullnameprotocolmapper-v1alpha1.kb.io,admissionReviewVersions=v1
 
-// FullNameProtocolMapperCustomDefaulter struct is responsible for setting default values on the custom resource of the
-// Kind FullNameProtocolMapper when those are created or updated.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as it is used only for temporary operations and does not need to be deeply copied.
-type FullNameProtocolMapperCustomDefaulter struct {
-	// TODO(user): Add more fields as needed for defaulting
-}
+type FullNameProtocolMapperCustomDefaulter struct{}
 
-var _ admission.Defaulter[*v1alpha1.FullNameProtocolMapper] = &FullNameProtocolMapperCustomDefaulter{}
+var _ admission.Defaulter[*openidv1alpha1.FullNameProtocolMapper] = &FullNameProtocolMapperCustomDefaulter{}
 
-// Default implements admission.Defaulter so a webhook will be registered for the Kind FullNameProtocolMapper.
-func (d *FullNameProtocolMapperCustomDefaulter) Default(_ context.Context, mapper *v1alpha1.FullNameProtocolMapper) error {
+func (d *FullNameProtocolMapperCustomDefaulter) Default(_ context.Context, mapper *openidv1alpha1.FullNameProtocolMapper) error {
 	fullnameprotocolmapperlog.Info("Defaulting for FullNameProtocolMapper", "name", mapper.GetName())
 
-	// TODO(user): fill in your defaulting logic.
+	setDefaultTrue(&mapper.Spec.AddToIDToken)
+	setDefaultTrue(&mapper.Spec.AddToAccessToken)
+	setDefaultTrue(&mapper.Spec.AddToUserInfo)
 
 	return nil
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-// NOTE: If you want to customise the 'path', use the flags '--defaulting-path' or '--validation-path'.
 // +kubebuilder:webhook:path=/validate-openid-keycloak-operator-webhippie-de-v1alpha1-fullnameprotocolmapper,mutating=false,failurePolicy=fail,sideEffects=None,groups=openid.keycloak-operator.webhippie.de,resources=fullnameprotocolmappers,verbs=create;update,versions=v1alpha1,name=vfullnameprotocolmapper-v1alpha1.kb.io,admissionReviewVersions=v1
 
-// FullNameProtocolMapperCustomValidator struct is responsible for validating the FullNameProtocolMapper resource
-// when it is created, updated, or deleted.
-//
-// NOTE: The +kubebuilder:object:generate=false marker prevents controller-gen from generating DeepCopy methods,
-// as this struct is used only for temporary operations and does not need to be deeply copied.
-type FullNameProtocolMapperCustomValidator struct {
-	// TODO(user): Add more fields as needed for validation
-}
+type FullNameProtocolMapperCustomValidator struct{}
 
-var _ admission.Validator[*v1alpha1.FullNameProtocolMapper] = &FullNameProtocolMapperCustomValidator{}
+var _ admission.Validator[*openidv1alpha1.FullNameProtocolMapper] = &FullNameProtocolMapperCustomValidator{}
 
-// ValidateCreate implements admission.Validator so a webhook will be registered for the type FullNameProtocolMapper.
-func (v *FullNameProtocolMapperCustomValidator) ValidateCreate(_ context.Context, mapper *v1alpha1.FullNameProtocolMapper) (admission.Warnings, error) {
+func (v *FullNameProtocolMapperCustomValidator) ValidateCreate(_ context.Context, mapper *openidv1alpha1.FullNameProtocolMapper) (admission.Warnings, error) {
 	fullnameprotocolmapperlog.Info("Validation for FullNameProtocolMapper upon creation", "name", mapper.GetName())
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if errs := validateFullNameProtocolMapper(mapper); len(errs) > 0 {
+		return nil, errs.ToAggregate()
+	}
 
 	return nil, nil
 }
 
-// ValidateUpdate implements admission.Validator so a webhook will be registered for the type FullNameProtocolMapper.
-func (v *FullNameProtocolMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *v1alpha1.FullNameProtocolMapper) (admission.Warnings, error) {
-	_ = oldMapper
+func (v *FullNameProtocolMapperCustomValidator) ValidateUpdate(_ context.Context, oldMapper, mapper *openidv1alpha1.FullNameProtocolMapper) (admission.Warnings, error) {
 	fullnameprotocolmapperlog.Info("Validation for FullNameProtocolMapper upon update", "name", mapper.GetName())
 
-	// TODO(user): fill in your validation logic upon object update.
+	var allErrs field.ErrorList
+	allErrs = append(allErrs, validateFullNameProtocolMapper(mapper)...)
+
+	if !clientRefEqual(oldMapper.Spec.ClientRef, mapper.Spec.ClientRef) {
+		allErrs = append(allErrs, field.Forbidden(
+			field.NewPath("spec", "clientRef"),
+			"clientRef is immutable and cannot be changed after creation",
+		))
+	}
+
+	if len(allErrs) > 0 {
+		return nil, allErrs.ToAggregate()
+	}
 
 	return nil, nil
 }
 
-// ValidateDelete implements admission.Validator so a webhook will be registered for the type FullNameProtocolMapper.
-func (v *FullNameProtocolMapperCustomValidator) ValidateDelete(_ context.Context, mapper *v1alpha1.FullNameProtocolMapper) (admission.Warnings, error) {
+func (v *FullNameProtocolMapperCustomValidator) ValidateDelete(_ context.Context, mapper *openidv1alpha1.FullNameProtocolMapper) (admission.Warnings, error) {
 	fullnameprotocolmapperlog.Info("Validation for FullNameProtocolMapper upon deletion", "name", mapper.GetName())
-
-	// TODO(user): fill in your validation logic upon object deletion.
-
 	return nil, nil
+}
+
+func validateFullNameProtocolMapper(mapper *openidv1alpha1.FullNameProtocolMapper) field.ErrorList {
+	errs := make(field.ErrorList, 0, 2)
+
+	errs = append(errs, validateClientRef(mapper.Spec.ClientRef, field.NewPath("spec", "clientRef"))...)
+	errs = append(errs, validateRequiredString(mapper.Spec.Name, field.NewPath("spec", "name"), "name is required")...)
+
+	return errs
 }

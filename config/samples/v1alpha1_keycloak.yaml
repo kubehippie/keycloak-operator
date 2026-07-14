@@ -1,11 +1,14 @@
+---
 apiVersion: keycloak-operator.webhippie.de/v1alpha1
 kind: Keycloak
+
 metadata:
+  name: keycloak-sample
+  namespace: keycloak-operator-system
   labels:
     app.kubernetes.io/name: keycloak-operator
     app.kubernetes.io/managed-by: kustomize
-  name: keycloak-sample
-  namespace: keycloak-operator-system
+
 spec:
   url: https://keycloak.example.com
   username:
@@ -16,3 +19,5 @@ spec:
     secretKeyRef:
       name: keycloak-admin
       key: password
+
+...

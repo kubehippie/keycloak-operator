@@ -17,20 +17,39 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// AttributeImporterMapperSpec defines the desired state of AttributeImporterMapper
+// AttributeImporterMapperSpec defines the desired state of AttributeImporterMapper.
 type AttributeImporterMapperSpec struct {
-	// foo is an example field of AttributeImporterMapper. Edit attributeimportermapper_types.go to remove/update
-	// +optional
-	Foo *string `json:"foo,omitempty"`
+	// identityProviderRef references the OIDCIdentityProvider this mapper is attached to.
+	// +required
+	IdentityProviderRef *common.IdentityProviderRef `json:"identityProviderRef"`
+
+	// name is the mapper's name as shown in the Keycloak admin console.
+	// +required
+	Name string `json:"name"`
+
+	// userAttribute is the Keycloak user attribute (or well-known property) to populate.
+	// +required
+	UserAttribute string `json:"userAttribute"`
+
+	// claimName is the name of the OIDC claim to read the value from.
+	// +required
+	ClaimName string `json:"claimName"`
 }
 
 // AttributeImporterMapperStatus defines the observed state of AttributeImporterMapper.
 type AttributeImporterMapperStatus struct {
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+	// keycloakID is the UUID assigned by Keycloak for this identity provider mapper.
+	// It is stored here so that update and delete operations can reference the
+	// mapper directly without an additional lookup by name.
+	// +optional
+	KeycloakID *string `json:"keycloakID,omitempty"`
 
 	// conditions represent the current state of the AttributeImporterMapper resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
@@ -49,8 +68,13 @@ type AttributeImporterMapperStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="IdentityProvider",type=string,JSONPath=`.spec.identityProviderRef.name`
+// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
+// +kubebuilder:printcolumn:name="UserAttribute",type=string,JSONPath=`.spec.userAttribute`
+// +kubebuilder:printcolumn:name="ClaimName",type=string,JSONPath=`.spec.claimName`
+// +kubebuilder:printcolumn:name="KeycloakID",type=string,JSONPath=`.status.keycloakID`
 
-// AttributeImporterMapper is the Schema for the attributeimportermappers API
+// AttributeImporterMapper is the Schema for the attributeimportermappers API.
 type AttributeImporterMapper struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -69,7 +93,7 @@ type AttributeImporterMapper struct {
 
 // +kubebuilder:object:root=true
 
-// AttributeImporterMapperList contains a list of AttributeImporterMapper
+// AttributeImporterMapperList contains a list of AttributeImporterMapper.
 type AttributeImporterMapperList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -79,3 +103,9 @@ type AttributeImporterMapperList struct {
 func init() {
 	SchemeBuilder.Register(&AttributeImporterMapper{}, &AttributeImporterMapperList{})
 }
+
+// GetKeycloakID returns the Keycloak-assigned UUID stored in the status.
+func (m *AttributeImporterMapper) GetKeycloakID() *string { return m.Status.KeycloakID }
+
+// SetKeycloakID stores a Keycloak-assigned UUID in the status.
+func (m *AttributeImporterMapper) SetKeycloakID(id *string) { m.Status.KeycloakID = id }

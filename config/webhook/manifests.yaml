@@ -70,6 +70,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-identity-keycloak-operator-webhippie-de-v1alpha1-customprovidermapper
+  failurePolicy: Fail
+  name: mcustomprovidermapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - customprovidermappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-openid-keycloak-operator-webhippie-de-v1alpha1-defaultscopes
   failurePolicy: Fail
   name: mdefaultscopes-v1alpha1.kb.io
@@ -389,6 +409,26 @@ webhooks:
     - UPDATE
     resources:
     - clientscopes
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-customprovidermapper
+  failurePolicy: Fail
+  name: vcustomprovidermapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - customprovidermappers
   sideEffects: None
 - admissionReviewVersions:
   - v1

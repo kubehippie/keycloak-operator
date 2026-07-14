@@ -17,20 +17,66 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/kubehippie/keycloak-operator/api/common"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// UserAttributeProtocolMapperSpec defines the desired state of UserAttributeProtocolMapper
+// UserAttributeProtocolMapperSpec defines the desired state of UserAttributeProtocolMapper.
 type UserAttributeProtocolMapperSpec struct {
-	// foo is an example field of UserAttributeProtocolMapper. Edit userattributeprotocolmapper_types.go to remove/update
+	// clientRef references the OpenIDClient this protocol mapper is attached to.
+	// +required
+	ClientRef *common.ClientRef `json:"clientRef"`
+
+	// name is the mapper's name as shown in the Keycloak admin console.
+	// +required
+	Name string `json:"name"`
+
+	// userAttribute is the custom Keycloak user attribute to read.
+	// +required
+	UserAttribute string `json:"userAttribute"`
+
+	// claimName is the token claim that receives the mapped value.
+	// +required
+	ClaimName string `json:"claimName"`
+
+	// claimValueType defines the JSON type label used for the claim.
+	// +kubebuilder:validation:Enum=String;JSON;long;int;boolean
 	// +optional
-	Foo *string `json:"foo,omitempty"`
+	ClaimValueType *string `json:"claimValueType,omitempty"`
+
+	// multivalued controls whether multi-valued claims are emitted.
+	// +optional
+	Multivalued *bool `json:"multivalued,omitempty"`
+
+	// aggregateAttributes controls whether attributes with the same name are aggregated.
+	// +optional
+	AggregateAttributes *bool `json:"aggregateAttributes,omitempty"`
+
+	// addToIDToken controls whether the claim is included in ID tokens.
+	// +optional
+	AddToIDToken *bool `json:"addToIDToken,omitempty"`
+
+	// addToAccessToken controls whether the claim is included in access tokens.
+	// +optional
+	AddToAccessToken *bool `json:"addToAccessToken,omitempty"`
+
+	// addToUserInfo controls whether the claim is included in the userinfo response.
+	// +optional
+	AddToUserInfo *bool `json:"addToUserInfo,omitempty"`
+
+	// addToTokenIntrospection controls whether the claim is included in token introspection responses.
+	// +optional
+	AddToTokenIntrospection *bool `json:"addToTokenIntrospection,omitempty"`
 }
 
 // UserAttributeProtocolMapperStatus defines the observed state of UserAttributeProtocolMapper.
 type UserAttributeProtocolMapperStatus struct {
 	// For Kubernetes API conventions, see:
 	// https://github.com/kubernetes/community/blob/master/contributors/devel/sig-architecture/api-conventions.md#typical-status-properties
+
+	// keycloakID is the UUID assigned by Keycloak for this protocol mapper.
+	// +optional
+	KeycloakID *string `json:"keycloakID,omitempty"`
 
 	// conditions represent the current state of the UserAttributeProtocolMapper resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.
@@ -49,8 +95,11 @@ type UserAttributeProtocolMapperStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Client",type=string,JSONPath=`.spec.clientRef.name`
+// +kubebuilder:printcolumn:name="Name",type=string,JSONPath=`.spec.name`
+// +kubebuilder:printcolumn:name="KeycloakID",type=string,JSONPath=`.status.keycloakID`
 
-// UserAttributeProtocolMapper is the Schema for the userattributeprotocolmappers API
+// UserAttributeProtocolMapper is the Schema for the userattributeprotocolmappers API.
 type UserAttributeProtocolMapper struct {
 	metav1.TypeMeta `json:",inline"`
 
@@ -69,7 +118,7 @@ type UserAttributeProtocolMapper struct {
 
 // +kubebuilder:object:root=true
 
-// UserAttributeProtocolMapperList contains a list of UserAttributeProtocolMapper
+// UserAttributeProtocolMapperList contains a list of UserAttributeProtocolMapper.
 type UserAttributeProtocolMapperList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
@@ -79,3 +128,9 @@ type UserAttributeProtocolMapperList struct {
 func init() {
 	SchemeBuilder.Register(&UserAttributeProtocolMapper{}, &UserAttributeProtocolMapperList{})
 }
+
+// GetKeycloakID returns the Keycloak-assigned UUID stored in the status.
+func (m *UserAttributeProtocolMapper) GetKeycloakID() *string { return m.Status.KeycloakID }
+
+// SetKeycloakID stores a Keycloak-assigned UUID in the status.
+func (m *UserAttributeProtocolMapper) SetKeycloakID(id *string) { m.Status.KeycloakID = id }

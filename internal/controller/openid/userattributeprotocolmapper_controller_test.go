@@ -17,67 +17,53 @@ limitations under the License.
 package openid
 
 import (
-	"context"
-
-	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
-	"github.com/kubehippie/keycloak-operator/test/utils"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-var _ = Describe("UserAttributeProtocolMapper Controller", func() {
-	Context("When reconciling a resource", func() {
-		const resourceName = "test-resource"
-
-		ctx := context.Background()
-
-		typeNamespacedName := types.NamespacedName{
-			Name:      resourceName,
-			Namespace: utils.StandardTestNamespace,
+var _ = Describe("userAttributeProtocolMapperToGocloak", func() {
+	It("maps all supported fields", func() {
+		mapper := &v1alpha1.UserAttributeProtocolMapper{
+			Spec: v1alpha1.UserAttributeProtocolMapperSpec{
+				Name:                    testAttributeDepartment,
+				UserAttribute:           testAttributeDepartment,
+				ClaimName:               testAttributeDepartment,
+				ClaimValueType:          stringPtr("long"),
+				Multivalued:             boolPtr(false),
+				AggregateAttributes:     boolPtr(true),
+				AddToIDToken:            boolPtr(false),
+				AddToAccessToken:        boolPtr(true),
+				AddToUserInfo:           boolPtr(false),
+				AddToTokenIntrospection: boolPtr(true),
+			},
 		}
-		userattributeprotocolmapper := &v1alpha1.UserAttributeProtocolMapper{}
 
-		BeforeEach(func() {
-			By("creating the custom resource for the Kind UserAttributeProtocolMapper")
-			err := k8sClient.Get(ctx, typeNamespacedName, userattributeprotocolmapper)
-			if err != nil && errors.IsNotFound(err) {
-				resource := &v1alpha1.UserAttributeProtocolMapper{
-					ObjectMeta: metav1.ObjectMeta{
-						Name:      resourceName,
-						Namespace: utils.StandardTestNamespace,
-					},
-					// TODO(user): Specify other spec details if needed.
-				}
-				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
-			}
-		})
+		got := userAttributeProtocolMapperToGocloak(mapper)
+		Expect(*got.ProtocolMapper).To(Equal("oidc-usermodel-attribute-mapper"))
+		Expect(got.Config).To(HaveKeyWithValue("user.attribute", testAttributeDepartment))
+		Expect(got.Config).To(HaveKeyWithValue("claim.name", testAttributeDepartment))
+		Expect(got.Config).To(HaveKeyWithValue("jsonType.label", "long"))
+		Expect(got.Config).To(HaveKeyWithValue("multivalued", "false"))
+		Expect(got.Config).To(HaveKeyWithValue("aggregate.attrs", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("id.token.claim", "false"))
+		Expect(got.Config).To(HaveKeyWithValue("access.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("userinfo.token.claim", "false"))
+		Expect(got.Config).To(HaveKeyWithValue("introspection.token.claim", "true"))
+	})
 
-		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
-			resource := &v1alpha1.UserAttributeProtocolMapper{}
-			err := k8sClient.Get(ctx, typeNamespacedName, resource)
-			Expect(err).NotTo(HaveOccurred())
+	It("defaults claimValueType and all booleans", func() {
+		mapper := &v1alpha1.UserAttributeProtocolMapper{
+			Spec: v1alpha1.UserAttributeProtocolMapperSpec{Name: testAttributeTeam, UserAttribute: testAttributeTeam, ClaimName: testAttributeTeam},
+		}
 
-			By("Cleanup the specific resource instance UserAttributeProtocolMapper")
-			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
-		})
-		It("should successfully reconcile the resource", func() {
-			By("Reconciling the created resource")
-			controllerReconciler := &UserAttributeProtocolMapperReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
-			}
-
-			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
-				NamespacedName: typeNamespacedName,
-			})
-			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
-		})
+		got := userAttributeProtocolMapperToGocloak(mapper)
+		Expect(got.Config).To(HaveKeyWithValue("jsonType.label", "String"))
+		Expect(got.Config).To(HaveKeyWithValue("multivalued", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("aggregate.attrs", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("id.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("access.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("userinfo.token.claim", "true"))
+		Expect(got.Config).To(HaveKeyWithValue("introspection.token.claim", "true"))
 	})
 })
