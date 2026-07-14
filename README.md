@@ -2,6 +2,14 @@
 
 [![GitHub Repo](https://img.shields.io/badge/github-repo-yellowgreen)](https://github.com/kubehippie/keycloak-operator) [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubehippie)](https://artifacthub.io/packages/helm/kubehippie/keycloak-operator)
 
+> [!WARNING]
+> **This project is in early development.** The builtin resources and their APIs
+> are **not yet stable** and can introduce **breaking changes** at any time,
+> including changes to the CRD schemas, defaulting/validation behavior, and
+> reconciliation logic. Pin your version, review the changelog before upgrading,
+> and do not use this operator for production workloads until it reaches a
+> stable release.
+
 This controller can configure an existing Keycloak instance. We don't wanted to
 use Terraform or some JSON document for this anymore and since there haven't
 been good controllers out there we built our own version of it.
