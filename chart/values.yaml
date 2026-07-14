@@ -10,17 +10,17 @@ replicas: 1
 
 # -- Security context for the deployment
 securityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Security context for the controller
+podSecurityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
   capabilities:
     drop:
       - ALL
-
-# -- Security context for the controller
-podSecurityContext:
-  runAsNonRoot: true
-  seccompProfile:
-    type: RuntimeDefault
 
 image:
   # -- Repository of the controller
