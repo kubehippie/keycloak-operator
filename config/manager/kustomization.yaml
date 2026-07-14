@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: ghcr.io/kubehippie/keycloak-operator
-  newTag: latest
+  newTag: 1.0.0
