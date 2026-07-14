@@ -1,0 +1,9 @@
+---
+# yaml-language-server: $schema=https://www.schemastore.org/pre-commit-config.json
+repos:
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.26.3
+    hooks:
+      - id: yamllint
+
+...

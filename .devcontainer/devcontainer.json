@@ -1,7 +1,8 @@
 {
-  "name": "Kubebuilder DevContainer",
-  "image": "golang:1.26",
+  "name": "mise",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "features": {
+    "ghcr.io/devcontainers-extra/features/mise:1": {},
     "ghcr.io/devcontainers/features/docker-in-docker:4": {},
     "ghcr.io/devcontainers/features/git:1": {}
   },
@@ -14,12 +15,12 @@
         "terminal.integrated.shell.linux": "/bin/bash"
       },
       "extensions": [
-        "ms-kubernetes-tools.vscode-kubernetes-tools",
-        "ms-azuretools.vscode-docker"
+        "hverlin.mise-vscode",
+        "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools"
       ]
     }
   },
 
   "onCreateCommand": "bash .devcontainer/post-install.sh"
 }
-

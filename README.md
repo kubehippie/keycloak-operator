@@ -13,35 +13,26 @@ are not covered by this document as the chart deployment is the preferred way:
 
 ```sh
 cat << EOF | helm install keycloak-operator oci://ghcr.io/kubehippie/charts/keycloak-operator --values -
-fullnameOverride: keycloak-operartor
+fullnameOverride: keycloak-operator
 EOF
 ```
 
 ## Development
 
-If you are not familiar with [Nix][nix] it is up to you to have a working
-environment for Go (>= 1.26.3) as the setup won't be covered within this guide.
-Please follow the official install instructions for [Go][golang] and. Beside
-that we are using `make` to define all commands to build this project.
+We are using [Mise][mise] to install all required tools with fixed versions to
+keep everything as far as possible compatible. If you don't want to use
+[Mise][mise] it is up to you to install the required tools like Go. Beside that
+we are using `make` to define all commands to build this project.
 
 ```console
 git clone https://github.com/kubehippie/keycloak-operator.git
 cd keycloak-operator
 
+mise trust
+mise install
+
 make build
 ./bin/manager -h
-```
-
-If you got [Nix][nix] and [Direnv][direnv] configured you can simply execute
-the following commands to get all dependencies including `make` and the required
-runtimes installed:
-
-```console
-cat << EOF > .envrc
-use flake . --impure
-EOF
-
-direnv allow
 ```
 
 To easily work on the operator we suggest to use [Tilt][tilt] for the local
@@ -82,7 +73,5 @@ Copyright (c) 2025 Thomas Boerger <thomas@webhippie.de>
 ```
 
 [helm]: https://helm.sh/
-[nix]: https://nixos.org/
-[golang]: http://golang.org/doc/install.html
-[direnv]: https://direnv.net/
+[mise]: https://mise.jdx.dev/getting-started.html
 [tilt]: https://tilt.dev/

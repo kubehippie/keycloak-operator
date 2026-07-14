@@ -21,7 +21,4 @@ go.work
 *.swo
 *~
 
-.direnv/
-.devenv/
-.pre-commit-config.yaml
 dist/
