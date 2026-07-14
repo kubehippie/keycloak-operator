@@ -6,6 +6,70 @@ metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
 rules:
+  - apiGroups:
+      - keycloak-operator.webhippie.de
+    resources:
+      - groups
+      - keycloaks
+      - realms
+      - users
+    verbs:
+      - '*'
+  - apiGroups:
+      - keycloak-operator.webhippie.de
+    resources:
+      - groups/status
+      - keycloaks/status
+      - realms/status
+      - users/status
+    verbs:
+      - get
+  - apiGroups:
+      - identity.keycloak-operator.webhippie.de
+    resources:
+      - attributeimportermappers
+      - customprovidermappers
+      - hardcodedrolemappers
+      - oidcadvancedgroupmappers
+      - oidcidentityproviders
+    verbs:
+      - '*'
+  - apiGroups:
+      - identity.keycloak-operator.webhippie.de
+    resources:
+      - attributeimportermappers/status
+      - customprovidermappers/status
+      - hardcodedrolemappers/status
+      - oidcadvancedgroupmappers/status
+      - oidcidentityproviders/status
+    verbs:
+      - get
+  - apiGroups:
+      - openid.keycloak-operator.webhippie.de
+    resources:
+      - audienceprotocolmappers
+      - clientscopes
+      - defaultscopes
+      - fullnameprotocolmappers
+      - groupmembershipprotocolmappers
+      - openidclients
+      - userattributeprotocolmappers
+      - userpropertyprotocolmappers
+    verbs:
+      - '*'
+  - apiGroups:
+      - openid.keycloak-operator.webhippie.de
+    resources:
+      - audienceprotocolmappers/status
+      - clientscopes/status
+      - defaultscopes/status
+      - fullnameprotocolmappers/status
+      - groupmembershipprotocolmappers/status
+      - openidclients/status
+      - userattributeprotocolmappers/status
+      - userpropertyprotocolmappers/status
+    verbs:
+      - get
   {{- if .Values.rbac.extraRules }}
   {{- toYaml .Values.rbac.extraRules | nindent 2 }}
   {{- end }}

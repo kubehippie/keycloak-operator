@@ -1,0 +1,351 @@
+{{- if .Values.webhook.enable }}
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: {{ include "chart.fullname" . }}
+  annotations:
+    {{- if .Values.certmanager.enable }}
+    cert-manager.io/inject-ca-from: {{ .Release.Namespace }}/{{ include "chart.fullname" . }}-webhook
+    {{- end }}
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-attributeimportermapper
+  failurePolicy: Fail
+  name: vattributeimportermapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - attributeimportermappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-audienceprotocolmapper
+  failurePolicy: Fail
+  name: vaudienceprotocolmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - audienceprotocolmappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-clientscope
+  failurePolicy: Fail
+  name: vclientscope-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - clientscopes
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-customprovidermapper
+  failurePolicy: Fail
+  name: vcustomprovidermapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - customprovidermappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-defaultscopes
+  failurePolicy: Fail
+  name: vdefaultscopes-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - defaultscopes
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-fullnameprotocolmapper
+  failurePolicy: Fail
+  name: vfullnameprotocolmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - fullnameprotocolmappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-keycloak-operator-webhippie-de-v1alpha1-group
+  failurePolicy: Fail
+  name: vgroup-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - groups
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-groupmembershipprotocolmapper
+  failurePolicy: Fail
+  name: vgroupmembershipprotocolmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - groupmembershipprotocolmappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-hardcodedrolemapper
+  failurePolicy: Fail
+  name: vhardcodedrolemapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - hardcodedrolemappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-keycloak-operator-webhippie-de-v1alpha1-keycloak
+  failurePolicy: Fail
+  name: vkeycloak-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - keycloaks
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-oidcadvancedgroupmapper
+  failurePolicy: Fail
+  name: voidcadvancedgroupmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - oidcadvancedgroupmappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-identity-keycloak-operator-webhippie-de-v1alpha1-oidcidentityprovider
+  failurePolicy: Fail
+  name: voidcidentityprovider-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - identity.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - oidcidentityproviders
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-openidclient
+  failurePolicy: Fail
+  name: vopenidclient-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - openidclients
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-keycloak-operator-webhippie-de-v1alpha1-realm
+  failurePolicy: Fail
+  name: vrealm-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - realms
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-keycloak-operator-webhippie-de-v1alpha1-user
+  failurePolicy: Fail
+  name: vuser-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - users
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-userattributeprotocolmapper
+  failurePolicy: Fail
+  name: vuserattributeprotocolmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - userattributeprotocolmappers
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: {{ include "chart.fullname" . }}-webhook
+      namespace: {{ .Release.Namespace }}
+      path: /validate-openid-keycloak-operator-webhippie-de-v1alpha1-userpropertyprotocolmapper
+  failurePolicy: Fail
+  name: vuserpropertyprotocolmapper-v1alpha1.kb.io
+  rules:
+  - apiGroups:
+    - openid.keycloak-operator.webhippie.de
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - userpropertyprotocolmappers
+  sideEffects: None
+{{- end }}

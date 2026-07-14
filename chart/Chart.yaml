@@ -6,7 +6,7 @@ description: Manage realms and clients for Keycloak
 version: 1.0.0
 appVersion: 1.0.0
 home: https://github.com/kubehippie/keycloak-operator
-icon: https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/hetzner.svg
+icon: https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/keycloak.svg
 keywords:
   - keycloak
   - controller
