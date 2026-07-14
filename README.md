@@ -1,6 +1,6 @@
 # keycloak-operator
 
-[![GitHub Repo](https://img.shields.io/badge/github-repo-yellowgreen)](https://github.com/kubehippie/keycloak-operator) [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubehippie)](https://artifacthub.io/packages/helm/kubehippie/keycloak-operator)
+[![GitHub Repo](https://img.shields.io/badge/github-repo-yellowgreen)](https://github.com/kubehippie/keycloak-operator) [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubehippie-keycloak-operator)](https://artifacthub.io/packages/helm/kubehippie-keycloak-operator/keycloak-operator)
 
 > [!WARNING]
 > **This project is in early development.** The builtin resources and their APIs
