@@ -43,6 +43,11 @@ spec:
           secret:
             secretName: {{ include "chart.fullname" . }}-metrics
         {{- end }}
+        {{- if and .Values.certmanager.enable .Values.webhook.enable }}
+        - name: webhook-certs
+          secret:
+            secretName: {{ include "chart.fullname" . }}-webhook
+        {{- end }}
       containers:
         - name: manager
           image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
