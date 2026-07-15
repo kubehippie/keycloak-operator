@@ -124,6 +124,9 @@ func (r *UserReconciler) reconcileUser(ctx context.Context, instance *v1alpha1.U
 				return ctrl.Result{}, fmt.Errorf("failed to create user in Keycloak: %w", err)
 			}
 			log.Info("User created in Keycloak", "id", id)
+			if err := r.setPassword(ctx, instance, session, id); err != nil {
+				return ctrl.Result{}, err
+			}
 			if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, &id); err != nil {
 				return ctrl.Result{}, err
 			}
@@ -136,8 +139,38 @@ func (r *UserReconciler) reconcileUser(ctx context.Context, instance *v1alpha1.U
 		return ctrl.Result{}, fmt.Errorf("failed to update user in Keycloak: %w", err)
 	}
 
+	if err := r.setPassword(ctx, instance, session, *instance.Status.KeycloakID); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	log.Info("User reconciled", "id", *instance.Status.KeycloakID)
 	return ctrl.Result{}, nil
+}
+
+// setPassword resolves the spec.password reference, if set, and applies it to
+// the Keycloak user via the admin API. It is a no-op when no password is
+// configured, leaving the user without credentials until an administrator
+// sets one manually.
+func (r *UserReconciler) setPassword(ctx context.Context, instance *v1alpha1.User, session *KeycloakSession, keycloakID string) error {
+	if instance.Spec.Password == nil {
+		return nil
+	}
+
+	password, err := ResolveSecretKeyRefOrVal(ctx, r.Client, instance.Spec.Password, instance.Namespace)
+	if err != nil {
+		return fmt.Errorf("unable to resolve password: %w", err)
+	}
+
+	temporary := true
+	if instance.Spec.Temporary != nil {
+		temporary = *instance.Spec.Temporary
+	}
+
+	if err := session.Client.SetPassword(ctx, session.Token.AccessToken, keycloakID, session.RealmName, password, temporary); err != nil {
+		return fmt.Errorf("failed to set password for user in Keycloak: %w", err)
+	}
+
+	return nil
 }
 
 // userToGocloak converts a User CR spec into the gocloak representation used

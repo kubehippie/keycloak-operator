@@ -763,6 +763,16 @@ func (in *UserSpec) DeepCopyInto(out *UserSpec) {
 		*out = new(string)
 		**out = **in
 	}
+	if in.Password != nil {
+		in, out := &in.Password, &out.Password
+		*out = new(common.SecretKeyRefOrVal)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Temporary != nil {
+		in, out := &in.Temporary, &out.Temporary
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Attributes != nil {
 		in, out := &in.Attributes, &out.Attributes
 		*out = make(map[string][]string, len(*in))

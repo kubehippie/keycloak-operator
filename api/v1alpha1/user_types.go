@@ -52,6 +52,20 @@ type UserSpec struct {
 	// +optional
 	Email *string `json:"email,omitempty"`
 
+	// password references a secret or direct value which contains the initial
+	// password to set for the user. If unset, no password is set in Keycloak
+	// and the user cannot authenticate until an administrator sets one
+	// (e.g. via the Keycloak console/API or a "forgot password" email flow).
+	// +optional
+	Password *common.SecretKeyRefOrVal `json:"password,omitempty"`
+
+	// temporary specifies whether the password set via the password field is
+	// temporary, forcing the user to change it on next login. Defaults to
+	// true and is only relevant when password is set.
+	// +optional
+	// +kubebuilder:default=true
+	Temporary *bool `json:"temporary,omitempty"`
+
 	// attributes holds custom user attributes as key/value pairs where each
 	// key maps to one or more values.
 	// +optional

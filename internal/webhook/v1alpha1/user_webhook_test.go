@@ -94,6 +94,40 @@ var _ = Describe("User Webhook", func() {
 			Expect(err.Error()).To(ContainSubstring("spec.username"))
 		})
 
+		It("Should admit creation when password is set with an inline value", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Password = &common.SecretKeyRefOrVal{Value: "s3cr3t"}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Should admit creation when password is set with a secretKeyRef", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Password = &common.SecretKeyRefOrVal{
+				SecretKeyRef: &common.SecretKeySelector{Name: "user-secret", Key: "password"},
+			}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Should deny creation when password has neither value nor secretKeyRef", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Password = &common.SecretKeyRefOrVal{}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.password"))
+		})
+
+		It("Should deny creation when password.secretKeyRef is missing name or key", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Password = &common.SecretKeyRefOrVal{
+				SecretKeyRef: &common.SecretKeySelector{Name: "user-secret"},
+			}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.password"))
+		})
+
 		It("Should admit deletion", func() {
 			obj.Spec = validSpec()
 			_, err := validator.ValidateDelete(ctx, obj)

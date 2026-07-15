@@ -161,3 +161,30 @@ var _ = Describe("userToGocloak", func() {
 		Expect(g.RequiredActions).To(BeNil())
 	})
 })
+
+var _ = Describe("UserReconciler.setPassword", func() {
+	ctx := context.Background()
+
+	It("is a no-op when spec.password is not set", func() {
+		reconciler := &UserReconciler{Client: k8sClient}
+		u := &v1alpha1.User{Spec: v1alpha1.UserSpec{Username: testUserUsername}}
+		err := reconciler.setPassword(ctx, u, nil, "some-keycloak-id")
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("returns an error when spec.password cannot be resolved", func() {
+		reconciler := &UserReconciler{Client: k8sClient}
+		u := &v1alpha1.User{
+			ObjectMeta: metav1.ObjectMeta{Namespace: utils.StandardTestNamespace},
+			Spec: v1alpha1.UserSpec{
+				Username: testUserUsername,
+				Password: &common.SecretKeyRefOrVal{
+					SecretKeyRef: &common.SecretKeySelector{Name: "no-such-secret", Key: "password"},
+				},
+			},
+		}
+		err := reconciler.setPassword(ctx, u, nil, "some-keycloak-id")
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("unable to resolve password"))
+	})
+})

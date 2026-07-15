@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/kubehippie/keycloak-operator/api/common"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -102,6 +103,28 @@ func (v *UserCustomValidator) validate(user *v1alpha1.User) error {
 
 	if strings.TrimSpace(user.Spec.Username) == "" {
 		return fmt.Errorf("spec.username must be set")
+	}
+
+	if user.Spec.Password != nil {
+		if err := v.validateSecretKeyRefOrVal("spec.password", user.Spec.Password); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (v *UserCustomValidator) validateSecretKeyRefOrVal(field string, ref *common.SecretKeyRefOrVal) error {
+	if strings.TrimSpace(ref.Value) != "" {
+		return nil
+	}
+
+	if ref.SecretKeyRef == nil {
+		return fmt.Errorf("%s must set value or secretKeyRef", field)
+	}
+
+	if strings.TrimSpace(ref.SecretKeyRef.Name) == "" || strings.TrimSpace(ref.SecretKeyRef.Key) == "" {
+		return fmt.Errorf("%s.secretKeyRef must set name and key", field)
 	}
 
 	return nil

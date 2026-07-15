@@ -15,4 +15,8 @@ spec:
 
   username: sample-user
 
+  password:
+    value: change-me
+  temporary: true
+
 ...
