@@ -82,6 +82,32 @@ spec:
                     - name
                     type: object
                 type: object
+              client:
+                description: |-
+                  client references a secret or direct value which contains the client ID
+                  used to authenticate via the client credentials grant.
+                  Either username/password or client/secret must be set.
+                properties:
+                  secretKeyRef:
+                    description: SecretKeyRef selects a key of a Kubernetes Secret.
+                    properties:
+                      key:
+                        description: Key is the key of the Secret to select from.
+                        type: string
+                      name:
+                        description: Name is the name of the Secret.
+                        type: string
+                      namespace:
+                        description: Namespace of the Secret.
+                        type: string
+                    required:
+                    - key
+                    - name
+                    type: object
+                  value:
+                    description: Value directly specifies the value as a plain string.
+                    type: string
+                type: object
               insecureSkipVerify:
                 description: |-
                   insecureSkipVerify controls whether API client verifies the servers
@@ -90,8 +116,9 @@ spec:
                   certificate.
                 type: boolean
               password:
-                description: password references a secret or direct value which contains
-                  admin password.
+                description: |-
+                  password references a secret or direct value which contains admin password.
+                  Either username/password or client/secret must be set.
                 properties:
                   secretKeyRef:
                     description: SecretKeyRef selects a key of a Kubernetes Secret.
@@ -119,12 +146,39 @@ spec:
                   realmName defines the realm name to authenticate the admin credentials,
                   normally this should be the master realm.
                 type: string
+              secret:
+                description: |-
+                  secret references a secret or direct value which contains the client
+                  secret used to authenticate via the client credentials grant.
+                  Either username/password or client/secret must be set.
+                properties:
+                  secretKeyRef:
+                    description: SecretKeyRef selects a key of a Kubernetes Secret.
+                    properties:
+                      key:
+                        description: Key is the key of the Secret to select from.
+                        type: string
+                      name:
+                        description: Name is the name of the Secret.
+                        type: string
+                      namespace:
+                        description: Namespace of the Secret.
+                        type: string
+                    required:
+                    - key
+                    - name
+                    type: object
+                  value:
+                    description: Value directly specifies the value as a plain string.
+                    type: string
+                type: object
               url:
                 description: url of keycloak instance.
                 type: string
               username:
-                description: username references a secret or direct value which contains
-                  admin username.
+                description: |-
+                  username references a secret or direct value which contains admin username.
+                  Either username/password or client/secret must be set.
                 properties:
                   secretKeyRef:
                     description: SecretKeyRef selects a key of a Kubernetes Secret.
@@ -147,9 +201,7 @@ spec:
                     type: string
                 type: object
             required:
-            - password
             - url
-            - username
             type: object
           status:
             default:

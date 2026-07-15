@@ -27,10 +27,26 @@ type KeycloakSpec struct {
 	URL string `json:"url"`
 
 	// username references a secret or direct value which contains admin username.
-	Username *common.SecretKeyRefOrVal `json:"username"`
+	// Either username/password or client/secret must be set.
+	// +optional
+	Username *common.SecretKeyRefOrVal `json:"username,omitempty"`
 
 	// password references a secret or direct value which contains admin password.
-	Password *common.SecretKeyRefOrVal `json:"password"`
+	// Either username/password or client/secret must be set.
+	// +optional
+	Password *common.SecretKeyRefOrVal `json:"password,omitempty"`
+
+	// client references a secret or direct value which contains the client ID
+	// used to authenticate via the client credentials grant.
+	// Either username/password or client/secret must be set.
+	// +optional
+	Client *common.SecretKeyRefOrVal `json:"client,omitempty"`
+
+	// secret references a secret or direct value which contains the client
+	// secret used to authenticate via the client credentials grant.
+	// Either username/password or client/secret must be set.
+	// +optional
+	Secret *common.SecretKeyRefOrVal `json:"secret,omitempty"`
 
 	// realmName defines the realm name to authenticate the admin credentials,
 	// normally this should be the master realm.

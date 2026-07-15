@@ -157,25 +157,45 @@ func KeycloakSessionForKeycloak(ctx context.Context, c client.Client, kcRef *com
 		return nil, fmt.Errorf("unable to fetch keycloak %s/%s: %w", kcNS, kcRef.Name, err)
 	}
 
-	username, err := ResolveSecretKeyRefOrVal(ctx, c, kc.Spec.Username, kcNS)
-	if err != nil {
-		return nil, fmt.Errorf("unable to resolve username: %w", err)
-	}
-
-	password, err := ResolveSecretKeyRefOrVal(ctx, c, kc.Spec.Password, kcNS)
-	if err != nil {
-		return nil, fmt.Errorf("unable to resolve password: %w", err)
-	}
-
 	kcClient := gocloak.NewClient(kc.Spec.URL)
 
 	if err := applyTLSConfig(ctx, c, kcClient, kc, kcNS); err != nil {
 		return nil, fmt.Errorf("unable to apply TLS configuration: %w", err)
 	}
 
-	token, err := kcClient.LoginAdmin(ctx, username, password, kc.Spec.RealmName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to authenticate with keycloak: %w", err)
+	var token *gocloak.JWT
+
+	switch {
+	case kc.Spec.Client != nil || kc.Spec.Secret != nil:
+		clientID, err := ResolveSecretKeyRefOrVal(ctx, c, kc.Spec.Client, kcNS)
+		if err != nil {
+			return nil, fmt.Errorf("unable to resolve client: %w", err)
+		}
+
+		clientSecret, err := ResolveSecretKeyRefOrVal(ctx, c, kc.Spec.Secret, kcNS)
+		if err != nil {
+			return nil, fmt.Errorf("unable to resolve secret: %w", err)
+		}
+
+		token, err = kcClient.LoginClient(ctx, clientID, clientSecret, kc.Spec.RealmName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to authenticate with keycloak: %w", err)
+		}
+	default:
+		username, err := ResolveSecretKeyRefOrVal(ctx, c, kc.Spec.Username, kcNS)
+		if err != nil {
+			return nil, fmt.Errorf("unable to resolve username: %w", err)
+		}
+
+		password, err := ResolveSecretKeyRefOrVal(ctx, c, kc.Spec.Password, kcNS)
+		if err != nil {
+			return nil, fmt.Errorf("unable to resolve password: %w", err)
+		}
+
+		token, err = kcClient.LoginAdmin(ctx, username, password, kc.Spec.RealmName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to authenticate with keycloak: %w", err)
+		}
 	}
 
 	return &KeycloakSession{

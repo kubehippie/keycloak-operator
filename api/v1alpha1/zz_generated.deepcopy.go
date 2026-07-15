@@ -241,6 +241,16 @@ func (in *KeycloakSpec) DeepCopyInto(out *KeycloakSpec) {
 		*out = new(common.SecretKeyRefOrVal)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Client != nil {
+		in, out := &in.Client, &out.Client
+		*out = new(common.SecretKeyRefOrVal)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Secret != nil {
+		in, out := &in.Secret, &out.Secret
+		*out = new(common.SecretKeyRefOrVal)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.CACert != nil {
 		in, out := &in.CACert, &out.CACert
 		*out = new(common.SourceRef)

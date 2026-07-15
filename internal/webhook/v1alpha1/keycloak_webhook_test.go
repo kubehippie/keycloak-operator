@@ -23,6 +23,13 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const (
+	testKeycloakURL  = "https://keycloak.example.com"
+	testRealmName    = "master"
+	testClientID     = "operator-client"
+	testClientSecret = "operator-secret"
+)
+
 var _ = Describe("Keycloak Webhook", func() {
 	var (
 		obj       *v1alpha1.Keycloak
@@ -42,8 +49,8 @@ var _ = Describe("Keycloak Webhook", func() {
 
 	validSpec := func() v1alpha1.KeycloakSpec {
 		return v1alpha1.KeycloakSpec{
-			URL:       "https://keycloak.example.com",
-			RealmName: "master",
+			URL:       testKeycloakURL,
+			RealmName: testRealmName,
 			Username:  &common.SecretKeyRefOrVal{Value: "admin"},
 			Password:  &common.SecretKeyRefOrVal{Value: "secret"},
 		}
@@ -65,8 +72,8 @@ var _ = Describe("Keycloak Webhook", func() {
 
 		It("Should admit creation when credentials are supplied as secret references", func() {
 			obj.Spec = v1alpha1.KeycloakSpec{
-				URL:       "https://keycloak.example.com",
-				RealmName: "master",
+				URL:       testKeycloakURL,
+				RealmName: testRealmName,
 				Username: &common.SecretKeyRefOrVal{
 					SecretKeyRef: &common.SecretKeySelector{
 						Name: "kc-secret",
@@ -138,6 +145,60 @@ var _ = Describe("Keycloak Webhook", func() {
 			_, err := validator.ValidateCreate(ctx, obj)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("spec.password"))
+		})
+
+		It("Should admit creation when client/secret credentials are supplied instead of username/password", func() {
+			obj.Spec = v1alpha1.KeycloakSpec{
+				URL:       testKeycloakURL,
+				RealmName: testRealmName,
+				Client:    &common.SecretKeyRefOrVal{Value: testClientID},
+				Secret:    &common.SecretKeyRefOrVal{Value: testClientSecret},
+			}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Should deny creation when neither username/password nor client/secret is set", func() {
+			obj.Spec = v1alpha1.KeycloakSpec{
+				URL:       testKeycloakURL,
+				RealmName: testRealmName,
+			}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.username/spec.password or spec.client/spec.secret"))
+		})
+
+		It("Should deny creation when both username/password and client/secret are set", func() {
+			obj.Spec = validSpec()
+			obj.Spec.Client = &common.SecretKeyRefOrVal{Value: testClientID}
+			obj.Spec.Secret = &common.SecretKeyRefOrVal{Value: testClientSecret}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("only one of"))
+		})
+
+		It("Should deny creation when client has neither value nor secret ref", func() {
+			obj.Spec = v1alpha1.KeycloakSpec{
+				URL:       testKeycloakURL,
+				RealmName: testRealmName,
+				Client:    &common.SecretKeyRefOrVal{},
+				Secret:    &common.SecretKeyRefOrVal{Value: testClientSecret},
+			}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.client"))
+		})
+
+		It("Should deny creation when secret has neither value nor secret ref", func() {
+			obj.Spec = v1alpha1.KeycloakSpec{
+				URL:       testKeycloakURL,
+				RealmName: testRealmName,
+				Client:    &common.SecretKeyRefOrVal{Value: testClientID},
+				Secret:    &common.SecretKeyRefOrVal{},
+			}
+			_, err := validator.ValidateCreate(ctx, obj)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("spec.secret"))
 		})
 
 		It("Should admit update when spec is valid", func() {

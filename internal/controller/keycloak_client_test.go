@@ -30,6 +30,7 @@ import (
 
 var _ = Describe("keycloak_client helpers", func() {
 	const testNS = "default"
+	const unreachableKeycloakURL = "http://127.0.0.1:19999"
 
 	ctx := context.Background()
 
@@ -123,7 +124,7 @@ var _ = Describe("keycloak_client helpers", func() {
 			kc := &v1alpha1.Keycloak{
 				ObjectMeta: metav1.ObjectMeta{Name: kcName, Namespace: testNS},
 				Spec: v1alpha1.KeycloakSpec{
-					URL:       "http://127.0.0.1:19999",
+					URL:       unreachableKeycloakURL,
 					RealmName: utils.StandardTestRealmName,
 					Username:  &common.SecretKeyRefOrVal{Value: "root"},
 					Password:  &common.SecretKeyRefOrVal{Value: "r4nd0m"},
@@ -163,6 +164,45 @@ var _ = Describe("keycloak_client helpers", func() {
 		})
 	})
 
+	Describe("KeycloakSessionForKeycloak with client/secret credentials", func() {
+		const kcName = "client-secret-kc"
+
+		BeforeEach(func() {
+			kc := &v1alpha1.Keycloak{
+				ObjectMeta: metav1.ObjectMeta{Name: kcName, Namespace: testNS},
+				Spec: v1alpha1.KeycloakSpec{
+					URL:       unreachableKeycloakURL,
+					RealmName: utils.StandardTestRealmName,
+					Client:    &common.SecretKeyRefOrVal{Value: "operator-client"},
+					Secret:    &common.SecretKeyRefOrVal{Value: "operator-secret"},
+				},
+			}
+			err := k8sClient.Create(ctx, kc)
+			if err != nil {
+				By("keycloak already exists, skipping creation")
+			}
+		})
+
+		AfterEach(func() {
+			kc := &v1alpha1.Keycloak{ObjectMeta: metav1.ObjectMeta{Name: kcName, Namespace: testNS}}
+			_ = k8sClient.Delete(ctx, kc)
+		})
+
+		It("attempts client credentials login instead of admin login", func() {
+			// No real Keycloak is listening at 127.0.0.1:19999, so the login
+			// itself fails, but it must reach the LoginClient call rather than
+			// erroring out while resolving username/password (which are unset).
+			_, err := KeycloakSessionForKeycloak(ctx, k8sClient,
+				&common.KeycloakRef{Name: kcName},
+				testNS,
+			)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).NotTo(ContainSubstring("unable to resolve username"))
+			Expect(err.Error()).NotTo(ContainSubstring("unable to resolve password"))
+			Expect(err.Error()).To(ContainSubstring("failed to authenticate with keycloak"))
+		})
+	})
+
 	Describe("KeycloakSessionForRealm namespace fallback", func() {
 		const kcName = "realm-ns-fallback-kc"
 		const realmResName = "realm-ns-fallback-realm"
@@ -171,7 +211,7 @@ var _ = Describe("keycloak_client helpers", func() {
 			kc := &v1alpha1.Keycloak{
 				ObjectMeta: metav1.ObjectMeta{Name: kcName, Namespace: testNS},
 				Spec: v1alpha1.KeycloakSpec{
-					URL:       "http://127.0.0.1:19999",
+					URL:       unreachableKeycloakURL,
 					RealmName: utils.StandardTestRealmName,
 					Username:  &common.SecretKeyRefOrVal{Value: "superadmin"},
 					Password:  &common.SecretKeyRefOrVal{Value: "5up3r53cr37"},

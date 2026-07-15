@@ -96,12 +96,35 @@ func (v *KeycloakCustomValidator) validate(keycloak *v1alpha1.Keycloak) error {
 		return fmt.Errorf("spec.realmName must be set")
 	}
 
-	if err := v.validateSecretKeyRefOrVal("spec.username", spec.Username); err != nil {
-		return err
+	usernamePasswordSet := spec.Username != nil || spec.Password != nil
+	clientSecretSet := spec.Client != nil || spec.Secret != nil
+
+	if usernamePasswordSet && clientSecretSet {
+		return fmt.Errorf("only one of spec.username/spec.password or spec.client/spec.secret must be set")
 	}
 
-	if err := v.validateSecretKeyRefOrVal("spec.password", spec.Password); err != nil {
-		return err
+	if !usernamePasswordSet && !clientSecretSet {
+		return fmt.Errorf("either spec.username/spec.password or spec.client/spec.secret must be set")
+	}
+
+	if usernamePasswordSet {
+		if err := v.validateSecretKeyRefOrVal("spec.username", spec.Username); err != nil {
+			return err
+		}
+
+		if err := v.validateSecretKeyRefOrVal("spec.password", spec.Password); err != nil {
+			return err
+		}
+	}
+
+	if clientSecretSet {
+		if err := v.validateSecretKeyRefOrVal("spec.client", spec.Client); err != nil {
+			return err
+		}
+
+		if err := v.validateSecretKeyRefOrVal("spec.secret", spec.Secret); err != nil {
+			return err
+		}
 	}
 
 	return nil
