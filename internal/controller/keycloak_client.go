@@ -18,6 +18,8 @@ package controller
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v14"
@@ -167,6 +169,10 @@ func KeycloakSessionForKeycloak(ctx context.Context, c client.Client, kcRef *com
 
 	kcClient := gocloak.NewClient(kc.Spec.URL)
 
+	if err := applyTLSConfig(ctx, c, kcClient, kc, kcNS); err != nil {
+		return nil, fmt.Errorf("unable to apply TLS configuration: %w", err)
+	}
+
 	token, err := kcClient.LoginAdmin(ctx, username, password, kc.Spec.RealmName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to authenticate with keycloak: %w", err)
@@ -176,6 +182,86 @@ func KeycloakSessionForKeycloak(ctx context.Context, c client.Client, kcRef *com
 		Client: kcClient,
 		Token:  token,
 	}, nil
+}
+
+// applyTLSConfig honours the Keycloak resource's caCert and insecureSkipVerify
+// settings by installing a custom tls.Config on the GoCloak client's
+// underlying resty HTTP client. Without this, both fields are silently
+// ignored and every client uses the process' default TLS trust store.
+func applyTLSConfig(ctx context.Context, c client.Client, kcClient *gocloak.GoCloak, kc *v1alpha1.Keycloak, defaultNamespace string) error {
+	if kc.Spec.CACert == nil && !kc.Spec.InsecureSkipVerify {
+		return nil
+	}
+
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: kc.Spec.InsecureSkipVerify, //nolint:gosec // explicitly opt-in via CRD field
+	}
+
+	if kc.Spec.CACert != nil {
+		caPEM, err := ResolveSourceRef(ctx, c, kc.Spec.CACert, defaultNamespace)
+		if err != nil {
+			return fmt.Errorf("unable to resolve caCert: %w", err)
+		}
+
+		pool := x509.NewCertPool()
+		if !pool.AppendCertsFromPEM([]byte(caPEM)) {
+			return fmt.Errorf("caCert does not contain a valid PEM certificate")
+		}
+
+		tlsConfig.RootCAs = pool
+	}
+
+	kcClient.RestyClient().SetTLSClientConfig(tlsConfig)
+	return nil
+}
+
+// ResolveSourceRef returns the string value referenced by a SourceRef, reading
+// from the referenced ConfigMap or Secret.
+func ResolveSourceRef(ctx context.Context, c client.Client, ref *common.SourceRef, defaultNamespace string) (string, error) {
+	if ref == nil {
+		return "", fmt.Errorf("ref is nil")
+	}
+
+	switch {
+	case ref.SecretKeyRef != nil:
+		ns := ref.SecretKeyRef.Namespace
+		if ns == "" {
+			ns = defaultNamespace
+		}
+
+		secret := &corev1.Secret{}
+		if err := c.Get(ctx, types.NamespacedName{Namespace: ns, Name: ref.SecretKeyRef.Name}, secret); err != nil {
+			return "", fmt.Errorf("unable to get secret %s/%s: %w", ns, ref.SecretKeyRef.Name, err)
+		}
+
+		val, ok := secret.Data[ref.SecretKeyRef.Key]
+		if !ok {
+			return "", fmt.Errorf("key %q not found in secret %s/%s", ref.SecretKeyRef.Key, ns, ref.SecretKeyRef.Name)
+		}
+
+		return string(val), nil
+
+	case ref.ConfigMapKeyRef != nil:
+		ns := ref.ConfigMapKeyRef.Namespace
+		if ns == "" {
+			ns = defaultNamespace
+		}
+
+		configMap := &corev1.ConfigMap{}
+		if err := c.Get(ctx, types.NamespacedName{Namespace: ns, Name: ref.ConfigMapKeyRef.Name}, configMap); err != nil {
+			return "", fmt.Errorf("unable to get configmap %s/%s: %w", ns, ref.ConfigMapKeyRef.Name, err)
+		}
+
+		val, ok := configMap.Data[ref.ConfigMapKeyRef.Key]
+		if !ok {
+			return "", fmt.Errorf("key %q not found in configmap %s/%s", ref.ConfigMapKeyRef.Key, ns, ref.ConfigMapKeyRef.Name)
+		}
+
+		return val, nil
+
+	default:
+		return "", fmt.Errorf("either configMapKeyRef or secretKeyRef must be set")
+	}
 }
 
 // ResolveSecretKeyRefOrVal returns the string value from a SecretKeyRefOrVal.

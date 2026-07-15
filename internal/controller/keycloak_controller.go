@@ -19,26 +19,68 @@ package controller
 import (
 	"context"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/kubehippie/keycloak-operator/api/common"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const (
-	FailedKeycloakConnectionRetryPeriod  = time.Second * 10
-	successKeycloakConnectionRetryPeriod = time.Minute * 30
+	// FailedKeycloakConnectionRetryPeriod is the initial requeue delay after a
+	// failed connection attempt. Subsequent consecutive failures double this
+	// delay (up to maxFailedKeycloakConnectionRetryPeriod) so a persistent
+	// outage or upstream ban (e.g. fail2ban/WAF) does not get continuously
+	// re-triggered by a tight retry loop.
+	FailedKeycloakConnectionRetryPeriod    = time.Second * 10
+	maxFailedKeycloakConnectionRetryPeriod = time.Minute * 10
+	successKeycloakConnectionRetryPeriod   = time.Minute * 30
 )
 
 // KeycloakReconciler reconciles a Keycloak object
 type KeycloakReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+
+	failuresMu sync.Mutex
+	failures   map[types.NamespacedName]int
+}
+
+// nextFailedRetryPeriod computes an exponential backoff delay for consecutive
+// connection failures on the given Keycloak instance, capped at
+// maxFailedKeycloakConnectionRetryPeriod.
+func (r *KeycloakReconciler) nextFailedRetryPeriod(key types.NamespacedName) time.Duration {
+	r.failuresMu.Lock()
+	defer r.failuresMu.Unlock()
+
+	if r.failures == nil {
+		r.failures = make(map[types.NamespacedName]int)
+	}
+
+	count := r.failures[key]
+	r.failures[key] = count + 1
+
+	period := FailedKeycloakConnectionRetryPeriod << count
+	if period <= 0 || period > maxFailedKeycloakConnectionRetryPeriod {
+		period = maxFailedKeycloakConnectionRetryPeriod
+	}
+
+	return period
+}
+
+// resetFailedRetryPeriod clears the consecutive failure counter once a
+// connection succeeds again.
+func (r *KeycloakReconciler) resetFailedRetryPeriod(key types.NamespacedName) {
+	r.failuresMu.Lock()
+	defer r.failuresMu.Unlock()
+
+	delete(r.failures, key)
 }
 
 // +kubebuilder:rbac:groups=keycloak-operator.webhippie.de,resources=keycloaks,verbs=get;list;watch;create;update;patch;delete
@@ -66,10 +108,12 @@ func (r *KeycloakReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	if !instance.Status.Connected {
-		log.Info("Not connected, will retry")
-		return ctrl.Result{RequeueAfter: FailedKeycloakConnectionRetryPeriod}, nil
+		retryAfter := r.nextFailedRetryPeriod(req.NamespacedName)
+		log.Info("Not connected, will retry", "retryAfter", retryAfter)
+		return ctrl.Result{RequeueAfter: retryAfter}, nil
 	}
 
+	r.resetFailedRetryPeriod(req.NamespacedName)
 	log.Info("Reconciling has been finished")
 
 	return ctrl.Result{
