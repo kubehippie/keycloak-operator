@@ -7,23 +7,14 @@ metadata:
     {{- include "chart.labels" . | nindent 4 }}
 rules:
   - apiGroups:
-      - keycloak-operator.webhippie.de
+      - ""
     resources:
-      - groups
-      - keycloaks
-      - realms
-      - users
-    verbs:
-      - '*'
-  - apiGroups:
-      - keycloak-operator.webhippie.de
-    resources:
-      - groups/status
-      - keycloaks/status
-      - realms/status
-      - users/status
+      - configmaps
+      - secrets
     verbs:
       - get
+      - list
+      - watch
   - apiGroups:
       - identity.keycloak-operator.webhippie.de
     resources:
@@ -33,7 +24,23 @@ rules:
       - oidcadvancedgroupmappers
       - oidcidentityproviders
     verbs:
-      - '*'
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+    - apiGroups:
+        - identity.keycloak-operator.webhippie.de
+      resources:
+        - attributeimportermappers/finalizers
+        - customprovidermappers/finalizers
+        - hardcodedrolemappers/finalizers
+        - oidcadvancedgroupmappers/finalizers
+        - oidcidentityproviders/finalizers
+      verbs:
+        - update
   - apiGroups:
       - identity.keycloak-operator.webhippie.de
     resources:
@@ -44,6 +51,44 @@ rules:
       - oidcidentityproviders/status
     verbs:
       - get
+      - patch
+      - update
+  - apiGroups:
+      - keycloak-operator.webhippie.de
+    resources:
+      - groups
+      - keycloaks
+      - realms
+      - users
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+    - apiGroups:
+        - keycloak-operator.webhippie.de
+      resources:
+        - groups/finalizers
+        - keycloaks/finalizers
+        - realms/finalizers
+        - users/finalizers
+      verbs:
+        - update
+  - apiGroups:
+      - keycloak-operator.webhippie.de
+    resources:
+      - groups/status
+      - keycloaks/status
+      - realms/status
+      - users/status
+    verbs:
+      - get
+      - patch
+      - update
+
   - apiGroups:
       - openid.keycloak-operator.webhippie.de
     resources:
@@ -56,7 +101,26 @@ rules:
       - userattributeprotocolmappers
       - userpropertyprotocolmappers
     verbs:
-      - '*'
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+    - apiGroups:
+        - openid.keycloak-operator.webhippie.de
+      resources:
+        - audienceprotocolmappers/finalizers
+        - clientscopes/finalizers
+        - defaultscopes/finalizers
+        - fullnameprotocolmappers/finalizers
+        - groupmembershipprotocolmappers/finalizers
+        - openidclients/finalizers
+        - userattributeprotocolmappers/finalizers
+        - userpropertyprotocolmappers/finalizers
+      verbs:
+        - update
   - apiGroups:
       - openid.keycloak-operator.webhippie.de
     resources:
@@ -70,6 +134,8 @@ rules:
       - userpropertyprotocolmappers/status
     verbs:
       - get
+      - patch
+      - update
   {{- if .Values.rbac.extraRules }}
   {{- toYaml .Values.rbac.extraRules | nindent 2 }}
   {{- end }}
