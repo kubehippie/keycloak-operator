@@ -17,6 +17,7 @@ resources:
   - openid_v1alpha1_fullnameprotocolmapper.yaml
   - openid_v1alpha1_audienceprotocolmapper.yaml
   - identity_v1alpha1_customprovidermapper.yaml
+  - v1alpha1_role.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples
 
 ...

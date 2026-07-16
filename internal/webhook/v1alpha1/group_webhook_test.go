@@ -72,7 +72,7 @@ var _ = Describe("Group Webhook", func() {
 
 		It("Should deny creation when realmRef.name is empty", func() {
 			obj.Spec = validSpec()
-			obj.Spec.RealmRef = &common.RealmRef{Kind: "Realm", Name: ""}
+			obj.Spec.RealmRef = &common.RealmRef{Kind: testInvalidRealmRefKind, Name: ""}
 			_, err := validator.ValidateCreate(ctx, obj)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("spec.realmRef.name"))
@@ -88,7 +88,7 @@ var _ = Describe("Group Webhook", func() {
 
 		It("Should deny creation when name is whitespace only", func() {
 			obj.Spec = validSpec()
-			obj.Spec.Name = "   "
+			obj.Spec.Name = testWhitespaceOnlyValue
 			_, err := validator.ValidateCreate(ctx, obj)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("spec.name"))

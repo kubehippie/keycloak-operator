@@ -44,6 +44,13 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
+// Shared literals reused across the *_webhook_test.go files in this package to
+// avoid tripping the goconst linter on repeated string constants.
+const (
+	testInvalidRealmRefKind = "Realm"
+	testWhitespaceOnlyValue = "   "
+)
+
 var (
 	ctx       context.Context
 	cancel    context.CancelFunc
@@ -117,6 +124,9 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 
 	err = SetupGroupWebhookWithManager(mgr)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = SetupRoleWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:webhook

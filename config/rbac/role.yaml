@@ -57,6 +57,7 @@ rules:
   - groups
   - keycloaks
   - realms
+  - roles
   - users
   verbs:
   - create
@@ -72,6 +73,7 @@ rules:
   - groups/finalizers
   - keycloaks/finalizers
   - realms/finalizers
+  - roles/finalizers
   - users/finalizers
   verbs:
   - update
@@ -81,6 +83,7 @@ rules:
   - groups/status
   - keycloaks/status
   - realms/status
+  - roles/status
   - users/status
   verbs:
   - get

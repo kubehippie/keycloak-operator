@@ -214,6 +214,13 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "Group")
 		os.Exit(1)
 	}
+	if err := (&controller.RoleReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "Role")
+		os.Exit(1)
+	}
 	if err := (&identitycontroller.OIDCIdentityProviderReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
@@ -324,6 +331,11 @@ func main() {
 
 		if err := webhookv1alpha1.SetupGroupWebhookWithManager(mgr); err != nil {
 			setupLog.Error(err, "unable to create webhook", "webhook", "Group")
+			os.Exit(1)
+		}
+
+		if err := webhookv1alpha1.SetupRoleWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "Role")
 			os.Exit(1)
 		}
 

@@ -24,38 +24,38 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("User Webhook", func() {
+var _ = Describe("Role Webhook", func() {
 	var (
-		obj       *v1alpha1.User
-		oldObj    *v1alpha1.User
-		validator UserCustomValidator
-		defaulter UserCustomDefaulter
+		obj       *v1alpha1.Role
+		oldObj    *v1alpha1.Role
+		validator RoleCustomValidator
+		defaulter RoleCustomDefaulter
 	)
 
 	BeforeEach(func() {
-		obj = &v1alpha1.User{}
-		oldObj = &v1alpha1.User{}
-		validator = UserCustomValidator{}
-		defaulter = UserCustomDefaulter{}
+		obj = &v1alpha1.Role{}
+		oldObj = &v1alpha1.Role{}
+		validator = RoleCustomValidator{}
+		defaulter = RoleCustomDefaulter{}
 		Expect(validator).NotTo(BeNil())
 		Expect(defaulter).NotTo(BeNil())
 	})
 
-	validSpec := func() v1alpha1.UserSpec {
-		return v1alpha1.UserSpec{
+	validSpec := func() v1alpha1.RoleSpec {
+		return v1alpha1.RoleSpec{
 			RealmRef: &common.RealmRef{Name: utils.StandardTestRealmName},
-			Username: "johndoe",
+			Name:     "operator",
 		}
 	}
 
-	Context("When creating User under Defaulting Webhook", func() {
+	Context("When creating Role under Defaulting Webhook", func() {
 		It("Should apply defaults without error", func() {
 			obj.Spec = validSpec()
 			Expect(defaulter.Default(ctx, obj)).To(Succeed())
 		})
 	})
 
-	Context("When creating User under Validating Webhook", func() {
+	Context("When creating Role under Validating Webhook", func() {
 		It("Should admit creation when all required fields are present", func() {
 			obj.Spec = validSpec()
 			_, err := validator.ValidateCreate(ctx, obj)
@@ -78,54 +78,20 @@ var _ = Describe("User Webhook", func() {
 			Expect(err.Error()).To(ContainSubstring("spec.realmRef.name"))
 		})
 
-		It("Should deny creation when username is empty", func() {
+		It("Should deny creation when name is empty", func() {
 			obj.Spec = validSpec()
-			obj.Spec.Username = ""
+			obj.Spec.Name = ""
 			_, err := validator.ValidateCreate(ctx, obj)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("spec.username"))
+			Expect(err.Error()).To(ContainSubstring("spec.name"))
 		})
 
-		It("Should deny creation when username is whitespace only", func() {
+		It("Should deny creation when name is whitespace only", func() {
 			obj.Spec = validSpec()
-			obj.Spec.Username = testWhitespaceOnlyValue
+			obj.Spec.Name = testWhitespaceOnlyValue
 			_, err := validator.ValidateCreate(ctx, obj)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("spec.username"))
-		})
-
-		It("Should admit creation when password is set with an inline value", func() {
-			obj.Spec = validSpec()
-			obj.Spec.Password = &common.SecretKeyRefOrVal{Value: "s3cr3t"}
-			_, err := validator.ValidateCreate(ctx, obj)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("Should admit creation when password is set with a secretKeyRef", func() {
-			obj.Spec = validSpec()
-			obj.Spec.Password = &common.SecretKeyRefOrVal{
-				SecretKeyRef: &common.SecretKeySelector{Name: "user-secret", Key: "password"},
-			}
-			_, err := validator.ValidateCreate(ctx, obj)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("Should deny creation when password has neither value nor secretKeyRef", func() {
-			obj.Spec = validSpec()
-			obj.Spec.Password = &common.SecretKeyRefOrVal{}
-			_, err := validator.ValidateCreate(ctx, obj)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("spec.password"))
-		})
-
-		It("Should deny creation when password.secretKeyRef is missing name or key", func() {
-			obj.Spec = validSpec()
-			obj.Spec.Password = &common.SecretKeyRefOrVal{
-				SecretKeyRef: &common.SecretKeySelector{Name: "user-secret"},
-			}
-			_, err := validator.ValidateCreate(ctx, obj)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring("spec.password"))
+			Expect(err.Error()).To(ContainSubstring("spec.name"))
 		})
 
 		It("Should admit deletion", func() {
@@ -135,18 +101,18 @@ var _ = Describe("User Webhook", func() {
 		})
 	})
 
-	Context("When updating User under Validating Webhook", func() {
-		It("Should admit update when username is unchanged", func() {
+	Context("When updating Role under Validating Webhook", func() {
+		It("Should admit update when name is unchanged", func() {
 			oldObj.Spec = validSpec()
 			obj.Spec = validSpec()
 			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("Should deny update when username is changed", func() {
+		It("Should deny update when name is changed", func() {
 			oldObj.Spec = validSpec()
 			obj.Spec = validSpec()
-			obj.Spec.Username = "janedoe"
+			obj.Spec.Name = "viewer"
 			_, err := validator.ValidateUpdate(ctx, oldObj, obj)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring("immutable"))

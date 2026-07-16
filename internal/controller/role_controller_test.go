@@ -1,0 +1,135 @@
+/*
+Copyright 2026 Thomas Boerger <thomas@webhippie.de>.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package controller
+
+import (
+	"context"
+
+	"github.com/kubehippie/keycloak-operator/api/common"
+	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	"github.com/kubehippie/keycloak-operator/test/utils"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+)
+
+const testRoleName = "operator"
+const testRoleDescription = "role managed by the operator"
+
+var _ = Describe("Role Controller", func() {
+	Context("When reconciling a resource", func() {
+		const resourceName = "test-resource"
+
+		ctx := context.Background()
+
+		typeNamespacedName := types.NamespacedName{
+			Name:      resourceName,
+			Namespace: utils.StandardTestNamespace,
+		}
+		role := &v1alpha1.Role{}
+
+		BeforeEach(func() {
+			By("creating the custom resource for the Kind Role")
+			err := k8sClient.Get(ctx, typeNamespacedName, role)
+			if err != nil && errors.IsNotFound(err) {
+				resource := &v1alpha1.Role{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      resourceName,
+						Namespace: utils.StandardTestNamespace,
+					},
+					Spec: v1alpha1.RoleSpec{
+						RealmRef: &common.RealmRef{
+							Name: utils.StandardTestRealmName,
+						},
+						Name: "test-role",
+					},
+				}
+				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
+			}
+		})
+
+		AfterEach(func() {
+			resource := &v1alpha1.Role{}
+			err := k8sClient.Get(ctx, typeNamespacedName, resource)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Cleanup the specific resource instance Role")
+			Expect(k8sClient.Delete(ctx, resource)).To(Succeed())
+		})
+
+		It("should successfully reconcile the resource", func() {
+			By("Reconciling the created resource")
+			controllerReconciler := &RoleReconciler{
+				Client: k8sClient,
+				Scheme: k8sClient.Scheme(),
+			}
+
+			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
+				NamespacedName: typeNamespacedName,
+			})
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+})
+
+var _ = Describe("roleToGocloak", func() {
+	It("maps name", func() {
+		rl := &v1alpha1.Role{
+			Spec: v1alpha1.RoleSpec{Name: testRoleName},
+		}
+		got := roleToGocloak(rl)
+		Expect(got.Name).NotTo(BeNil())
+		Expect(*got.Name).To(Equal(testRoleName))
+	})
+
+	It("maps description when set", func() {
+		description := testRoleDescription
+		rl := &v1alpha1.Role{
+			Spec: v1alpha1.RoleSpec{
+				Name:        testRoleName,
+				Description: &description,
+			},
+		}
+		got := roleToGocloak(rl)
+		Expect(got.Description).NotTo(BeNil())
+		Expect(*got.Description).To(Equal(testRoleDescription))
+	})
+
+	It("maps attributes when set", func() {
+		rl := &v1alpha1.Role{
+			Spec: v1alpha1.RoleSpec{
+				Name:       testRoleName,
+				Attributes: map[string][]string{"team": {"platform"}},
+			},
+		}
+		got := roleToGocloak(rl)
+		Expect(got.Attributes).NotTo(BeNil())
+		Expect(got.Attributes["team"]).To(ConsistOf("platform"))
+	})
+
+	It("leaves optional fields nil when not set", func() {
+		rl := &v1alpha1.Role{
+			Spec: v1alpha1.RoleSpec{Name: "empty"},
+		}
+		got := roleToGocloak(rl)
+		Expect(got.Description).To(BeNil())
+		Expect(got.Attributes).To(BeNil())
+	})
+})

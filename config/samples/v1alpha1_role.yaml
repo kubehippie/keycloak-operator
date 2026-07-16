@@ -1,0 +1,18 @@
+---
+apiVersion: keycloak-operator.webhippie.de/v1alpha1
+kind: Role
+
+metadata:
+  name: role-sample
+  namespace: keycloak-operator-system
+  labels:
+    app.kubernetes.io/name: keycloak-operator
+    app.kubernetes.io/managed-by: kustomize
+
+spec:
+  realmRef:
+    name: realm-sample
+
+  name: sample-role
+
+...
