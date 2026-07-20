@@ -95,7 +95,7 @@ grafana/                         # Grafana dashboard definitions
 
 dist/                            # Generated dist/install.yaml (kustomize build output)
 
-flake.nix                        # Nix dev shell definition
+mise.toml                         # mise tool version definitions (dev shell)
 Makefile                         # All build, test, lint, and deploy targets
 PROJECT                          # kubebuilder project metadata
 ```
@@ -104,20 +104,14 @@ PROJECT                          # kubebuilder project metadata
 
 ## Shell Environment
 
-This repository uses a **Nix flake** (`flake.nix`) for the dev shell. With
-[direnv](https://direnv.net/) configured (`.envrc` calls `use flake . --impure`),
-the shell activates automatically on `cd`.
+This repository uses [mise](https://mise.jdx.dev/) (`mise.toml`) to manage
+tool versions for the dev shell (Go, Helm, kubebuilder, kind, kubectl, etc.).
 
-> **Important:** devenv sets `GOPATH` to `.devenv/state/go` inside the project
-> directory. This means `GOMODCACHE` is also inside the project tree. The
-> Makefile `generate` and `manifests` targets use explicit source paths
-> (`./api/...`, `./cmd/...`, etc.) instead of `./...` to avoid
-> `controller-gen` walking into the read-only module cache.
-
-To activate the shell manually:
+To activate the tools:
 
 ```bash
-nix develop
+mise install
+mise use
 ```
 
 ---
@@ -246,7 +240,6 @@ the test run (`make cleanup-test-e2e`).
 | Release | `.github/workflows/release.yml` | Semantic release and changelog |
 | Helm docs | `.github/workflows/helmdocs.yml` | Regenerate chart documentation |
 | Automerge | `.github/workflows/automerge.yml` | Renovate automation |
-| Flake | `.github/workflows/flake.yml` | Scheduled Nix flake lock updates |
 
 Required status checks on `master`: `lint`, `chart`, `tests`, `docker`.
 
