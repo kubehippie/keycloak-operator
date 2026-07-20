@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "GroupMembershipProtocolMapper",
-  "description": "GroupMembershipProtocolMapper is the Schema for the groupmembershipprotocolmappers API.",
+  "title": "CustomProviderMapper",
+  "description": "CustomProviderMapper is the Schema for the customprovidermappers API",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -15,45 +15,32 @@
       "type": "object"
     },
     "spec": {
-      "description": "spec defines the desired state of GroupMembershipProtocolMapper",
+      "description": "spec defines the desired state of CustomProviderMapper",
       "properties": {
-        "addToAccessToken": {
-          "description": "addToAccessToken controls whether the claim is included in access tokens.",
-          "type": "boolean"
+        "config": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "config holds the arbitrary key/value configuration passed through to\nthe underlying Keycloak identity provider mapper.",
+          "type": "object"
         },
-        "addToIDToken": {
-          "description": "addToIDToken controls whether the claim is included in ID tokens.",
-          "type": "boolean"
-        },
-        "addToTokenIntrospection": {
-          "description": "addToTokenIntrospection controls whether the claim is included in token introspection responses.",
-          "type": "boolean"
-        },
-        "addToUserInfo": {
-          "description": "addToUserInfo controls whether the claim is included in the userinfo response.",
-          "type": "boolean"
-        },
-        "claimName": {
-          "description": "claimName is the token claim that receives the group membership data.",
-          "type": "string"
-        },
-        "clientRef": {
-          "description": "clientRef references the OpenIDClient this protocol mapper is attached to.",
+        "identityProviderRef": {
+          "description": "identityProviderRef references the OIDCIdentityProvider this mapper is attached to.",
           "properties": {
             "kind": {
-              "default": "OpenIDClient",
-              "description": "Kind specifies the kind of the referenced client resource.",
+              "default": "OIDCIdentityProvider",
+              "description": "Kind specifies the kind of the referenced identity provider resource.",
               "enum": [
-                "OpenIDClient"
+                "OIDCIdentityProvider"
               ],
               "type": "string"
             },
             "name": {
-              "description": "Name specifies the name of the OpenIDClient resource.",
+              "description": "Name specifies the name of the OIDCIdentityProvider resource.",
               "type": "string"
             },
             "namespace": {
-              "description": "Namespace specifies the namespace of the OpenIDClient resource.",
+              "description": "Namespace specifies the namespace of the OIDCIdentityProvider resource.",
               "type": "string"
             }
           },
@@ -62,9 +49,9 @@
           ],
           "type": "object"
         },
-        "fullPath": {
-          "description": "fullPath controls whether full group paths are emitted instead of simple names.",
-          "type": "boolean"
+        "mapperType": {
+          "description": "mapperType is the free-form Keycloak identity provider mapper type\nidentifier, e.g. \"oidc-username-idp-mapper\" or a custom SPI provider ID.",
+          "type": "string"
         },
         "name": {
           "description": "name is the mapper's name as shown in the Keycloak admin console.",
@@ -72,17 +59,17 @@
         }
       },
       "required": [
-        "claimName",
-        "clientRef",
+        "identityProviderRef",
+        "mapperType",
         "name"
       ],
       "type": "object"
     },
     "status": {
-      "description": "status defines the observed state of GroupMembershipProtocolMapper",
+      "description": "status defines the observed state of CustomProviderMapper",
       "properties": {
         "conditions": {
-          "description": "conditions represent the current state of the GroupMembershipProtocolMapper resource.\nEach condition has a unique type and reflects the status of a specific aspect of the resource.\n\nStandard condition types include:\n- \"Available\": the resource is fully functional\n- \"Progressing\": the resource is being created or updated\n- \"Degraded\": the resource failed to reach or maintain its desired state\n\nThe status of each condition is one of True, False, or Unknown.",
+          "description": "conditions represent the current state of the CustomProviderMapper resource.\nEach condition has a unique type and reflects the status of a specific aspect of the resource.\n\nStandard condition types include:\n- \"Available\": the resource is fully functional\n- \"Progressing\": the resource is being created or updated\n- \"Degraded\": the resource failed to reach or maintain its desired state\n\nThe status of each condition is one of True, False, or Unknown.",
           "items": {
             "description": "Condition contains details for one aspect of the current state of this API Resource.",
             "properties": {
@@ -141,7 +128,7 @@
           "x-kubernetes-list-type": "map"
         },
         "keycloakID": {
-          "description": "keycloakID is the UUID assigned by Keycloak for this protocol mapper.",
+          "description": "keycloakID is the UUID assigned by Keycloak for this identity provider mapper.",
           "type": "string"
         }
       },

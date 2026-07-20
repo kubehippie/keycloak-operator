@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "DefaultScopes",
-  "description": "DefaultScopes is the Schema for the defaultscopes API",
+  "description": "DefaultScopes is the Schema for the defaultscopes API.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -17,11 +17,44 @@
     "spec": {
       "description": "spec defines the desired state of DefaultScopes",
       "properties": {
-        "foo": {
-          "description": "foo is an example field of DefaultScopes. Edit defaultscopes_types.go to remove/update",
-          "type": "string"
+        "clientRef": {
+          "description": "clientRef references the OpenIDClient whose default client scopes are managed.",
+          "properties": {
+            "kind": {
+              "default": "OpenIDClient",
+              "description": "Kind specifies the kind of the referenced client resource.",
+              "enum": [
+                "OpenIDClient"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "description": "Name specifies the name of the OpenIDClient resource.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace specifies the namespace of the OpenIDClient resource.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "defaultScopes": {
+          "description": "defaultScopes lists the client scope names that should be attached to the\nclient as default scopes.",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
         }
       },
+      "required": [
+        "clientRef",
+        "defaultScopes"
+      ],
       "type": "object"
     },
     "status": {

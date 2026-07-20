@@ -17,11 +17,155 @@
     "spec": {
       "description": "spec defines the desired state of OpenIDClient",
       "properties": {
-        "foo": {
-          "description": "foo is an example field of OpenIDClient. Edit openidclient_types.go to remove/update",
+        "accessType": {
+          "description": "accessType controls the client's authentication requirements.",
+          "enum": [
+            "CONFIDENTIAL",
+            "PUBLIC",
+            "BEARER-ONLY"
+          ],
           "type": "string"
+        },
+        "adminURL": {
+          "description": "adminURL is the URL used by Keycloak to send admin management\nrequests (e.g. logout, sync) to the client.",
+          "type": "string"
+        },
+        "attributes": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "attributes holds arbitrary client-level key/value attributes.",
+          "type": "object"
+        },
+        "baseURL": {
+          "description": "baseURL is the default URL the client is redirected to after a\nsuccessful login.",
+          "type": "string"
+        },
+        "clientAuthenticatorType": {
+          "description": "clientAuthenticatorType sets the authenticator used to validate client\ncredentials. Defaults to \"client-secret\" when omitted.",
+          "type": "string"
+        },
+        "clientID": {
+          "description": "clientID is the client identifier registered in Keycloak.\nThis field is immutable after creation.",
+          "type": "string"
+        },
+        "clientSecret": {
+          "description": "clientSecret references a secret or inline value holding the client\nsecret. Only used when accessType is CONFIDENTIAL.",
+          "properties": {
+            "secretKeyRef": {
+              "description": "SecretKeyRef selects a key of a Kubernetes Secret.",
+              "properties": {
+                "key": {
+                  "description": "Key is the key of the Secret to select from.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Name is the name of the Secret.",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the Secret.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "name"
+              ],
+              "type": "object"
+            },
+            "value": {
+              "description": "Value directly specifies the value as a plain string.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "description": {
+          "description": "description describes the purpose of the client.",
+          "type": "string"
+        },
+        "directAccessGrantsEnabled": {
+          "description": "directAccessGrantsEnabled enables the OIDC resource owner password\ncredentials grant.",
+          "type": "boolean"
+        },
+        "enabled": {
+          "description": "enabled controls whether the client is active.",
+          "type": "boolean"
+        },
+        "frontChannelLogoutEnabled": {
+          "description": "frontChannelLogoutEnabled enables front-channel logout for the client.",
+          "type": "boolean"
+        },
+        "fullScopeAllowed": {
+          "description": "fullScopeAllowed enables all realm/client roles to be included in\naccess tokens by default.",
+          "type": "boolean"
+        },
+        "implicitFlowEnabled": {
+          "description": "implicitFlowEnabled enables the OIDC implicit flow.",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "name is the human-readable name of the client shown in the admin console.",
+          "type": "string"
+        },
+        "realmRef": {
+          "description": "realmRef is a reference to the Realm this client belongs to.",
+          "properties": {
+            "kind": {
+              "default": "Realm",
+              "description": "Kind specifies the kind of the Realm resource.",
+              "enum": [
+                "Realm"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "description": "Name specifies the name of the Realm resource.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace specifies the namespace of the Realm resource.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "rootURL": {
+          "description": "rootURL is the root URL used for relative redirect/base/admin URLs.",
+          "type": "string"
+        },
+        "serviceAccountsEnabled": {
+          "description": "serviceAccountsEnabled enables the OIDC client credentials grant.",
+          "type": "boolean"
+        },
+        "standardFlowEnabled": {
+          "description": "standardFlowEnabled enables the OIDC authorization code flow.",
+          "type": "boolean"
+        },
+        "validRedirectURIs": {
+          "description": "validRedirectURIs lists the URIs allowed as OIDC redirect targets.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "webOrigins": {
+          "description": "webOrigins lists the allowed CORS origins.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
+      "required": [
+        "accessType",
+        "clientID",
+        "realmRef"
+      ],
       "type": "object"
     },
     "status": {
@@ -85,6 +229,10 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "keycloakID": {
+          "description": "keycloakID is the internal UUID assigned by Keycloak for this client.",
+          "type": "string"
         }
       },
       "type": "object"

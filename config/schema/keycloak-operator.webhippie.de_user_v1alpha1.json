@@ -47,6 +47,38 @@
           "description": "lastName specifies the user's last name.",
           "type": "string"
         },
+        "password": {
+          "description": "password references a secret or direct value which contains the initial\npassword to set for the user. If unset, no password is set in Keycloak\nand the user cannot authenticate until an administrator sets one\n(e.g. via the Keycloak console/API or a \"forgot password\" email flow).",
+          "properties": {
+            "secretKeyRef": {
+              "description": "SecretKeyRef selects a key of a Kubernetes Secret.",
+              "properties": {
+                "key": {
+                  "description": "Key is the key of the Secret to select from.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Name is the name of the Secret.",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the Secret.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "name"
+              ],
+              "type": "object"
+            },
+            "value": {
+              "description": "Value directly specifies the value as a plain string.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
         "realmRef": {
           "description": "realmRef is a reference to the Realm this user belongs to.\nThe Keycloak connection is resolved transitively through the Realm resource.",
           "properties": {
@@ -68,7 +100,6 @@
             }
           },
           "required": [
-            "kind",
             "name"
           ],
           "type": "object"
@@ -79,6 +110,11 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "temporary": {
+          "default": true,
+          "description": "temporary specifies whether the password set via the password field is\ntemporary, forcing the user to change it on next login. Defaults to\ntrue and is only relevant when password is set.",
+          "type": "boolean"
         },
         "username": {
           "description": "username specifies the login name of the user.",

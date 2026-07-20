@@ -82,7 +82,6 @@
             }
           },
           "required": [
-            "kind",
             "name"
           ],
           "type": "object"
@@ -125,12 +124,12 @@
           },
           "type": "object"
         },
-        "passwordPolicy": {
-          "description": "passwordPolicy sets the password policy expression for the realm\n(e.g. \"length(8) and digits(1)\").",
+        "name": {
+          "description": "name specifies the internal name of the realm in Keycloak.\nThis field is immutable after creation.",
           "type": "string"
         },
-        "realmName": {
-          "description": "realmName specifies the internal name of the realm.\nThis field is immutable after creation.",
+        "passwordPolicy": {
+          "description": "passwordPolicy sets the password policy expression for the realm\n(e.g. \"length(8) and digits(1)\").",
           "type": "string"
         },
         "sessionTimeouts": {
@@ -181,29 +180,34 @@
             "password": {
               "description": "password references a secret or inline value for the SMTP authentication\npassword.",
               "properties": {
-                "key": {
-                  "description": "The key of the secret to select from.",
-                  "type": "string"
-                },
-                "name": {
-                  "default": "",
-                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
-                  "type": "string"
-                },
-                "namespace": {
-                  "description": "Namespace of the ConfigMap.",
-                  "type": "string"
+                "secretKeyRef": {
+                  "description": "SecretKeyRef selects a key of a Kubernetes Secret.",
+                  "properties": {
+                    "key": {
+                      "description": "Key is the key of the Secret to select from.",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name is the name of the Secret.",
+                      "type": "string"
+                    },
+                    "namespace": {
+                      "description": "Namespace of the Secret.",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "name"
+                  ],
+                  "type": "object"
                 },
                 "value": {
-                  "description": "Directly specifies a value.",
+                  "description": "Value directly specifies the value as a plain string.",
                   "type": "string"
                 }
               },
-              "required": [
-                "key"
-              ],
-              "type": "object",
-              "x-kubernetes-map-type": "atomic"
+              "type": "object"
             },
             "port": {
               "description": "port is the SMTP server port. Defaults to 25 when omitted.",
@@ -270,7 +274,7 @@
       },
       "required": [
         "keycloakRef",
-        "realmName"
+        "name"
       ],
       "type": "object"
     },

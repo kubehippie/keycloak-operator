@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "AudienceProtocolMapper",
-  "description": "AudienceProtocolMapper is the Schema for the audienceprotocolmappers API",
+  "description": "AudienceProtocolMapper is the Schema for the audienceprotocolmappers API.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -17,11 +17,60 @@
     "spec": {
       "description": "spec defines the desired state of AudienceProtocolMapper",
       "properties": {
-        "foo": {
-          "description": "foo is an example field of AudienceProtocolMapper. Edit audienceprotocolmapper_types.go to remove/update",
+        "addToAccessToken": {
+          "description": "addToAccessToken controls whether the audience is included in access tokens.",
+          "type": "boolean"
+        },
+        "addToIDToken": {
+          "description": "addToIDToken controls whether the audience is included in ID tokens.",
+          "type": "boolean"
+        },
+        "addToTokenIntrospection": {
+          "description": "addToTokenIntrospection controls whether the audience is included in token introspection responses.",
+          "type": "boolean"
+        },
+        "clientRef": {
+          "description": "clientRef references the OpenIDClient this protocol mapper is attached to.",
+          "properties": {
+            "kind": {
+              "default": "OpenIDClient",
+              "description": "Kind specifies the kind of the referenced client resource.",
+              "enum": [
+                "OpenIDClient"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "description": "Name specifies the name of the OpenIDClient resource.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace specifies the namespace of the OpenIDClient resource.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "includedClientAudience": {
+          "description": "includedClientAudience references another client that should appear in the aud claim.",
+          "type": "string"
+        },
+        "includedCustomAudience": {
+          "description": "includedCustomAudience is a literal audience value that should appear in the aud claim.",
+          "type": "string"
+        },
+        "name": {
+          "description": "name is the mapper's name as shown in the Keycloak admin console.",
           "type": "string"
         }
       },
+      "required": [
+        "clientRef",
+        "name"
+      ],
       "type": "object"
     },
     "status": {
@@ -85,6 +134,10 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "keycloakID": {
+          "description": "keycloakID is the UUID assigned by Keycloak for this protocol mapper.",
+          "type": "string"
         }
       },
       "type": "object"

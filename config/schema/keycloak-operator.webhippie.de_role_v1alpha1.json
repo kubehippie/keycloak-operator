@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "GroupMembershipProtocolMapper",
-  "description": "GroupMembershipProtocolMapper is the Schema for the groupmembershipprotocolmappers API.",
+  "title": "Role",
+  "description": "Role is the Schema for the roles API",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -15,45 +15,43 @@
       "type": "object"
     },
     "spec": {
-      "description": "spec defines the desired state of GroupMembershipProtocolMapper",
+      "description": "spec defines the desired state of Role",
       "properties": {
-        "addToAccessToken": {
-          "description": "addToAccessToken controls whether the claim is included in access tokens.",
-          "type": "boolean"
+        "attributes": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": "attributes holds custom role attributes as key/value pairs where each\nkey maps to one or more values.",
+          "type": "object"
         },
-        "addToIDToken": {
-          "description": "addToIDToken controls whether the claim is included in ID tokens.",
-          "type": "boolean"
-        },
-        "addToTokenIntrospection": {
-          "description": "addToTokenIntrospection controls whether the claim is included in token introspection responses.",
-          "type": "boolean"
-        },
-        "addToUserInfo": {
-          "description": "addToUserInfo controls whether the claim is included in the userinfo response.",
-          "type": "boolean"
-        },
-        "claimName": {
-          "description": "claimName is the token claim that receives the group membership data.",
+        "description": {
+          "description": "description holds a human-readable description of the role.",
           "type": "string"
         },
-        "clientRef": {
-          "description": "clientRef references the OpenIDClient this protocol mapper is attached to.",
+        "name": {
+          "description": "name specifies the realm-level role name within the realm.",
+          "type": "string"
+        },
+        "realmRef": {
+          "description": "realmRef is a reference to the Realm this role belongs to.\nThe Keycloak connection is resolved transitively through the Realm resource.",
           "properties": {
             "kind": {
-              "default": "OpenIDClient",
-              "description": "Kind specifies the kind of the referenced client resource.",
+              "default": "Realm",
+              "description": "Kind specifies the kind of the Realm resource.",
               "enum": [
-                "OpenIDClient"
+                "Realm"
               ],
               "type": "string"
             },
             "name": {
-              "description": "Name specifies the name of the OpenIDClient resource.",
+              "description": "Name specifies the name of the Realm resource.",
               "type": "string"
             },
             "namespace": {
-              "description": "Namespace specifies the namespace of the OpenIDClient resource.",
+              "description": "Namespace specifies the namespace of the Realm resource.",
               "type": "string"
             }
           },
@@ -61,28 +59,19 @@
             "name"
           ],
           "type": "object"
-        },
-        "fullPath": {
-          "description": "fullPath controls whether full group paths are emitted instead of simple names.",
-          "type": "boolean"
-        },
-        "name": {
-          "description": "name is the mapper's name as shown in the Keycloak admin console.",
-          "type": "string"
         }
       },
       "required": [
-        "claimName",
-        "clientRef",
-        "name"
+        "name",
+        "realmRef"
       ],
       "type": "object"
     },
     "status": {
-      "description": "status defines the observed state of GroupMembershipProtocolMapper",
+      "description": "status defines the observed state of Role",
       "properties": {
         "conditions": {
-          "description": "conditions represent the current state of the GroupMembershipProtocolMapper resource.\nEach condition has a unique type and reflects the status of a specific aspect of the resource.\n\nStandard condition types include:\n- \"Available\": the resource is fully functional\n- \"Progressing\": the resource is being created or updated\n- \"Degraded\": the resource failed to reach or maintain its desired state\n\nThe status of each condition is one of True, False, or Unknown.",
+          "description": "conditions represent the current state of the Role resource.\nEach condition has a unique type and reflects the status of a specific aspect of the resource.\n\nStandard condition types include:\n- \"Available\": the resource is fully functional\n- \"Progressing\": the resource is being created or updated\n- \"Degraded\": the resource failed to reach or maintain its desired state\n\nThe status of each condition is one of True, False, or Unknown.",
           "items": {
             "description": "Condition contains details for one aspect of the current state of this API Resource.",
             "properties": {
@@ -141,7 +130,7 @@
           "x-kubernetes-list-type": "map"
         },
         "keycloakID": {
-          "description": "keycloakID is the UUID assigned by Keycloak for this protocol mapper.",
+          "description": "keycloakID is the UUID assigned by Keycloak for this role.\nIt is stored here so that update and delete operations can reference the\nrole directly without an additional lookup by name.",
           "type": "string"
         }
       },

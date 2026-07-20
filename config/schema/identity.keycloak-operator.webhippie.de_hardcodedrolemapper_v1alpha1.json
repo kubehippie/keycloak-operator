@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "HardcodedRoleMapper",
-  "description": "HardcodedRoleMapper is the Schema for the hardcodedrolemappers API",
+  "description": "HardcodedRoleMapper is the Schema for the hardcodedrolemappers API.",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -17,11 +17,45 @@
     "spec": {
       "description": "spec defines the desired state of HardcodedRoleMapper",
       "properties": {
-        "foo": {
-          "description": "foo is an example field of HardcodedRoleMapper. Edit hardcodedrolemapper_types.go to remove/update",
+        "identityProviderRef": {
+          "description": "identityProviderRef references the OIDCIdentityProvider this mapper is attached to.",
+          "properties": {
+            "kind": {
+              "default": "OIDCIdentityProvider",
+              "description": "Kind specifies the kind of the referenced identity provider resource.",
+              "enum": [
+                "OIDCIdentityProvider"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "description": "Name specifies the name of the OIDCIdentityProvider resource.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace specifies the namespace of the OIDCIdentityProvider resource.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
+        },
+        "name": {
+          "description": "name is the mapper's name as shown in the Keycloak admin console.",
+          "type": "string"
+        },
+        "role": {
+          "description": "role is the realm or client role to hardcode for federated users\n(e.g. \"admin\" or \"myclient.myrole\").",
           "type": "string"
         }
       },
+      "required": [
+        "identityProviderRef",
+        "name",
+        "role"
+      ],
       "type": "object"
     },
     "status": {
@@ -85,6 +119,10 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "keycloakID": {
+          "description": "keycloakID is the UUID assigned by Keycloak for this identity provider mapper.\nIt is stored here so that update and delete operations can reference the\nmapper directly without an additional lookup by name.",
+          "type": "string"
         }
       },
       "type": "object"

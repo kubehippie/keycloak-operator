@@ -21,15 +21,14 @@
           "description": "caCert defines the root certificate authority that API clients use when\nverifying server certificates.",
           "properties": {
             "configMapKeyRef": {
-              "description": "Selects a key of a ConfigMap.",
+              "description": "ConfigMapKeyRef selects a key of a ConfigMap.",
               "properties": {
                 "key": {
-                  "description": "The key to select.",
+                  "description": "Key is the key in the ConfigMap to select from.",
                   "type": "string"
                 },
                 "name": {
-                  "default": "",
-                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                  "description": "Name is the name of the ConfigMap.",
                   "type": "string"
                 },
                 "namespace": {
@@ -38,33 +37,64 @@
                 }
               },
               "required": [
-                "key"
+                "key",
+                "name"
               ],
-              "type": "object",
-              "x-kubernetes-map-type": "atomic"
+              "type": "object"
             },
             "secretKeyRef": {
-              "description": "Selects a key of a secret.",
+              "description": "SecretKeyRef selects a key of a Secret.",
               "properties": {
                 "key": {
-                  "description": "The key of the secret to select from.",
+                  "description": "Key is the key of the Secret to select from.",
                   "type": "string"
                 },
                 "name": {
-                  "default": "",
-                  "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
+                  "description": "Name is the name of the Secret.",
                   "type": "string"
                 },
                 "namespace": {
-                  "description": "Namespace of the ConfigMap.",
+                  "description": "Namespace of the Secret.",
                   "type": "string"
                 }
               },
               "required": [
-                "key"
+                "key",
+                "name"
               ],
-              "type": "object",
-              "x-kubernetes-map-type": "atomic"
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "client": {
+          "description": "client references a secret or direct value which contains the client ID\nused to authenticate via the client credentials grant.\nEither username/password or client/secret must be set.",
+          "properties": {
+            "secretKeyRef": {
+              "description": "SecretKeyRef selects a key of a Kubernetes Secret.",
+              "properties": {
+                "key": {
+                  "description": "Key is the key of the Secret to select from.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Name is the name of the Secret.",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the Secret.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "name"
+              ],
+              "type": "object"
+            },
+            "value": {
+              "description": "Value directly specifies the value as a plain string.",
+              "type": "string"
             }
           },
           "type": "object"
@@ -74,73 +104,113 @@
           "type": "boolean"
         },
         "password": {
-          "description": "password references a secret or direct value which contains admin password.",
+          "description": "password references a secret or direct value which contains admin password.\nEither username/password or client/secret must be set.",
           "properties": {
-            "key": {
-              "description": "The key of the secret to select from.",
-              "type": "string"
-            },
-            "name": {
-              "default": "",
-              "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
-              "type": "string"
-            },
-            "namespace": {
-              "description": "Namespace of the ConfigMap.",
-              "type": "string"
+            "secretKeyRef": {
+              "description": "SecretKeyRef selects a key of a Kubernetes Secret.",
+              "properties": {
+                "key": {
+                  "description": "Key is the key of the Secret to select from.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Name is the name of the Secret.",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the Secret.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "name"
+              ],
+              "type": "object"
             },
             "value": {
-              "description": "Directly specifies a value.",
+              "description": "Value directly specifies the value as a plain string.",
               "type": "string"
             }
           },
-          "required": [
-            "key"
-          ],
-          "type": "object",
-          "x-kubernetes-map-type": "atomic"
+          "type": "object"
         },
         "realmName": {
           "default": "master",
           "description": "realmName defines the realm name to authenticate the admin credentials,\nnormally this should be the master realm.",
           "type": "string"
         },
+        "secret": {
+          "description": "secret references a secret or direct value which contains the client\nsecret used to authenticate via the client credentials grant.\nEither username/password or client/secret must be set.",
+          "properties": {
+            "secretKeyRef": {
+              "description": "SecretKeyRef selects a key of a Kubernetes Secret.",
+              "properties": {
+                "key": {
+                  "description": "Key is the key of the Secret to select from.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Name is the name of the Secret.",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the Secret.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "name"
+              ],
+              "type": "object"
+            },
+            "value": {
+              "description": "Value directly specifies the value as a plain string.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
         "url": {
           "description": "url of keycloak instance.",
           "type": "string"
         },
         "username": {
-          "description": "username references a secret or direct value which contains admin username.",
+          "description": "username references a secret or direct value which contains admin username.\nEither username/password or client/secret must be set.",
           "properties": {
-            "key": {
-              "description": "The key of the secret to select from.",
-              "type": "string"
-            },
-            "name": {
-              "default": "",
-              "description": "Name of the referent.\nThis field is effectively required, but due to backwards compatibility is\nallowed to be empty. Instances of this type with an empty value here are\nalmost certainly wrong.\nMore info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names",
-              "type": "string"
-            },
-            "namespace": {
-              "description": "Namespace of the ConfigMap.",
-              "type": "string"
+            "secretKeyRef": {
+              "description": "SecretKeyRef selects a key of a Kubernetes Secret.",
+              "properties": {
+                "key": {
+                  "description": "Key is the key of the Secret to select from.",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Name is the name of the Secret.",
+                  "type": "string"
+                },
+                "namespace": {
+                  "description": "Namespace of the Secret.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "name"
+              ],
+              "type": "object"
             },
             "value": {
-              "description": "Directly specifies a value.",
+              "description": "Value directly specifies the value as a plain string.",
               "type": "string"
             }
           },
-          "required": [
-            "key"
-          ],
-          "type": "object",
-          "x-kubernetes-map-type": "atomic"
+          "type": "object"
         }
       },
       "required": [
-        "password",
-        "url",
-        "username"
+        "url"
       ],
       "type": "object"
     },

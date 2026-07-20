@@ -17,11 +17,52 @@
     "spec": {
       "description": "spec defines the desired state of ClientScope",
       "properties": {
-        "foo": {
-          "description": "foo is an example field of ClientScope. Edit clientscope_types.go to remove/update",
+        "consentScreenText": {
+          "description": "consentScreenText is the text displayed on the consent screen when\nthis scope is requested. Setting this implies displayOnConsentScreen.",
           "type": "string"
+        },
+        "description": {
+          "description": "description is a human-readable description of the client scope.",
+          "type": "string"
+        },
+        "includeInTokenScope": {
+          "description": "includeInTokenScope controls whether this client scope is included in\nthe access token's \"scope\" claim. Defaults to true.",
+          "type": "boolean"
+        },
+        "name": {
+          "description": "name is the name of the client scope.",
+          "type": "string"
+        },
+        "realmRef": {
+          "description": "realmRef references the Realm this client scope belongs to. Immutable\nafter creation.",
+          "properties": {
+            "kind": {
+              "default": "Realm",
+              "description": "Kind specifies the kind of the Realm resource.",
+              "enum": [
+                "Realm"
+              ],
+              "type": "string"
+            },
+            "name": {
+              "description": "Name specifies the name of the Realm resource.",
+              "type": "string"
+            },
+            "namespace": {
+              "description": "Namespace specifies the namespace of the Realm resource.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "type": "object"
         }
       },
+      "required": [
+        "name",
+        "realmRef"
+      ],
       "type": "object"
     },
     "status": {
@@ -85,6 +126,10 @@
             "type"
           ],
           "x-kubernetes-list-type": "map"
+        },
+        "keycloakID": {
+          "description": "keycloakID is the UUID assigned by Keycloak for this client scope.",
+          "type": "string"
         }
       },
       "type": "object"
