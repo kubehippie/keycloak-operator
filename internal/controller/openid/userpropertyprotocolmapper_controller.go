@@ -134,6 +134,13 @@ func (r *UserPropertyProtocolMapperReconciler) reconcileUserPropertyProtocolMapp
 
 	desired.ID = instance.Status.KeycloakID
 	if err := session.Client.UpdateClientProtocolMapper(ctx, session.Token.AccessToken, session.RealmName, idOfClient, *instance.Status.KeycloakID, desired); err != nil {
+		if isNotFoundAPIError(err) {
+			log.Info("Protocol mapper missing in Keycloak, clearing status to recreate", "id", *instance.Status.KeycloakID)
+			if err := controller.UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{Requeue: true}, nil
+		}
 		return ctrl.Result{}, fmt.Errorf("failed to update protocol mapper in Keycloak: %w", err)
 	}
 
