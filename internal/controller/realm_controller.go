@@ -24,6 +24,7 @@ import (
 
 	"github.com/Nerzal/gocloak/v14"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -243,8 +244,38 @@ func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RealmReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := RegisterRefIndex(mgr, &v1alpha1.Realm{}, realmSecretIndexField, realmSecretRefKeys); err != nil {
+		return err
+	}
+
+	newList := func() client.ObjectList { return &v1alpha1.RealmList{} }
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Realm{}).
+		Watches(&corev1.Secret{}, RefEventHandler(mgr.GetClient(), newList, realmSecretIndexField)).
 		Named("realm").
 		Complete(r)
+}
+
+const realmSecretIndexField = ".spec.secretRefs"
+
+// realmSecretRefKeys returns the RefIndexKey values for every Secret the
+// given Realm instance may reference (currently the SMTP password).
+func realmSecretRefKeys(obj client.Object) []string {
+	realm, ok := obj.(*v1alpha1.Realm)
+	if !ok || realm.Spec.SmtpServer == nil || realm.Spec.SmtpServer.Password == nil {
+		return nil
+	}
+
+	ref := realm.Spec.SmtpServer.Password.SecretKeyRef
+	if ref == nil {
+		return nil
+	}
+
+	ns := ref.Namespace
+	if ns == "" {
+		ns = realm.Namespace
+	}
+
+	return []string{RefIndexKey(ns, ref.Name)}
 }

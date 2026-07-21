@@ -24,6 +24,7 @@ import (
 	"github.com/Nerzal/gocloak/v14"
 	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	"github.com/kubehippie/keycloak-operator/internal/controller"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -206,8 +207,34 @@ func openIDClientToGocloak(ctx context.Context, cl client.Client, o *v1alpha1.Op
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *OpenIDClientReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := controller.RegisterRefIndex(mgr, &v1alpha1.OpenIDClient{}, openIDClientSecretIndexField, openIDClientSecretRefKeys); err != nil {
+		return err
+	}
+
+	newList := func() client.ObjectList { return &v1alpha1.OpenIDClientList{} }
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.OpenIDClient{}).
+		Watches(&corev1.Secret{}, controller.RefEventHandler(mgr.GetClient(), newList, openIDClientSecretIndexField)).
 		Named("openid-openidclient").
 		Complete(r)
+}
+
+const openIDClientSecretIndexField = ".spec.secretRefs"
+
+// openIDClientSecretRefKeys returns the RefIndexKey values for every Secret
+// the given OpenIDClient instance may reference (currently the clientSecret).
+func openIDClientSecretRefKeys(obj client.Object) []string {
+	c, ok := obj.(*v1alpha1.OpenIDClient)
+	if !ok || c.Spec.ClientSecret == nil || c.Spec.ClientSecret.SecretKeyRef == nil {
+		return nil
+	}
+
+	ref := c.Spec.ClientSecret.SecretKeyRef
+	ns := ref.Namespace
+	if ns == "" {
+		ns = c.Namespace
+	}
+
+	return []string{controller.RefIndexKey(ns, ref.Name)}
 }

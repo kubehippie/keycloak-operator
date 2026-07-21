@@ -24,6 +24,7 @@ import (
 
 	"github.com/kubehippie/keycloak-operator/api/common"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -121,10 +122,78 @@ func (r *KeycloakReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}, nil
 }
 
+const (
+	keycloakSecretIndexField    = ".spec.secretRefs"
+	keycloakConfigMapIndexField = ".spec.configMapRefs"
+)
+
+// keycloakSecretRefKeys returns the RefIndexKey values for every Secret the
+// given Keycloak instance may reference (admin credentials and caCert).
+func keycloakSecretRefKeys(obj client.Object) []string {
+	kc, ok := obj.(*v1alpha1.Keycloak)
+	if !ok {
+		return nil
+	}
+
+	var keys []string
+	appendSecretRef := func(ref *common.SecretKeyRefOrVal) {
+		if ref == nil || ref.SecretKeyRef == nil {
+			return
+		}
+		ns := ref.SecretKeyRef.Namespace
+		if ns == "" {
+			ns = kc.Namespace
+		}
+		keys = append(keys, RefIndexKey(ns, ref.SecretKeyRef.Name))
+	}
+
+	appendSecretRef(kc.Spec.Username)
+	appendSecretRef(kc.Spec.Password)
+	appendSecretRef(kc.Spec.Client)
+	appendSecretRef(kc.Spec.Secret)
+
+	if kc.Spec.CACert != nil && kc.Spec.CACert.SecretKeyRef != nil {
+		ns := kc.Spec.CACert.SecretKeyRef.Namespace
+		if ns == "" {
+			ns = kc.Namespace
+		}
+		keys = append(keys, RefIndexKey(ns, kc.Spec.CACert.SecretKeyRef.Name))
+	}
+
+	return keys
+}
+
+// keycloakConfigMapRefKeys returns the RefIndexKey values for every ConfigMap
+// the given Keycloak instance may reference (currently only caCert).
+func keycloakConfigMapRefKeys(obj client.Object) []string {
+	kc, ok := obj.(*v1alpha1.Keycloak)
+	if !ok || kc.Spec.CACert == nil || kc.Spec.CACert.ConfigMapKeyRef == nil {
+		return nil
+	}
+
+	ns := kc.Spec.CACert.ConfigMapKeyRef.Namespace
+	if ns == "" {
+		ns = kc.Namespace
+	}
+
+	return []string{RefIndexKey(ns, kc.Spec.CACert.ConfigMapKeyRef.Name)}
+}
+
 // SetupWithManager sets up the controller with the Manager.
 func (r *KeycloakReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := RegisterRefIndex(mgr, &v1alpha1.Keycloak{}, keycloakSecretIndexField, keycloakSecretRefKeys); err != nil {
+		return err
+	}
+	if err := RegisterRefIndex(mgr, &v1alpha1.Keycloak{}, keycloakConfigMapIndexField, keycloakConfigMapRefKeys); err != nil {
+		return err
+	}
+
+	newList := func() client.ObjectList { return &v1alpha1.KeycloakList{} }
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Keycloak{}).
+		Watches(&corev1.Secret{}, RefEventHandler(mgr.GetClient(), newList, keycloakSecretIndexField)).
+		Watches(&corev1.ConfigMap{}, RefEventHandler(mgr.GetClient(), newList, keycloakConfigMapIndexField)).
 		Named("keycloak").
 		Complete(r)
 }

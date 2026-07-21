@@ -22,6 +22,7 @@ import (
 
 	"github.com/Nerzal/gocloak/v14"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -200,8 +201,34 @@ func userToGocloak(u *v1alpha1.User) gocloak.User {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *UserReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := RegisterRefIndex(mgr, &v1alpha1.User{}, userSecretIndexField, userSecretRefKeys); err != nil {
+		return err
+	}
+
+	newList := func() client.ObjectList { return &v1alpha1.UserList{} }
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.User{}).
+		Watches(&corev1.Secret{}, RefEventHandler(mgr.GetClient(), newList, userSecretIndexField)).
 		Named("user").
 		Complete(r)
+}
+
+const userSecretIndexField = ".spec.secretRefs"
+
+// userSecretRefKeys returns the RefIndexKey values for every Secret the
+// given User instance may reference (currently the initial password).
+func userSecretRefKeys(obj client.Object) []string {
+	user, ok := obj.(*v1alpha1.User)
+	if !ok || user.Spec.Password == nil || user.Spec.Password.SecretKeyRef == nil {
+		return nil
+	}
+
+	ref := user.Spec.Password.SecretKeyRef
+	ns := ref.Namespace
+	if ns == "" {
+		ns = user.Namespace
+	}
+
+	return []string{RefIndexKey(ns, ref.Name)}
 }

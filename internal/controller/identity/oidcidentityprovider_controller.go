@@ -24,6 +24,7 @@ import (
 	"github.com/Nerzal/gocloak/v14"
 	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	"github.com/kubehippie/keycloak-operator/internal/controller"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -211,8 +212,35 @@ func boolToString(b bool) string {
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *OIDCIdentityProviderReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	if err := controller.RegisterRefIndex(mgr, &v1alpha1.OIDCIdentityProvider{}, oidcIdentityProviderSecretIndexField, oidcIdentityProviderSecretRefKeys); err != nil {
+		return err
+	}
+
+	newList := func() client.ObjectList { return &v1alpha1.OIDCIdentityProviderList{} }
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.OIDCIdentityProvider{}).
+		Watches(&corev1.Secret{}, controller.RefEventHandler(mgr.GetClient(), newList, oidcIdentityProviderSecretIndexField)).
 		Named("identity-oidcidentityprovider").
 		Complete(r)
+}
+
+const oidcIdentityProviderSecretIndexField = ".spec.secretRefs"
+
+// oidcIdentityProviderSecretRefKeys returns the RefIndexKey values for every
+// Secret the given OIDCIdentityProvider instance may reference (currently
+// the clientSecret).
+func oidcIdentityProviderSecretRefKeys(obj client.Object) []string {
+	idp, ok := obj.(*v1alpha1.OIDCIdentityProvider)
+	if !ok || idp.Spec.ClientSecret == nil || idp.Spec.ClientSecret.SecretKeyRef == nil {
+		return nil
+	}
+
+	ref := idp.Spec.ClientSecret.SecretKeyRef
+	ns := ref.Namespace
+	if ns == "" {
+		ns = idp.Namespace
+	}
+
+	return []string{controller.RefIndexKey(ns, ref.Name)}
 }
