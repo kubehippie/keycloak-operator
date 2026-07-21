@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v14"
@@ -137,6 +138,14 @@ func (r *UserReconciler) reconcileUser(ctx context.Context, instance *v1alpha1.U
 
 	desired.ID = instance.Status.KeycloakID
 	if err := session.Client.UpdateUser(ctx, session.Token.AccessToken, session.RealmName, desired); err != nil {
+		var apiErr *gocloak.APIError
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			log.Info("User missing in Keycloak, clearing status to recreate", "id", *instance.Status.KeycloakID)
+			if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{Requeue: true}, nil
+		}
 		return ctrl.Result{}, fmt.Errorf("failed to update user in Keycloak: %w", err)
 	}
 

@@ -18,6 +18,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/Nerzal/gocloak/v14"
@@ -141,6 +142,14 @@ func (r *GroupReconciler) reconcileGroup(ctx context.Context, instance *v1alpha1
 
 	desired.ID = instance.Status.KeycloakID
 	if err := session.Client.UpdateGroup(ctx, session.Token.AccessToken, session.RealmName, desired); err != nil {
+		var apiErr *gocloak.APIError
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			log.Info("Group missing in Keycloak, clearing status to recreate", "id", *instance.Status.KeycloakID)
+			if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{Requeue: true}, nil
+		}
 		return ctrl.Result{}, fmt.Errorf("failed to update group in Keycloak: %w", err)
 	}
 

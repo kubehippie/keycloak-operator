@@ -148,6 +148,14 @@ func (r *ClientScopeReconciler) reconcileClientScope(ctx context.Context, instan
 
 	desired.ID = instance.Status.KeycloakID
 	if err := session.Client.UpdateClientScope(ctx, session.Token.AccessToken, session.RealmName, desired); err != nil {
+		var apiErr *gocloak.APIError
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			log.Info("Client scope missing in Keycloak, clearing status to recreate", "id", *instance.Status.KeycloakID)
+			if err := controller.UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{Requeue: true}, nil
+		}
 		return ctrl.Result{}, fmt.Errorf("failed to update client scope in Keycloak: %w", err)
 	}
 

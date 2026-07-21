@@ -139,6 +139,14 @@ func (r *RoleReconciler) reconcileRole(ctx context.Context, instance *v1alpha1.R
 
 	desired.ID = instance.Status.KeycloakID
 	if err := session.Client.UpdateRealmRoleByID(ctx, session.Token.AccessToken, session.RealmName, *instance.Status.KeycloakID, desired); err != nil {
+		var apiErr *gocloak.APIError
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			log.Info("Role missing in Keycloak, clearing status to recreate", "id", *instance.Status.KeycloakID)
+			if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{Requeue: true}, nil
+		}
 		return ctrl.Result{}, fmt.Errorf("failed to update role in Keycloak: %w", err)
 	}
 

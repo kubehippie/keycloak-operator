@@ -148,6 +148,14 @@ func (r *AttributeImporterMapperReconciler) reconcileAttributeImporterMapper(ctx
 
 	desired.ID = instance.Status.KeycloakID
 	if err := session.Client.UpdateIdentityProviderMapper(ctx, session.Token.AccessToken, session.RealmName, alias, desired); err != nil {
+		var apiErr *gocloak.APIError
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			log.Info("Identity provider mapper missing in Keycloak, clearing status to recreate", "id", *instance.Status.KeycloakID)
+			if err := controller.UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{Requeue: true}, nil
+		}
 		return ctrl.Result{}, fmt.Errorf("failed to update identity provider mapper in Keycloak: %w", err)
 	}
 

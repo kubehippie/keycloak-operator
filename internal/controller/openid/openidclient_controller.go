@@ -151,6 +151,14 @@ func (r *OpenIDClientReconciler) reconcileOpenIDClient(ctx context.Context, inst
 
 	desired.ID = instance.Status.KeycloakID
 	if err := session.Client.UpdateClient(ctx, session.Token.AccessToken, session.RealmName, desired); err != nil {
+		var apiErr *gocloak.APIError
+		if errors.As(err, &apiErr) && apiErr.Code == 404 {
+			log.Info("Client missing in Keycloak, clearing status to recreate", "id", *instance.Status.KeycloakID)
+			if err := controller.UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
+				return ctrl.Result{}, err
+			}
+			return ctrl.Result{Requeue: true}, nil
+		}
 		return ctrl.Result{}, fmt.Errorf("failed to update client in Keycloak: %w", err)
 	}
 
