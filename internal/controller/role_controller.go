@@ -138,7 +138,7 @@ func (r *RoleReconciler) reconcileRole(ctx context.Context, instance *v1alpha1.R
 	}
 
 	desired.ID = instance.Status.KeycloakID
-	if err := session.Client.UpdateRealmRole(ctx, session.Token.AccessToken, session.RealmName, instance.Spec.Name, desired); err != nil {
+	if err := session.Client.UpdateRealmRoleByID(ctx, session.Token.AccessToken, session.RealmName, *instance.Status.KeycloakID, desired); err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to update role in Keycloak: %w", err)
 	}
 
