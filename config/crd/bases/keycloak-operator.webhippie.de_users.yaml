@@ -77,6 +77,16 @@ spec:
               firstName:
                 description: firstName specifies the user's first name.
                 type: string
+              groups:
+                description: |-
+                  groups lists the names of Keycloak groups this user should be a member
+                  of. Membership is managed relative to what this operator previously
+                  applied (see status.groups): removing a name from this list removes
+                  the corresponding membership, but memberships added outside of this
+                  resource are left untouched.
+                items:
+                  type: string
+                type: array
               lastName:
                 description: lastName specifies the user's last name.
                 type: string
@@ -127,6 +137,16 @@ spec:
                 required:
                 - name
                 type: object
+              realmRoles:
+                description: |-
+                  realmRoles lists the names of realm-level roles assigned directly to
+                  this user. Assignment is managed relative to what this operator
+                  previously applied (see status.realmRoles): removing a name from this
+                  list revokes the corresponding role, but roles assigned outside of
+                  this resource (e.g. default realm roles) are left untouched.
+                items:
+                  type: string
+                type: array
               requiredActions:
                 description: |-
                   requiredActions lists the actions the user must perform on next login
@@ -220,12 +240,28 @@ spec:
                 x-kubernetes-list-map-keys:
                 - type
                 x-kubernetes-list-type: map
+              groups:
+                description: |-
+                  groups records the names of Keycloak groups this operator has most
+                  recently applied for this user, used to determine which memberships
+                  to revoke when spec.groups is changed.
+                items:
+                  type: string
+                type: array
               keycloakID:
                 description: |-
                   keycloakID is the UUID assigned by Keycloak for this user.
                   It is stored here so that update and delete operations can reference the
                   user directly without an additional lookup by username.
                 type: string
+              realmRoles:
+                description: |-
+                  realmRoles records the names of realm-level roles this operator has
+                  most recently applied for this user, used to determine which role
+                  assignments to revoke when spec.realmRoles is changed.
+                items:
+                  type: string
+                type: array
             type: object
         required:
         - spec

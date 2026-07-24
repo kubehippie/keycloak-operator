@@ -132,29 +132,189 @@ func (r *UserReconciler) reconcileUser(ctx context.Context, instance *v1alpha1.U
 			if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, &id); err != nil {
 				return ctrl.Result{}, err
 			}
-			return ctrl.Result{}, nil
 		}
-	}
-
-	desired.ID = instance.Status.KeycloakID
-	if err := session.Client.UpdateUser(ctx, session.Token.AccessToken, session.RealmName, desired); err != nil {
-		var apiErr *gocloak.APIError
-		if errors.As(err, &apiErr) && apiErr.Code == 404 {
-			log.Info("User missing in Keycloak, clearing status to recreate", "id", *instance.Status.KeycloakID)
-			if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
-				return ctrl.Result{}, err
+	} else {
+		desired.ID = instance.Status.KeycloakID
+		if err := session.Client.UpdateUser(ctx, session.Token.AccessToken, session.RealmName, desired); err != nil {
+			var apiErr *gocloak.APIError
+			if errors.As(err, &apiErr) && apiErr.Code == 404 {
+				log.Info("User missing in Keycloak, clearing status to recreate", "id", *instance.Status.KeycloakID)
+				if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
+					return ctrl.Result{}, err
+				}
+				return ctrl.Result{Requeue: true}, nil
 			}
-			return ctrl.Result{Requeue: true}, nil
+			return ctrl.Result{}, fmt.Errorf("failed to update user in Keycloak: %w", err)
 		}
-		return ctrl.Result{}, fmt.Errorf("failed to update user in Keycloak: %w", err)
+
+		if err := r.setPassword(ctx, instance, session, *instance.Status.KeycloakID); err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
-	if err := r.setPassword(ctx, instance, session, *instance.Status.KeycloakID); err != nil {
+	if err := r.reconcileGroups(ctx, instance, session, *instance.Status.KeycloakID); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if err := r.reconcileRealmRoles(ctx, instance, session, *instance.Status.KeycloakID); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	log.Info("User reconciled", "id", *instance.Status.KeycloakID)
 	return ctrl.Result{}, nil
+}
+
+// reconcileGroups ensures the user's Keycloak group memberships match
+// instance.Spec.Groups. Membership changes are computed relative to
+// instance.Status.Groups (the set previously applied by this operator), so
+// memberships created outside of this resource are left untouched, while
+// names removed from spec.groups have their membership revoked.
+func (r *UserReconciler) reconcileGroups(ctx context.Context, instance *v1alpha1.User, session *KeycloakSession, keycloakID string) error {
+	toAdd, toRemove := diffNames(instance.Spec.Groups, instance.Status.Groups)
+	if len(toAdd) == 0 && len(toRemove) == 0 {
+		return nil
+	}
+
+	for _, name := range toAdd {
+		groupID, err := findGroupIDByName(ctx, session, name)
+		if err != nil {
+			return fmt.Errorf("failed to resolve group %q: %w", name, err)
+		}
+		if groupID == "" {
+			return fmt.Errorf("group %q not found in realm %q", name, session.RealmName)
+		}
+		if err := session.Client.AddUserToGroup(ctx, session.Token.AccessToken, session.RealmName, keycloakID, groupID); err != nil {
+			return fmt.Errorf("failed to add user to group %q: %w", name, err)
+		}
+	}
+
+	for _, name := range toRemove {
+		groupID, err := findGroupIDByName(ctx, session, name)
+		if err != nil {
+			return fmt.Errorf("failed to resolve group %q for removal: %w", name, err)
+		}
+		if groupID == "" {
+			// Group no longer exists in Keycloak, nothing left to remove.
+			continue
+		}
+		if err := session.Client.DeleteUserFromGroup(ctx, session.Token.AccessToken, session.RealmName, keycloakID, groupID); err != nil {
+			return fmt.Errorf("failed to remove user from group %q: %w", name, err)
+		}
+	}
+
+	return updateAppliedGroupsStatus(ctx, r.Client, instance)
+}
+
+// reconcileRealmRoles ensures the user's directly assigned realm roles match
+// instance.Spec.RealmRoles. Assignment changes are computed relative to
+// instance.Status.RealmRoles (the set previously applied by this operator),
+// so roles assigned outside of this resource (e.g. default realm roles) are
+// left untouched, while names removed from spec.realmRoles are revoked.
+func (r *UserReconciler) reconcileRealmRoles(ctx context.Context, instance *v1alpha1.User, session *KeycloakSession, keycloakID string) error {
+	toAdd, toRemove := diffNames(instance.Spec.RealmRoles, instance.Status.RealmRoles)
+	if len(toAdd) == 0 && len(toRemove) == 0 {
+		return nil
+	}
+
+	for _, name := range toAdd {
+		role, err := session.Client.GetRealmRole(ctx, session.Token.AccessToken, session.RealmName, name)
+		if err != nil {
+			return fmt.Errorf("failed to resolve realm role %q: %w", name, err)
+		}
+		if err := session.Client.AddRealmRoleToUser(ctx, session.Token.AccessToken, session.RealmName, keycloakID, []gocloak.Role{*role}); err != nil {
+			return fmt.Errorf("failed to assign realm role %q: %w", name, err)
+		}
+	}
+
+	for _, name := range toRemove {
+		role, err := session.Client.GetRealmRole(ctx, session.Token.AccessToken, session.RealmName, name)
+		if err != nil {
+			var apiErr *gocloak.APIError
+			if errors.As(err, &apiErr) && apiErr.Code == 404 {
+				// Role no longer exists in Keycloak, nothing left to remove.
+				continue
+			}
+			return fmt.Errorf("failed to resolve realm role %q for removal: %w", name, err)
+		}
+		if err := session.Client.DeleteRealmRoleFromUser(ctx, session.Token.AccessToken, session.RealmName, keycloakID, []gocloak.Role{*role}); err != nil {
+			return fmt.Errorf("failed to revoke realm role %q: %w", name, err)
+		}
+	}
+
+	return updateAppliedRealmRolesStatus(ctx, r.Client, instance)
+}
+
+// findGroupIDByName searches the realm for a top-level group with an exact
+// name match, returning an empty ID (without error) when no such group
+// exists.
+func findGroupIDByName(ctx context.Context, session *KeycloakSession, name string) (string, error) {
+	groups, err := session.Client.GetGroups(ctx, session.Token.AccessToken, session.RealmName, gocloak.GetGroupsParams{
+		Search: gocloak.StringP(name),
+		Exact:  gocloak.BoolP(true),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	for _, g := range groups {
+		if g.Name != nil && *g.Name == name && g.ID != nil {
+			return *g.ID, nil
+		}
+	}
+
+	return "", nil
+}
+
+// diffNames compares a desired set of names against the set previously
+// applied by this operator (as recorded in status), returning the names that
+// need to be added and the names that need to be removed.
+func diffNames(desired, previouslyApplied []string) (toAdd, toRemove []string) {
+	desiredSet := make(map[string]struct{}, len(desired))
+	for _, name := range desired {
+		desiredSet[name] = struct{}{}
+	}
+
+	previousSet := make(map[string]struct{}, len(previouslyApplied))
+	for _, name := range previouslyApplied {
+		previousSet[name] = struct{}{}
+	}
+
+	for _, name := range desired {
+		if _, ok := previousSet[name]; !ok {
+			toAdd = append(toAdd, name)
+		}
+	}
+
+	for _, name := range previouslyApplied {
+		if _, ok := desiredSet[name]; !ok {
+			toRemove = append(toRemove, name)
+		}
+	}
+
+	return toAdd, toRemove
+}
+
+// updateAppliedGroupsStatus persists instance.Spec.Groups into
+// instance.Status.Groups, recording the set of memberships this operator has
+// applied so that future reconciliations can compute an accurate diff.
+func updateAppliedGroupsStatus(ctx context.Context, c client.Client, instance *v1alpha1.User) error {
+	instance.Status.Groups = instance.Spec.Groups
+	if err := c.Status().Update(ctx, instance); err != nil {
+		return fmt.Errorf("failed to update applied groups status: %w", err)
+	}
+	return nil
+}
+
+// updateAppliedRealmRolesStatus persists instance.Spec.RealmRoles into
+// instance.Status.RealmRoles, recording the set of role assignments this
+// operator has applied so that future reconciliations can compute an
+// accurate diff.
+func updateAppliedRealmRolesStatus(ctx context.Context, c client.Client, instance *v1alpha1.User) error {
+	instance.Status.RealmRoles = instance.Spec.RealmRoles
+	if err := c.Status().Update(ctx, instance); err != nil {
+		return fmt.Errorf("failed to update applied realm roles status: %w", err)
+	}
+	return nil
 }
 
 // setPassword resolves the spec.password reference, if set, and applies it to

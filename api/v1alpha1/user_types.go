@@ -75,6 +75,22 @@ type UserSpec struct {
 	// (e.g. UPDATE_PASSWORD, VERIFY_EMAIL).
 	// +optional
 	RequiredActions []string `json:"requiredActions,omitempty"`
+
+	// groups lists the names of Keycloak groups this user should be a member
+	// of. Membership is managed relative to what this operator previously
+	// applied (see status.groups): removing a name from this list removes
+	// the corresponding membership, but memberships added outside of this
+	// resource are left untouched.
+	// +optional
+	Groups []string `json:"groups,omitempty"`
+
+	// realmRoles lists the names of realm-level roles assigned directly to
+	// this user. Assignment is managed relative to what this operator
+	// previously applied (see status.realmRoles): removing a name from this
+	// list revokes the corresponding role, but roles assigned outside of
+	// this resource (e.g. default realm roles) are left untouched.
+	// +optional
+	RealmRoles []string `json:"realmRoles,omitempty"`
 }
 
 // UserStatus defines the observed state of User.
@@ -87,6 +103,18 @@ type UserStatus struct {
 	// user directly without an additional lookup by username.
 	// +optional
 	KeycloakID *string `json:"keycloakID,omitempty"`
+
+	// groups records the names of Keycloak groups this operator has most
+	// recently applied for this user, used to determine which memberships
+	// to revoke when spec.groups is changed.
+	// +optional
+	Groups []string `json:"groups,omitempty"`
+
+	// realmRoles records the names of realm-level roles this operator has
+	// most recently applied for this user, used to determine which role
+	// assignments to revoke when spec.realmRoles is changed.
+	// +optional
+	RealmRoles []string `json:"realmRoles,omitempty"`
 
 	// conditions represent the current state of the User resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.

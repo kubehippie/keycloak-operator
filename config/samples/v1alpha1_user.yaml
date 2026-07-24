@@ -19,4 +19,10 @@ spec:
     value: change-me
   temporary: true
 
+  groups:
+    - group-sample
+
+  realmRoles:
+    - realm-role-sample
+
 ...

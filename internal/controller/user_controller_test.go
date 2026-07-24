@@ -162,6 +162,32 @@ var _ = Describe("userToGocloak", func() {
 	})
 })
 
+var _ = Describe("diffNames", func() {
+	It("returns all desired names as toAdd when nothing was previously applied", func() {
+		toAdd, toRemove := diffNames([]string{"a", "b"}, nil)
+		Expect(toAdd).To(ConsistOf("a", "b"))
+		Expect(toRemove).To(BeEmpty())
+	})
+
+	It("returns previously applied names as toRemove when nothing is desired anymore", func() {
+		toAdd, toRemove := diffNames(nil, []string{"a", "b"})
+		Expect(toAdd).To(BeEmpty())
+		Expect(toRemove).To(ConsistOf("a", "b"))
+	})
+
+	It("returns only the difference when desired and previous overlap", func() {
+		toAdd, toRemove := diffNames([]string{"a", "c"}, []string{"a", "b"})
+		Expect(toAdd).To(ConsistOf("c"))
+		Expect(toRemove).To(ConsistOf("b"))
+	})
+
+	It("returns no changes when desired matches previously applied", func() {
+		toAdd, toRemove := diffNames([]string{"a", "b"}, []string{"a", "b"})
+		Expect(toAdd).To(BeEmpty())
+		Expect(toRemove).To(BeEmpty())
+	})
+})
+
 var _ = Describe("UserReconciler.setPassword", func() {
 	ctx := context.Background()
 
