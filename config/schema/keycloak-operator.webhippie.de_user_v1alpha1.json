@@ -43,6 +43,13 @@
           "description": "firstName specifies the user's first name.",
           "type": "string"
         },
+        "groups": {
+          "description": "groups lists the names of Keycloak groups this user should be a member\nof. Membership is managed relative to what this operator previously\napplied (see status.groups): removing a name from this list removes\nthe corresponding membership, but memberships added outside of this\nresource are left untouched.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "lastName": {
           "description": "lastName specifies the user's last name.",
           "type": "string"
@@ -103,6 +110,13 @@
             "name"
           ],
           "type": "object"
+        },
+        "realmRoles": {
+          "description": "realmRoles lists the names of realm-level roles assigned directly to\nthis user. Assignment is managed relative to what this operator\npreviously applied (see status.realmRoles): removing a name from this\nlist revokes the corresponding role, but roles assigned outside of\nthis resource (e.g. default realm roles) are left untouched.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "requiredActions": {
           "description": "requiredActions lists the actions the user must perform on next login\n(e.g. UPDATE_PASSWORD, VERIFY_EMAIL).",
@@ -189,9 +203,23 @@
           ],
           "x-kubernetes-list-type": "map"
         },
+        "groups": {
+          "description": "groups records the names of Keycloak groups this operator has most\nrecently applied for this user, used to determine which memberships\nto revoke when spec.groups is changed.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "keycloakID": {
           "description": "keycloakID is the UUID assigned by Keycloak for this user.\nIt is stored here so that update and delete operations can reference the\nuser directly without an additional lookup by username.",
           "type": "string"
+        },
+        "realmRoles": {
+          "description": "realmRoles records the names of realm-level roles this operator has\nmost recently applied for this user, used to determine which role\nassignments to revoke when spec.realmRoles is changed.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "type": "object"
