@@ -3,7 +3,7 @@ module github.com/kubehippie/keycloak-operator
 go 1.26.5
 
 require (
-	github.com/Nerzal/gocloak/v14 v14.0.3
+	github.com/Nerzal/gocloak/v14 v14.0.4
 	github.com/onsi/ginkgo/v2 v2.32.0
 	github.com/onsi/gomega v1.42.1
 	k8s.io/api v0.36.3
