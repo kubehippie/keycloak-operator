@@ -1,5 +1,7 @@
 # Changelog
 
+## [1.4.1](https://github.com/kubehippie/keycloak-operator/compare/v1.4.0...v1.4.1) (2026-08-03)
+
 ## [1.4.0](https://github.com/kubehippie/keycloak-operator/compare/v1.3.1...v1.4.0) (2026-07-27)
 
 ## [1.3.1](https://github.com/kubehippie/keycloak-operator/compare/v1.3.0...v1.3.1) (2026-07-21)
