@@ -61,6 +61,10 @@ func (r *RealmReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 
 	session, err := KeycloakSessionForKeycloak(ctx, r.Client, instance.Spec.KeycloakRef, req.Namespace)
 	if err != nil {
+		if !instance.DeletionTimestamp.IsZero() && apierrors.IsNotFound(err) {
+			log.Info("Keycloak no longer exists, skipping Keycloak cleanup", "error", err.Error())
+			return r.handleDeletion(ctx, instance, nil)
+		}
 		log.Error(err, "Unable to get Keycloak session")
 		return ctrl.Result{RequeueAfter: FailedKeycloakConnectionRetryPeriod}, nil
 	}
@@ -87,13 +91,15 @@ func (r *RealmReconciler) handleDeletion(ctx context.Context, instance *v1alpha1
 		return ctrl.Result{}, nil
 	}
 
-	log.Info("Deleting realm from Keycloak", "realm", instance.Spec.Name)
-	if err := session.Client.DeleteRealm(ctx, session.Token.AccessToken, instance.Spec.Name); err != nil {
-		var apiErr *gocloak.APIError
-		if errors.As(err, &apiErr) && apiErr.Code == 404 {
-			log.Info("Realm already absent in Keycloak, skipping delete")
-		} else {
-			return ctrl.Result{}, fmt.Errorf("failed to delete realm from Keycloak: %w", err)
+	if session != nil {
+		log.Info("Deleting realm from Keycloak", "realm", instance.Spec.Name)
+		if err := session.Client.DeleteRealm(ctx, session.Token.AccessToken, instance.Spec.Name); err != nil {
+			var apiErr *gocloak.APIError
+			if errors.As(err, &apiErr) && apiErr.Code == 404 {
+				log.Info("Realm already absent in Keycloak, skipping delete")
+			} else {
+				return ctrl.Result{}, fmt.Errorf("failed to delete realm from Keycloak: %w", err)
+			}
 		}
 	}
 

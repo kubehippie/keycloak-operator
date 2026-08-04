@@ -60,6 +60,10 @@ func (r *ClientScopeReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	session, err := controller.KeycloakSessionForRealm(ctx, r.Client, instance.Spec.RealmRef, req.Namespace)
 	if err != nil {
+		if !instance.DeletionTimestamp.IsZero() && apierrors.IsNotFound(err) {
+			log.Info("Realm no longer exists, skipping Keycloak cleanup", "error", err.Error())
+			return r.handleDeletion(ctx, instance, nil)
+		}
 		log.Error(err, "Unable to get Keycloak session")
 		return ctrl.Result{RequeueAfter: controller.FailedKeycloakConnectionRetryPeriod}, nil
 	}
@@ -86,7 +90,7 @@ func (r *ClientScopeReconciler) handleDeletion(ctx context.Context, instance *v1
 		return ctrl.Result{}, nil
 	}
 
-	if instance.Status.KeycloakID != nil {
+	if session != nil && instance.Status.KeycloakID != nil {
 		log.Info("Deleting client scope from Keycloak", "id", *instance.Status.KeycloakID)
 		if err := session.Client.DeleteClientScope(ctx, session.Token.AccessToken, session.RealmName, *instance.Status.KeycloakID); err != nil {
 			var apiErr *gocloak.APIError

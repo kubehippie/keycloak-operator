@@ -61,6 +61,10 @@ func (r *OIDCIdentityProviderReconciler) Reconcile(ctx context.Context, req ctrl
 
 	session, err := controller.KeycloakSessionForRealm(ctx, r.Client, instance.Spec.RealmRef, req.Namespace)
 	if err != nil {
+		if !instance.DeletionTimestamp.IsZero() && apierrors.IsNotFound(err) {
+			log.Info("Realm no longer exists, skipping Keycloak cleanup", "error", err.Error())
+			return r.handleDeletion(ctx, instance, nil)
+		}
 		log.Error(err, "Unable to get Keycloak session")
 		return ctrl.Result{RequeueAfter: controller.FailedKeycloakConnectionRetryPeriod}, nil
 	}
@@ -87,13 +91,15 @@ func (r *OIDCIdentityProviderReconciler) handleDeletion(ctx context.Context, ins
 		return ctrl.Result{}, nil
 	}
 
-	log.Info("Deleting identity provider from Keycloak", "alias", instance.Spec.Alias)
-	if err := session.Client.DeleteIdentityProvider(ctx, session.Token.AccessToken, session.RealmName, instance.Spec.Alias); err != nil {
-		var apiErr *gocloak.APIError
-		if errors.As(err, &apiErr) && apiErr.Code == 404 {
-			log.Info("Identity provider already absent in Keycloak, skipping delete")
-		} else {
-			return ctrl.Result{}, fmt.Errorf("failed to delete identity provider from Keycloak: %w", err)
+	if session != nil {
+		log.Info("Deleting identity provider from Keycloak", "alias", instance.Spec.Alias)
+		if err := session.Client.DeleteIdentityProvider(ctx, session.Token.AccessToken, session.RealmName, instance.Spec.Alias); err != nil {
+			var apiErr *gocloak.APIError
+			if errors.As(err, &apiErr) && apiErr.Code == 404 {
+				log.Info("Identity provider already absent in Keycloak, skipping delete")
+			} else {
+				return ctrl.Result{}, fmt.Errorf("failed to delete identity provider from Keycloak: %w", err)
+			}
 		}
 	}
 

@@ -60,6 +60,10 @@ func (r *AttributeImporterMapperReconciler) Reconcile(ctx context.Context, req c
 
 	session, alias, err := controller.KeycloakSessionForIdentityProvider(ctx, r.Client, instance.Spec.IdentityProviderRef, req.Namespace)
 	if err != nil {
+		if !instance.DeletionTimestamp.IsZero() && apierrors.IsNotFound(err) {
+			log.Info("Identity provider no longer exists, skipping Keycloak cleanup", "error", err.Error())
+			return r.handleDeletion(ctx, instance, nil, "")
+		}
 		log.Error(err, "Unable to get Keycloak session")
 		return ctrl.Result{RequeueAfter: controller.FailedKeycloakConnectionRetryPeriod}, nil
 	}
@@ -86,7 +90,7 @@ func (r *AttributeImporterMapperReconciler) handleDeletion(ctx context.Context, 
 		return ctrl.Result{}, nil
 	}
 
-	if instance.Status.KeycloakID != nil {
+	if session != nil && instance.Status.KeycloakID != nil {
 		log.Info("Deleting identity provider mapper from Keycloak", "id", *instance.Status.KeycloakID)
 		if err := session.Client.DeleteIdentityProviderMapper(ctx, session.Token.AccessToken, session.RealmName, alias, *instance.Status.KeycloakID); err != nil {
 			var apiErr *gocloak.APIError

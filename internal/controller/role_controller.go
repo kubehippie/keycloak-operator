@@ -59,6 +59,10 @@ func (r *RoleReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 
 	session, err := KeycloakSessionForRealm(ctx, r.Client, instance.Spec.RealmRef, req.Namespace)
 	if err != nil {
+		if !instance.DeletionTimestamp.IsZero() && apierrors.IsNotFound(err) {
+			log.Info("Realm no longer exists, skipping Keycloak cleanup", "error", err.Error())
+			return r.handleDeletion(ctx, instance, nil)
+		}
 		log.Error(err, "Unable to get Keycloak session")
 		return ctrl.Result{RequeueAfter: FailedKeycloakConnectionRetryPeriod}, nil
 	}
@@ -85,7 +89,7 @@ func (r *RoleReconciler) handleDeletion(ctx context.Context, instance *v1alpha1.
 		return ctrl.Result{}, nil
 	}
 
-	if instance.Status.KeycloakID != nil {
+	if session != nil && instance.Status.KeycloakID != nil {
 		log.Info("Deleting role from Keycloak", "id", *instance.Status.KeycloakID)
 		if err := session.Client.DeleteRealmRole(ctx, session.Token.AccessToken, session.RealmName, instance.Spec.Name); err != nil {
 			var apiErr *gocloak.APIError

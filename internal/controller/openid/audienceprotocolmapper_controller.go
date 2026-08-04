@@ -59,6 +59,10 @@ func (r *AudienceProtocolMapperReconciler) Reconcile(ctx context.Context, req ct
 
 	session, idOfClient, err := controller.KeycloakSessionForClient(ctx, r.Client, instance.Spec.ClientRef, req.Namespace)
 	if err != nil {
+		if !instance.DeletionTimestamp.IsZero() && apierrors.IsNotFound(err) {
+			log.Info("OpenID client no longer exists, skipping Keycloak cleanup", "error", err.Error())
+			return r.handleDeletion(ctx, instance, nil, "")
+		}
 		log.Error(err, "Unable to get Keycloak session")
 		return ctrl.Result{RequeueAfter: controller.FailedKeycloakConnectionRetryPeriod}, nil
 	}
@@ -85,7 +89,7 @@ func (r *AudienceProtocolMapperReconciler) handleDeletion(ctx context.Context, i
 		return ctrl.Result{}, nil
 	}
 
-	if instance.Status.KeycloakID != nil {
+	if session != nil && instance.Status.KeycloakID != nil {
 		log.Info("Deleting protocol mapper from Keycloak", "id", *instance.Status.KeycloakID)
 		if err := session.Client.DeleteClientProtocolMapper(ctx, session.Token.AccessToken, session.RealmName, idOfClient, *instance.Status.KeycloakID); err != nil {
 			if !isNotFoundAPIError(err) {

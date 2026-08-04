@@ -58,6 +58,10 @@ func (r *DefaultScopesReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	session, idOfClient, err := controller.KeycloakSessionForClient(ctx, r.Client, instance.Spec.ClientRef, req.Namespace)
 	if err != nil {
+		if !instance.DeletionTimestamp.IsZero() && apierrors.IsNotFound(err) {
+			log.Info("OpenID client no longer exists, skipping Keycloak cleanup", "error", err.Error())
+			return r.handleDeletion(ctx, instance, nil, "")
+		}
 		log.Error(err, "Unable to get Keycloak session")
 		return ctrl.Result{RequeueAfter: controller.FailedKeycloakConnectionRetryPeriod}, nil
 	}
@@ -84,30 +88,32 @@ func (r *DefaultScopesReconciler) handleDeletion(ctx context.Context, instance *
 		return ctrl.Result{}, nil
 	}
 
-	currentScopes, err := session.Client.GetClientsDefaultScopes(ctx, session.Token.AccessToken, session.RealmName, idOfClient)
-	if err != nil {
-		if isNotFoundAPIError(err) {
-			log.Info("Client already absent in Keycloak, skipping default scope cleanup")
-		} else {
-			return ctrl.Result{}, fmt.Errorf("failed to read default scopes from Keycloak: %w", err)
+	if session != nil {
+		currentScopes, err := session.Client.GetClientsDefaultScopes(ctx, session.Token.AccessToken, session.RealmName, idOfClient)
+		if err != nil {
+			if isNotFoundAPIError(err) {
+				log.Info("Client already absent in Keycloak, skipping default scope cleanup")
+			} else {
+				return ctrl.Result{}, fmt.Errorf("failed to read default scopes from Keycloak: %w", err)
+			}
+			currentScopes = nil
 		}
-		currentScopes = nil
-	}
 
-	desiredNames := make(map[string]struct{}, len(instance.Spec.DefaultScopes))
-	for _, scopeName := range instance.Spec.DefaultScopes {
-		desiredNames[scopeName] = struct{}{}
-	}
+		desiredNames := make(map[string]struct{}, len(instance.Spec.DefaultScopes))
+		for _, scopeName := range instance.Spec.DefaultScopes {
+			desiredNames[scopeName] = struct{}{}
+		}
 
-	for _, scope := range currentScopes {
-		if scope == nil || scope.Name == nil || scope.ID == nil {
-			continue
-		}
-		if _, ok := desiredNames[*scope.Name]; !ok {
-			continue
-		}
-		if err := session.Client.RemoveDefaultScopeFromClient(ctx, session.Token.AccessToken, session.RealmName, idOfClient, *scope.ID); err != nil {
-			log.Error(err, "Failed to remove default scope during deletion", "scope", *scope.Name)
+		for _, scope := range currentScopes {
+			if scope == nil || scope.Name == nil || scope.ID == nil {
+				continue
+			}
+			if _, ok := desiredNames[*scope.Name]; !ok {
+				continue
+			}
+			if err := session.Client.RemoveDefaultScopeFromClient(ctx, session.Token.AccessToken, session.RealmName, idOfClient, *scope.ID); err != nil {
+				log.Error(err, "Failed to remove default scope during deletion", "scope", *scope.Name)
+			}
 		}
 	}
 
