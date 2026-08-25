@@ -1,7 +1,7 @@
 #:schema https://mise.jdx.dev/schema/mise.json
 
 [tools]
-go = "1.26.7"
+go = "1.27.0"
 helm = "4.2.4"
 helm-docs = "1.14.2"
 kind = "0.32.0"
