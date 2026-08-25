@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.27.0@sha256:65b6f280bf050ec5af12716857e8ea8439d694dbba8f31ceeb7630670071f2bb AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.0@sha256:713ecb45d77c39af241e08371ada5bb5643e1e9806994e955ac90cbf17fa5ffd AS builder
 
 WORKDIR /workspace
 COPY go.mod go.mod
