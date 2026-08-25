@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Nerzal/gocloak/v14"
 	"github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
@@ -78,7 +79,7 @@ func (r *OIDCIdentityProviderReconciler) Reconcile(ctx context.Context, req ctrl
 		if err := r.Update(ctx, instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
 		}
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: time.Second}, nil
 	}
 
 	return r.reconcileOIDCIdentityProvider(ctx, instance, session)

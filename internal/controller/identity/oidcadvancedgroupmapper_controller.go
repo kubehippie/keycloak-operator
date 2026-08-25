@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/Nerzal/gocloak/v14"
 	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
@@ -110,7 +111,7 @@ func (r *OIDCAdvancedGroupMapperReconciler) Reconcile(ctx context.Context, req c
 		if err := r.Update(ctx, instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
 		}
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: time.Second}, nil
 	}
 
 	return r.reconcileOIDCAdvancedGroupMapper(ctx, instance, session, alias)
@@ -191,7 +192,7 @@ func (r *OIDCAdvancedGroupMapperReconciler) reconcileOIDCAdvancedGroupMapper(ctx
 			if err := controller.UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
 				return ctrl.Result{}, err
 			}
-			return ctrl.Result{Requeue: true}, nil
+			return ctrl.Result{RequeueAfter: time.Second}, nil
 		}
 		return ctrl.Result{}, fmt.Errorf("failed to update identity provider mapper in Keycloak: %w", err)
 	}

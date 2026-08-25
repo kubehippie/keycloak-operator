@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Nerzal/gocloak/v14"
 	"github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
@@ -78,7 +79,7 @@ func (r *OpenIDClientReconciler) Reconcile(ctx context.Context, req ctrl.Request
 		if err := r.Update(ctx, instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
 		}
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: time.Second}, nil
 	}
 
 	return r.reconcileOpenIDClient(ctx, instance, session)
@@ -161,7 +162,7 @@ func (r *OpenIDClientReconciler) reconcileOpenIDClient(ctx context.Context, inst
 			if err := controller.UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
 				return ctrl.Result{}, err
 			}
-			return ctrl.Result{Requeue: true}, nil
+			return ctrl.Result{RequeueAfter: time.Second}, nil
 		}
 		return ctrl.Result{}, fmt.Errorf("failed to update client in Keycloak: %w", err)
 	}

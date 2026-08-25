@@ -19,6 +19,7 @@ package openid
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Nerzal/gocloak/v14"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
@@ -76,7 +77,7 @@ func (r *UserAttributeProtocolMapperReconciler) Reconcile(ctx context.Context, r
 		if err := r.Update(ctx, instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
 		}
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: time.Second}, nil
 	}
 
 	return r.reconcileUserAttributeProtocolMapper(ctx, instance, session, idOfClient)
@@ -143,7 +144,7 @@ func (r *UserAttributeProtocolMapperReconciler) reconcileUserAttributeProtocolMa
 			if err := controller.UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
 				return ctrl.Result{}, err
 			}
-			return ctrl.Result{Requeue: true}, nil
+			return ctrl.Result{RequeueAfter: time.Second}, nil
 		}
 		return ctrl.Result{}, fmt.Errorf("failed to update protocol mapper in Keycloak: %w", err)
 	}

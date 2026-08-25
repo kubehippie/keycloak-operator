@@ -19,6 +19,7 @@ package openid
 import (
 	"context"
 	"fmt"
+	"time"
 
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 	controller "github.com/kubehippie/keycloak-operator/internal/controller"
@@ -75,7 +76,7 @@ func (r *DefaultScopesReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		if err := r.Update(ctx, instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
 		}
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: time.Second}, nil
 	}
 
 	return r.reconcileDefaultScopes(ctx, instance, session, idOfClient)
