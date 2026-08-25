@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Nerzal/gocloak/v14"
 	v1alpha1 "github.com/kubehippie/keycloak-operator/api/v1alpha1"
@@ -77,7 +78,7 @@ func (r *UserReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.
 		if err := r.Update(ctx, instance); err != nil {
 			return ctrl.Result{}, fmt.Errorf("failed to add finalizer: %w", err)
 		}
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: time.Second}, nil
 	}
 
 	return r.reconcileUser(ctx, instance, session)
@@ -146,7 +147,7 @@ func (r *UserReconciler) reconcileUser(ctx context.Context, instance *v1alpha1.U
 				if err := UpdateKeycloakIDStatus(ctx, r.Client, instance, nil); err != nil {
 					return ctrl.Result{}, err
 				}
-				return ctrl.Result{Requeue: true}, nil
+				return ctrl.Result{RequeueAfter: time.Second}, nil
 			}
 			return ctrl.Result{}, fmt.Errorf("failed to update user in Keycloak: %w", err)
 		}
