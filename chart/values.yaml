@@ -130,4 +130,7 @@ labels: {}
 # -- Define additional labels for the pod
 podLabels: {}
 
+# -- List of environment variables for the pod
+env: []
+
 ...
