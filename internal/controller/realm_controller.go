@@ -115,16 +115,16 @@ func (r *RealmReconciler) handleDeletion(ctx context.Context, instance *v1alpha1
 func (r *RealmReconciler) reconcileRealm(ctx context.Context, instance *v1alpha1.Realm, session *KeycloakSession) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
-	desired, err := realmToGocloak(ctx, r.Client, instance, instance.Namespace)
-	if err != nil {
-		return ctrl.Result{}, fmt.Errorf("failed to build realm representation: %w", err)
-	}
-
 	existing, err := session.Client.GetRealm(ctx, session.Token.AccessToken, instance.Spec.Name)
 	if err != nil {
 		var apiErr *gocloak.APIError
 		if !errors.As(err, &apiErr) || apiErr.Code != 404 {
 			return ctrl.Result{}, fmt.Errorf("failed to check for existing realm: %w", err)
+		}
+
+		desired, err := realmToGocloak(ctx, r.Client, instance, instance.Namespace, nil)
+		if err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to build realm representation: %w", err)
 		}
 
 		id, err := session.Client.CreateRealm(ctx, session.Token.AccessToken, desired)
@@ -142,6 +142,17 @@ func (r *RealmReconciler) reconcileRealm(ctx context.Context, instance *v1alpha1
 		return ctrl.Result{}, err
 	}
 
+	// Build the desired representation on top of the realm's current state in
+	// Keycloak. Keycloak's realm update endpoint treats the PUT body as the
+	// full representation: any field left nil/omitted is reset to its
+	// default rather than left untouched. Starting from `existing` and only
+	// overlaying fields explicitly managed by the CR spec preserves anything
+	// not modeled/set here (e.g. settings changed outside the operator).
+	desired, err := realmToGocloak(ctx, r.Client, instance, instance.Namespace, existing)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("failed to build realm representation: %w", err)
+	}
+
 	if err := session.Client.UpdateRealm(ctx, session.Token.AccessToken, desired); err != nil {
 		return ctrl.Result{}, fmt.Errorf("failed to update realm in Keycloak: %w", err)
 	}
@@ -151,50 +162,106 @@ func (r *RealmReconciler) reconcileRealm(ctx context.Context, instance *v1alpha1
 }
 
 // realmToGocloak converts a Realm CR spec into the gocloak representation
-// used for create and update API calls. The SMTP password (if configured as a
-// Secret reference) is resolved from the cluster at call time.
-func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns string) (gocloak.RealmRepresentation, error) {
-	realm := gocloak.RealmRepresentation{
-		Realm:               gocloak.StringP(r.Spec.Name),
-		DisplayName:         r.Spec.DisplayName,
-		DisplayNameHTML:     r.Spec.DisplayNameHtml,
-		Enabled:             r.Spec.Enabled,
-		SSLRequired:         r.Spec.SslRequired,
-		PasswordPolicy:      r.Spec.PasswordPolicy,
-		BruteForceProtected: r.Spec.BruteForceProtected,
+// used for create and update API calls. When existing is non-nil (i.e. the
+// realm already exists in Keycloak), it is used as the base representation
+// so that fields not managed by the CR spec are preserved rather than reset
+// to their Keycloak defaults by the full-representation PUT semantics of the
+// realm update endpoint. The SMTP password (if configured as a Secret
+// reference) is resolved from the cluster at call time.
+func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns string, existing *gocloak.RealmRepresentation) (gocloak.RealmRepresentation, error) {
+	var realm gocloak.RealmRepresentation
+	if existing != nil {
+		realm = *existing
+	}
+
+	realm.Realm = gocloak.StringP(r.Spec.Name)
+
+	if r.Spec.DisplayName != nil {
+		realm.DisplayName = r.Spec.DisplayName
+	}
+	if r.Spec.DisplayNameHtml != nil {
+		realm.DisplayNameHTML = r.Spec.DisplayNameHtml
+	}
+	if r.Spec.Enabled != nil {
+		realm.Enabled = r.Spec.Enabled
+	}
+	if r.Spec.SslRequired != nil {
+		realm.SSLRequired = r.Spec.SslRequired
+	}
+	if r.Spec.PasswordPolicy != nil {
+		realm.PasswordPolicy = r.Spec.PasswordPolicy
+	}
+	if r.Spec.BruteForceProtected != nil {
+		realm.BruteForceProtected = r.Spec.BruteForceProtected
 	}
 
 	if l := r.Spec.Login; l != nil {
-		realm.RegistrationAllowed = l.RegistrationAllowed
-		realm.RegistrationEmailAsUsername = l.RegistrationEmailAsUsername
-		realm.EditUsernameAllowed = l.EditUsernameAllowed
-		realm.ResetPasswordAllowed = l.ResetPasswordAllowed
-		realm.RememberMe = l.RememberMe
-		realm.VerifyEmail = l.VerifyEmail
-		realm.LoginWithEmailAllowed = l.LoginWithEmailAllowed
-		realm.DuplicateEmailsAllowed = l.DuplicateEmailsAllowed
+		if l.RegistrationAllowed != nil {
+			realm.RegistrationAllowed = l.RegistrationAllowed
+		}
+		if l.RegistrationEmailAsUsername != nil {
+			realm.RegistrationEmailAsUsername = l.RegistrationEmailAsUsername
+		}
+		if l.EditUsernameAllowed != nil {
+			realm.EditUsernameAllowed = l.EditUsernameAllowed
+		}
+		if l.ResetPasswordAllowed != nil {
+			realm.ResetPasswordAllowed = l.ResetPasswordAllowed
+		}
+		if l.RememberMe != nil {
+			realm.RememberMe = l.RememberMe
+		}
+		if l.VerifyEmail != nil {
+			realm.VerifyEmail = l.VerifyEmail
+		}
+		if l.LoginWithEmailAllowed != nil {
+			realm.LoginWithEmailAllowed = l.LoginWithEmailAllowed
+		}
+		if l.DuplicateEmailsAllowed != nil {
+			realm.DuplicateEmailsAllowed = l.DuplicateEmailsAllowed
+		}
 	}
 
 	if t := r.Spec.Themes; t != nil {
-		realm.LoginTheme = t.Login
-		realm.AccountTheme = t.Account
-		realm.AdminTheme = t.Admin
-		realm.EmailTheme = t.Email
+		if t.Login != nil {
+			realm.LoginTheme = t.Login
+		}
+		if t.Account != nil {
+			realm.AccountTheme = t.Account
+		}
+		if t.Admin != nil {
+			realm.AdminTheme = t.Admin
+		}
+		if t.Email != nil {
+			realm.EmailTheme = t.Email
+		}
 	}
 
 	if i := r.Spec.Internationalization; i != nil {
-		realm.InternationalizationEnabled = i.Enabled
-		realm.DefaultLocale = i.DefaultLocale
+		if i.Enabled != nil {
+			realm.InternationalizationEnabled = i.Enabled
+		}
+		if i.DefaultLocale != nil {
+			realm.DefaultLocale = i.DefaultLocale
+		}
 		if len(i.SupportedLocales) > 0 {
 			realm.SupportedLocales = i.SupportedLocales
 		}
 	}
 
 	if st := r.Spec.SessionTimeouts; st != nil {
-		realm.AccessTokenLifespan = st.AccessTokenLifespan
-		realm.SSOSessionIdleTimeout = st.SsoSessionIdleTimeout
-		realm.SSOSessionMaxLifespan = st.SsoSessionMaxLifespan
-		realm.OfflineSessionIdleTimeout = st.OfflineSessionIdleTimeout
+		if st.AccessTokenLifespan != nil {
+			realm.AccessTokenLifespan = st.AccessTokenLifespan
+		}
+		if st.SsoSessionIdleTimeout != nil {
+			realm.SSOSessionIdleTimeout = st.SsoSessionIdleTimeout
+		}
+		if st.SsoSessionMaxLifespan != nil {
+			realm.SSOSessionMaxLifespan = st.SsoSessionMaxLifespan
+		}
+		if st.OfflineSessionIdleTimeout != nil {
+			realm.OfflineSessionIdleTimeout = st.OfflineSessionIdleTimeout
+		}
 	}
 
 	if smtp := r.Spec.SmtpServer; smtp != nil {
