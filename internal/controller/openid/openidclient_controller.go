@@ -34,6 +34,12 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
+// isServiceAccountsEnabled reports whether the client's service account
+// (client credentials grant) is enabled.
+func isServiceAccountsEnabled(o *v1alpha1.OpenIDClient) bool {
+	return o.Spec.ServiceAccountsEnabled != nil && *o.Spec.ServiceAccountsEnabled
+}
+
 const openIDClientFinalizer = "keycloak-operator.webhippie.de/openidclient"
 
 // OpenIDClientReconciler reconciles a OpenIDClient object
@@ -167,8 +173,203 @@ func (r *OpenIDClientReconciler) reconcileOpenIDClient(ctx context.Context, inst
 		return ctrl.Result{}, fmt.Errorf("failed to update client in Keycloak: %w", err)
 	}
 
+	if err := r.reconcileServiceAccountRoles(ctx, instance, session); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	log.Info("Client reconciled", "id", *instance.Status.KeycloakID)
 	return ctrl.Result{}, nil
+}
+
+// reconcileServiceAccountRoles ensures the client's service account user has
+// the realm and client roles configured in
+// spec.serviceAccountRealmRoles/spec.serviceAccountClientRoles. It is a
+// no-op when serviceAccountsEnabled is not set.
+func (r *OpenIDClientReconciler) reconcileServiceAccountRoles(ctx context.Context, instance *v1alpha1.OpenIDClient, session *controller.KeycloakSession) error {
+	if !isServiceAccountsEnabled(instance) {
+		return nil
+	}
+
+	if len(instance.Spec.ServiceAccountRealmRoles) == 0 && len(instance.Spec.ServiceAccountClientRoles) == 0 &&
+		len(instance.Status.ServiceAccountRealmRoles) == 0 && len(instance.Status.ServiceAccountClientRoles) == 0 {
+		return nil
+	}
+
+	serviceAccount, err := session.Client.GetClientServiceAccount(ctx, session.Token.AccessToken, session.RealmName, *instance.Status.KeycloakID)
+	if err != nil {
+		return fmt.Errorf("failed to resolve service account user: %w", err)
+	}
+	if serviceAccount == nil || serviceAccount.ID == nil {
+		return fmt.Errorf("service account user not found for client %q", instance.Spec.ClientID)
+	}
+
+	if err := r.reconcileServiceAccountRealmRoles(ctx, instance, session, *serviceAccount.ID); err != nil {
+		return err
+	}
+
+	return r.reconcileServiceAccountClientRoles(ctx, instance, session, *serviceAccount.ID)
+}
+
+// reconcileServiceAccountRealmRoles ensures the service account user's
+// directly assigned realm roles match spec.serviceAccountRealmRoles.
+// Assignment changes are computed relative to
+// status.serviceAccountRealmRoles (the set previously applied by this
+// operator), so roles assigned outside of this resource (e.g. default realm
+// roles) are left untouched, while names removed from
+// spec.serviceAccountRealmRoles are revoked.
+func (r *OpenIDClientReconciler) reconcileServiceAccountRealmRoles(ctx context.Context, instance *v1alpha1.OpenIDClient, session *controller.KeycloakSession, userID string) error {
+	toAdd, toRemove := diffNames(instance.Spec.ServiceAccountRealmRoles, instance.Status.ServiceAccountRealmRoles)
+	if len(toAdd) == 0 && len(toRemove) == 0 {
+		return nil
+	}
+
+	for _, name := range toAdd {
+		role, err := session.Client.GetRealmRole(ctx, session.Token.AccessToken, session.RealmName, name)
+		if err != nil {
+			return fmt.Errorf("failed to resolve service account realm role %q: %w", name, err)
+		}
+		if err := session.Client.AddRealmRoleToUser(ctx, session.Token.AccessToken, session.RealmName, userID, []gocloak.Role{*role}); err != nil {
+			return fmt.Errorf("failed to assign service account realm role %q: %w", name, err)
+		}
+	}
+
+	for _, name := range toRemove {
+		role, err := session.Client.GetRealmRole(ctx, session.Token.AccessToken, session.RealmName, name)
+		if err != nil {
+			if isNotFoundAPIError(err) {
+				continue
+			}
+			return fmt.Errorf("failed to resolve service account realm role %q for removal: %w", name, err)
+		}
+		if err := session.Client.DeleteRealmRoleFromUser(ctx, session.Token.AccessToken, session.RealmName, userID, []gocloak.Role{*role}); err != nil {
+			return fmt.Errorf("failed to revoke service account realm role %q: %w", name, err)
+		}
+	}
+
+	instance.Status.ServiceAccountRealmRoles = instance.Spec.ServiceAccountRealmRoles
+	if err := r.Status().Update(ctx, instance); err != nil {
+		return fmt.Errorf("failed to update applied service account realm roles status: %w", err)
+	}
+
+	return nil
+}
+
+// reconcileServiceAccountClientRoles ensures the service account user's
+// client role assignments match spec.serviceAccountClientRoles, a map of
+// target clientID (e.g. "realm-management") to role names on that client
+// (e.g. "view-users", "manage-users", "query-users"). Assignment changes are
+// computed per target client relative to
+// status.serviceAccountClientRoles, following the same "leave
+// externally-managed roles untouched" semantics as realm roles.
+func (r *OpenIDClientReconciler) reconcileServiceAccountClientRoles(ctx context.Context, instance *v1alpha1.OpenIDClient, session *controller.KeycloakSession, userID string) error {
+	desired := instance.Spec.ServiceAccountClientRoles
+	previous := instance.Status.ServiceAccountClientRoles
+
+	targetClientIDs := make(map[string]struct{}, len(desired)+len(previous))
+	for name := range desired {
+		targetClientIDs[name] = struct{}{}
+	}
+	for name := range previous {
+		targetClientIDs[name] = struct{}{}
+	}
+
+	changed := false
+	for targetClientID := range targetClientIDs {
+		toAdd, toRemove := diffNames(desired[targetClientID], previous[targetClientID])
+		if len(toAdd) == 0 && len(toRemove) == 0 {
+			continue
+		}
+		changed = true
+
+		idOfTargetClient, err := findClientIDByClientID(ctx, session, targetClientID)
+		if err != nil {
+			return fmt.Errorf("failed to resolve client %q: %w", targetClientID, err)
+		}
+		if idOfTargetClient == "" {
+			return fmt.Errorf("client %q not found in realm %q", targetClientID, session.RealmName)
+		}
+
+		for _, name := range toAdd {
+			role, err := session.Client.GetClientRole(ctx, session.Token.AccessToken, session.RealmName, idOfTargetClient, name)
+			if err != nil {
+				return fmt.Errorf("failed to resolve client role %q on client %q: %w", name, targetClientID, err)
+			}
+			if err := session.Client.AddClientRolesToUser(ctx, session.Token.AccessToken, session.RealmName, idOfTargetClient, userID, []gocloak.Role{*role}); err != nil {
+				return fmt.Errorf("failed to assign client role %q on client %q: %w", name, targetClientID, err)
+			}
+		}
+
+		for _, name := range toRemove {
+			role, err := session.Client.GetClientRole(ctx, session.Token.AccessToken, session.RealmName, idOfTargetClient, name)
+			if err != nil {
+				if isNotFoundAPIError(err) {
+					continue
+				}
+				return fmt.Errorf("failed to resolve client role %q on client %q for removal: %w", name, targetClientID, err)
+			}
+			if err := session.Client.DeleteClientRolesFromUser(ctx, session.Token.AccessToken, session.RealmName, idOfTargetClient, userID, []gocloak.Role{*role}); err != nil {
+				return fmt.Errorf("failed to revoke client role %q on client %q: %w", name, targetClientID, err)
+			}
+		}
+	}
+
+	if changed {
+		instance.Status.ServiceAccountClientRoles = desired
+		if err := r.Status().Update(ctx, instance); err != nil {
+			return fmt.Errorf("failed to update applied service account client roles status: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// findClientIDByClientID resolves the internal Keycloak UUID for the client
+// with the given clientID, returning an empty string (without error) when no
+// such client exists.
+func findClientIDByClientID(ctx context.Context, session *controller.KeycloakSession, clientID string) (string, error) {
+	clients, err := session.Client.GetClients(ctx, session.Token.AccessToken, session.RealmName, gocloak.GetClientsParams{
+		ClientID: gocloak.StringP(clientID),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	for _, c := range clients {
+		if c.ClientID != nil && *c.ClientID == clientID && c.ID != nil {
+			return *c.ID, nil
+		}
+	}
+
+	return "", nil
+}
+
+// diffNames compares a desired set of names against the set previously
+// applied by this operator (as recorded in status), returning the names
+// that need to be added and the names that need to be removed.
+func diffNames(desired, previouslyApplied []string) (toAdd, toRemove []string) {
+	desiredSet := make(map[string]struct{}, len(desired))
+	for _, name := range desired {
+		desiredSet[name] = struct{}{}
+	}
+
+	previousSet := make(map[string]struct{}, len(previouslyApplied))
+	for _, name := range previouslyApplied {
+		previousSet[name] = struct{}{}
+	}
+
+	for _, name := range desired {
+		if _, ok := previousSet[name]; !ok {
+			toAdd = append(toAdd, name)
+		}
+	}
+
+	for _, name := range previouslyApplied {
+		if _, ok := desiredSet[name]; !ok {
+			toRemove = append(toRemove, name)
+		}
+	}
+
+	return toAdd, toRemove
 }
 
 // openIDClientToGocloak converts an OpenIDClient CR spec into the gocloak
