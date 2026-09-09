@@ -176,6 +176,26 @@ func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns
 
 	realm.Realm = gocloak.StringP(r.Spec.Name)
 
+	applyRealmBasicFields(&realm, r)
+	applyRealmLoginSettings(&realm, r.Spec.Login)
+	applyRealmThemes(&realm, r.Spec.Themes)
+	applyRealmInternationalization(&realm, r.Spec.Internationalization)
+	applyRealmSessionTimeouts(&realm, r.Spec.SessionTimeouts)
+
+	if err := applyRealmSmtpServer(ctx, cl, &realm, r.Spec.SmtpServer, ns); err != nil {
+		return gocloak.RealmRepresentation{}, err
+	}
+
+	if r.Spec.Attributes != nil {
+		realm.Attributes = r.Spec.Attributes
+	}
+
+	return realm, nil
+}
+
+// applyRealmBasicFields overlays the top-level, non-grouped Realm spec
+// fields onto the given representation.
+func applyRealmBasicFields(realm *gocloak.RealmRepresentation, r *v1alpha1.Realm) {
 	if r.Spec.DisplayName != nil {
 		realm.DisplayName = r.Spec.DisplayName
 	}
@@ -194,126 +214,151 @@ func realmToGocloak(ctx context.Context, cl client.Client, r *v1alpha1.Realm, ns
 	if r.Spec.BruteForceProtected != nil {
 		realm.BruteForceProtected = r.Spec.BruteForceProtected
 	}
+}
 
-	if l := r.Spec.Login; l != nil {
-		if l.RegistrationAllowed != nil {
-			realm.RegistrationAllowed = l.RegistrationAllowed
-		}
-		if l.RegistrationEmailAsUsername != nil {
-			realm.RegistrationEmailAsUsername = l.RegistrationEmailAsUsername
-		}
-		if l.EditUsernameAllowed != nil {
-			realm.EditUsernameAllowed = l.EditUsernameAllowed
-		}
-		if l.ResetPasswordAllowed != nil {
-			realm.ResetPasswordAllowed = l.ResetPasswordAllowed
-		}
-		if l.RememberMe != nil {
-			realm.RememberMe = l.RememberMe
-		}
-		if l.VerifyEmail != nil {
-			realm.VerifyEmail = l.VerifyEmail
-		}
-		if l.LoginWithEmailAllowed != nil {
-			realm.LoginWithEmailAllowed = l.LoginWithEmailAllowed
-		}
-		if l.DuplicateEmailsAllowed != nil {
-			realm.DuplicateEmailsAllowed = l.DuplicateEmailsAllowed
-		}
+// applyRealmLoginSettings overlays the Login spec section onto the given
+// representation.
+func applyRealmLoginSettings(realm *gocloak.RealmRepresentation, l *v1alpha1.RealmLoginSettings) {
+	if l == nil {
+		return
 	}
 
-	if t := r.Spec.Themes; t != nil {
-		if t.Login != nil {
-			realm.LoginTheme = t.Login
-		}
-		if t.Account != nil {
-			realm.AccountTheme = t.Account
-		}
-		if t.Admin != nil {
-			realm.AdminTheme = t.Admin
-		}
-		if t.Email != nil {
-			realm.EmailTheme = t.Email
-		}
+	if l.RegistrationAllowed != nil {
+		realm.RegistrationAllowed = l.RegistrationAllowed
+	}
+	if l.RegistrationEmailAsUsername != nil {
+		realm.RegistrationEmailAsUsername = l.RegistrationEmailAsUsername
+	}
+	if l.EditUsernameAllowed != nil {
+		realm.EditUsernameAllowed = l.EditUsernameAllowed
+	}
+	if l.ResetPasswordAllowed != nil {
+		realm.ResetPasswordAllowed = l.ResetPasswordAllowed
+	}
+	if l.RememberMe != nil {
+		realm.RememberMe = l.RememberMe
+	}
+	if l.VerifyEmail != nil {
+		realm.VerifyEmail = l.VerifyEmail
+	}
+	if l.LoginWithEmailAllowed != nil {
+		realm.LoginWithEmailAllowed = l.LoginWithEmailAllowed
+	}
+	if l.DuplicateEmailsAllowed != nil {
+		realm.DuplicateEmailsAllowed = l.DuplicateEmailsAllowed
+	}
+}
+
+// applyRealmThemes overlays the Themes spec section onto the given
+// representation.
+func applyRealmThemes(realm *gocloak.RealmRepresentation, t *v1alpha1.RealmThemes) {
+	if t == nil {
+		return
 	}
 
-	if i := r.Spec.Internationalization; i != nil {
-		if i.Enabled != nil {
-			realm.InternationalizationEnabled = i.Enabled
-		}
-		if i.DefaultLocale != nil {
-			realm.DefaultLocale = i.DefaultLocale
-		}
-		if len(i.SupportedLocales) > 0 {
-			realm.SupportedLocales = i.SupportedLocales
-		}
+	if t.Login != nil {
+		realm.LoginTheme = t.Login
+	}
+	if t.Account != nil {
+		realm.AccountTheme = t.Account
+	}
+	if t.Admin != nil {
+		realm.AdminTheme = t.Admin
+	}
+	if t.Email != nil {
+		realm.EmailTheme = t.Email
+	}
+}
+
+// applyRealmInternationalization overlays the Internationalization spec
+// section onto the given representation.
+func applyRealmInternationalization(realm *gocloak.RealmRepresentation, i *v1alpha1.RealmInternationalization) {
+	if i == nil {
+		return
 	}
 
-	if st := r.Spec.SessionTimeouts; st != nil {
-		if st.AccessTokenLifespan != nil {
-			realm.AccessTokenLifespan = st.AccessTokenLifespan
-		}
-		if st.SsoSessionIdleTimeout != nil {
-			realm.SSOSessionIdleTimeout = st.SsoSessionIdleTimeout
-		}
-		if st.SsoSessionMaxLifespan != nil {
-			realm.SSOSessionMaxLifespan = st.SsoSessionMaxLifespan
-		}
-		if st.OfflineSessionIdleTimeout != nil {
-			realm.OfflineSessionIdleTimeout = st.OfflineSessionIdleTimeout
-		}
+	if i.Enabled != nil {
+		realm.InternationalizationEnabled = i.Enabled
+	}
+	if i.DefaultLocale != nil {
+		realm.DefaultLocale = i.DefaultLocale
+	}
+	if len(i.SupportedLocales) > 0 {
+		realm.SupportedLocales = i.SupportedLocales
+	}
+}
+
+// applyRealmSessionTimeouts overlays the SessionTimeouts spec section onto
+// the given representation.
+func applyRealmSessionTimeouts(realm *gocloak.RealmRepresentation, st *v1alpha1.RealmSessionTimeouts) {
+	if st == nil {
+		return
 	}
 
-	if smtp := r.Spec.SmtpServer; smtp != nil {
-		smtpMap := map[string]string{
-			"host": smtp.Host,
-			"from": smtp.From,
-		}
+	if st.AccessTokenLifespan != nil {
+		realm.AccessTokenLifespan = st.AccessTokenLifespan
+	}
+	if st.SsoSessionIdleTimeout != nil {
+		realm.SSOSessionIdleTimeout = st.SsoSessionIdleTimeout
+	}
+	if st.SsoSessionMaxLifespan != nil {
+		realm.SSOSessionMaxLifespan = st.SsoSessionMaxLifespan
+	}
+	if st.OfflineSessionIdleTimeout != nil {
+		realm.OfflineSessionIdleTimeout = st.OfflineSessionIdleTimeout
+	}
+}
 
-		if smtp.Port != nil {
-			smtpMap["port"] = fmt.Sprintf("%d", *smtp.Port)
-		}
-		if smtp.FromDisplayName != nil {
-			smtpMap["fromDisplayName"] = *smtp.FromDisplayName
-		}
-		if smtp.ReplyTo != nil {
-			smtpMap["replyTo"] = *smtp.ReplyTo
-		}
-		if smtp.ReplyToDisplayName != nil {
-			smtpMap["replyToDisplayName"] = *smtp.ReplyToDisplayName
-		}
-		if smtp.EnvelopeFrom != nil {
-			smtpMap["envelopeFrom"] = *smtp.EnvelopeFrom
-		}
-		if smtp.Ssl != nil {
-			smtpMap["ssl"] = strconv.FormatBool(*smtp.Ssl)
-		}
-		if smtp.StartTls != nil {
-			smtpMap["starttls"] = strconv.FormatBool(*smtp.StartTls)
-		}
-		if smtp.Auth != nil {
-			smtpMap["auth"] = strconv.FormatBool(*smtp.Auth)
-		}
-		if smtp.User != nil {
-			smtpMap["user"] = *smtp.User
-		}
-		if smtp.Password != nil {
-			password, err := ResolveSecretKeyRefOrVal(ctx, cl, smtp.Password, ns)
-			if err != nil {
-				return gocloak.RealmRepresentation{}, fmt.Errorf("failed to resolve SMTP password: %w", err)
-			}
-			smtpMap["password"] = password
-		}
-
-		realm.SMTPServer = smtpMap
+// applyRealmSmtpServer builds the SMTP server settings map from the SmtpServer
+// spec section, resolving the password from a Secret reference if needed,
+// and assigns it onto the given representation.
+func applyRealmSmtpServer(ctx context.Context, cl client.Client, realm *gocloak.RealmRepresentation, smtp *v1alpha1.RealmSmtpServer, ns string) error {
+	if smtp == nil {
+		return nil
 	}
 
-	if r.Spec.Attributes != nil {
-		attrs := r.Spec.Attributes
-		realm.Attributes = attrs
+	smtpMap := map[string]string{
+		"host": smtp.Host,
+		"from": smtp.From,
 	}
 
-	return realm, nil
+	if smtp.Port != nil {
+		smtpMap["port"] = fmt.Sprintf("%d", *smtp.Port)
+	}
+	if smtp.FromDisplayName != nil {
+		smtpMap["fromDisplayName"] = *smtp.FromDisplayName
+	}
+	if smtp.ReplyTo != nil {
+		smtpMap["replyTo"] = *smtp.ReplyTo
+	}
+	if smtp.ReplyToDisplayName != nil {
+		smtpMap["replyToDisplayName"] = *smtp.ReplyToDisplayName
+	}
+	if smtp.EnvelopeFrom != nil {
+		smtpMap["envelopeFrom"] = *smtp.EnvelopeFrom
+	}
+	if smtp.Ssl != nil {
+		smtpMap["ssl"] = strconv.FormatBool(*smtp.Ssl)
+	}
+	if smtp.StartTls != nil {
+		smtpMap["starttls"] = strconv.FormatBool(*smtp.StartTls)
+	}
+	if smtp.Auth != nil {
+		smtpMap["auth"] = strconv.FormatBool(*smtp.Auth)
+	}
+	if smtp.User != nil {
+		smtpMap["user"] = *smtp.User
+	}
+	if smtp.Password != nil {
+		password, err := ResolveSecretKeyRefOrVal(ctx, cl, smtp.Password, ns)
+		if err != nil {
+			return fmt.Errorf("failed to resolve SMTP password: %w", err)
+		}
+		smtpMap["password"] = password
+	}
+
+	realm.SMTPServer = smtpMap
+	return nil
 }
 
 // SetupWithManager sets up the controller with the Manager.
