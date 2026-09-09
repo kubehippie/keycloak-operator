@@ -156,8 +156,8 @@ func UninstallCertManager() {
 	}
 }
 
-// IsCertManagerInstalled returns true when the keycloak Helm release already
-// exists.
+// IsCertManagerInstalled returns true when the cert-manager Helm release
+// already exists.
 func IsCertManagerInstalled() bool {
 	cmd := exec.Command("helm", "status", "cert-manager",
 		"--namespace", "cert-manager",

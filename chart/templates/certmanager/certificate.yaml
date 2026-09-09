@@ -6,7 +6,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "chart.labels" . | nindent 4 }}
-{{- with .Values.annotation }}
+{{- with .Values.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
 {{- end }}
@@ -25,7 +25,7 @@ metadata:
     {{- if .Values.crd.keep }}
     "helm.sh/resource-policy": keep
     {{- end }}
-{{- with .Values.annotation }}
+{{- with .Values.annotations }}
     {{- toYaml . | nindent 4 }}
 {{- end }}
 spec:
@@ -51,7 +51,7 @@ metadata:
     {{- if .Values.crd.keep }}
     "helm.sh/resource-policy": keep
     {{- end }}
-{{- with .Values.annotation }}
+{{- with .Values.annotations }}
     {{- toYaml . | nindent 4 }}
 {{- end }}
 spec:

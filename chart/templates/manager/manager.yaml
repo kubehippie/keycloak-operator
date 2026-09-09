@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "chart.labels" . | nindent 4 }}
     control-plane: controller-manager
-{{- with .Values.annotation }}
+{{- with .Values.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
 {{- end }}
