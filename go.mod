@@ -4,7 +4,7 @@ go 1.26.5
 
 require (
 	github.com/Nerzal/gocloak/v14 v14.0.4
-	github.com/onsi/ginkgo/v2 v2.32.1
+	github.com/onsi/ginkgo/v2 v2.32.2
 	github.com/onsi/gomega v1.43.0
 	k8s.io/api v0.37.0
 	k8s.io/apimachinery v0.37.0
