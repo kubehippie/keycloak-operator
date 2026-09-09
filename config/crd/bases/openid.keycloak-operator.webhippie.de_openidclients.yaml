@@ -156,6 +156,29 @@ spec:
                 description: rootURL is the root URL used for relative redirect/base/admin
                   URLs.
                 type: string
+              serviceAccountClientRoles:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: |-
+                  serviceAccountClientRoles maps a target client's clientID (e.g.
+                  "realm-management") to the client role names on that client (e.g.
+                  "view-users", "manage-users", "query-users") to assign to this
+                  client's service account user. Only applied when
+                  serviceAccountsEnabled is true.
+                type: object
+              serviceAccountRealmRoles:
+                description: |-
+                  serviceAccountRealmRoles lists realm-level roles to assign to this
+                  client's service account user. Only applied when
+                  serviceAccountsEnabled is true. Assignment changes are computed
+                  relative to status.serviceAccountRealmRoles, so roles assigned
+                  outside of this resource (e.g. default realm roles) are left
+                  untouched.
+                items:
+                  type: string
+                type: array
               serviceAccountsEnabled:
                 description: serviceAccountsEnabled enables the OIDC client credentials
                   grant.
@@ -256,6 +279,23 @@ spec:
                 description: keycloakID is the internal UUID assigned by Keycloak
                   for this client.
                 type: string
+              serviceAccountClientRoles:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                description: |-
+                  serviceAccountClientRoles records the client roles this operator has
+                  applied to the client's service account user, keyed by the target
+                  client's clientID.
+                type: object
+              serviceAccountRealmRoles:
+                description: |-
+                  serviceAccountRealmRoles records the realm roles this operator has
+                  applied to the client's service account user.
+                items:
+                  type: string
+                type: array
             type: object
         required:
         - spec

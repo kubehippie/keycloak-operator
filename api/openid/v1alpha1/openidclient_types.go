@@ -76,6 +76,23 @@ type OpenIDClientSpec struct {
 	// +optional
 	ServiceAccountsEnabled *bool `json:"serviceAccountsEnabled,omitempty"`
 
+	// serviceAccountRealmRoles lists realm-level roles to assign to this
+	// client's service account user. Only applied when
+	// serviceAccountsEnabled is true. Assignment changes are computed
+	// relative to status.serviceAccountRealmRoles, so roles assigned
+	// outside of this resource (e.g. default realm roles) are left
+	// untouched.
+	// +optional
+	ServiceAccountRealmRoles []string `json:"serviceAccountRealmRoles,omitempty"`
+
+	// serviceAccountClientRoles maps a target client's clientID (e.g.
+	// "realm-management") to the client role names on that client (e.g.
+	// "view-users", "manage-users", "query-users") to assign to this
+	// client's service account user. Only applied when
+	// serviceAccountsEnabled is true.
+	// +optional
+	ServiceAccountClientRoles map[string][]string `json:"serviceAccountClientRoles,omitempty"`
+
 	// frontChannelLogoutEnabled enables front-channel logout for the client.
 	// +optional
 	FrontChannelLogoutEnabled *bool `json:"frontChannelLogoutEnabled,omitempty"`
@@ -120,6 +137,17 @@ type OpenIDClientStatus struct {
 	// keycloakID is the internal UUID assigned by Keycloak for this client.
 	// +optional
 	KeycloakID *string `json:"keycloakID,omitempty"`
+
+	// serviceAccountRealmRoles records the realm roles this operator has
+	// applied to the client's service account user.
+	// +optional
+	ServiceAccountRealmRoles []string `json:"serviceAccountRealmRoles,omitempty"`
+
+	// serviceAccountClientRoles records the client roles this operator has
+	// applied to the client's service account user, keyed by the target
+	// client's clientID.
+	// +optional
+	ServiceAccountClientRoles map[string][]string `json:"serviceAccountClientRoles,omitempty"`
 
 	// conditions represent the current state of the OpenIDClient resource.
 	// Each condition has a unique type and reflects the status of a specific aspect of the resource.

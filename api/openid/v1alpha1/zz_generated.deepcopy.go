@@ -748,6 +748,27 @@ func (in *OpenIDClientSpec) DeepCopyInto(out *OpenIDClientSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.ServiceAccountRealmRoles != nil {
+		in, out := &in.ServiceAccountRealmRoles, &out.ServiceAccountRealmRoles
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.ServiceAccountClientRoles != nil {
+		in, out := &in.ServiceAccountClientRoles, &out.ServiceAccountClientRoles
+		*out = make(map[string][]string, len(*in))
+		for key, val := range *in {
+			var outVal []string
+			if val == nil {
+				(*out)[key] = nil
+			} else {
+				inVal := (*in)[key]
+				in, out := &inVal, &outVal
+				*out = make([]string, len(*in))
+				copy(*out, *in)
+			}
+			(*out)[key] = outVal
+		}
+	}
 	if in.FrontChannelLogoutEnabled != nil {
 		in, out := &in.FrontChannelLogoutEnabled, &out.FrontChannelLogoutEnabled
 		*out = new(bool)
@@ -809,6 +830,27 @@ func (in *OpenIDClientStatus) DeepCopyInto(out *OpenIDClientStatus) {
 		in, out := &in.KeycloakID, &out.KeycloakID
 		*out = new(string)
 		**out = **in
+	}
+	if in.ServiceAccountRealmRoles != nil {
+		in, out := &in.ServiceAccountRealmRoles, &out.ServiceAccountRealmRoles
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
+	if in.ServiceAccountClientRoles != nil {
+		in, out := &in.ServiceAccountClientRoles, &out.ServiceAccountClientRoles
+		*out = make(map[string][]string, len(*in))
+		for key, val := range *in {
+			var outVal []string
+			if val == nil {
+				(*out)[key] = nil
+			} else {
+				inVal := (*in)[key]
+				in, out := &inVal, &outVal
+				*out = make([]string, len(*in))
+				copy(*out, *in)
+			}
+			(*out)[key] = outVal
+		}
 	}
 	if in.Conditions != nil {
 		in, out := &in.Conditions, &out.Conditions
