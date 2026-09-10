@@ -27,6 +27,7 @@ helm install keycloak-operator oci://ghcr.io/kubehippie/charts/keycloak-operator
 | certmanager.enable | bool | `false` | Enable Cert Manager integration |
 | crd.enable | bool | `true` | Install CRDs if we provide some |
 | crd.keep | bool | `true` | Enable to add a helm.sh/resource-policy annotation |
+| env | list | `[]` | List of environment variables for the pod |
 | fullnameOverride | string | `""` | Override the fullname |
 | image.imagePullPolicy | string | `"IfNotPresent"` | Image pull policy |
 | image.repository | string | `"ghcr.io/kubehippie/keycloak-operator"` | Repository of the controller |
