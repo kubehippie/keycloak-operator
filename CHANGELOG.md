@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.6.0](https://github.com/kubehippie/keycloak-operator/compare/v1.5.0...v1.6.0) (2026-09-10)
+
+### Features
+
+* integrate client and realm roles for service accounts ([8fb6cae](https://github.com/kubehippie/keycloak-operator/commit/8fb6caeffb1e8f8206c47b351fcf0e4de000c396))
+
+### Bugfixes
+
+* **deps:** update golang:1.27.1 docker digest to f44f6e8 ([#110](https://github.com/kubehippie/keycloak-operator/issues/110)) ([1e4beaf](https://github.com/kubehippie/keycloak-operator/commit/1e4beafd6094316f7e1f609bf0d39c6130c3facb))
+* resolve typos or wrong wording ([84ca5c5](https://github.com/kubehippie/keycloak-operator/commit/84ca5c56dea501fd05e07d375db18634999e99b3))
+
+### Dependencies
+
+* **patch:** update module github.com/onsi/ginkgo/v2 to v2.32.2 ([#108](https://github.com/kubehippie/keycloak-operator/issues/108)) ([5184fff](https://github.com/kubehippie/keycloak-operator/commit/5184fffe8ba93ebac414bccf91cb136cac0640be))
+
 ## [1.5.0](https://github.com/kubehippie/keycloak-operator/compare/v1.4.3...v1.5.0) (2026-09-09)
 
 ### Bugfixes
