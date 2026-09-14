@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.6.1](https://github.com/kubehippie/keycloak-operator/compare/v1.6.0...v1.6.1) (2026-09-14)
+
+### Bugfixes
+
+* **deps:** update gcr.io/distroless/static:nonroot docker digest to e2e927e ([#114](https://github.com/kubehippie/keycloak-operator/issues/114)) ([6f43557](https://github.com/kubehippie/keycloak-operator/commit/6f435578dc2ef8f85a23a0d9b75b5401020da087))
+
+### Dependencies
+
+* **mise:** update dependency helm to v4.3.0 ([#111](https://github.com/kubehippie/keycloak-operator/issues/111)) ([f91b7ac](https://github.com/kubehippie/keycloak-operator/commit/f91b7aca0e0481762d29ffce11243017fac4019a))
+* **mise:** update dependency kubebuilder to v4.16.0 ([#112](https://github.com/kubehippie/keycloak-operator/issues/112)) ([6ccd474](https://github.com/kubehippie/keycloak-operator/commit/6ccd4743783574d744ac1d5af574a7e5c6dfca3f))
+* **mise:** update dependency prek to v0.5.3 ([#113](https://github.com/kubehippie/keycloak-operator/issues/113)) ([055f947](https://github.com/kubehippie/keycloak-operator/commit/055f947d8cd7c51544565361917b6cb40af9587d))
+* **patch:** update module sigs.k8s.io/controller-runtime to v0.25.1 ([#115](https://github.com/kubehippie/keycloak-operator/issues/115)) ([f339b91](https://github.com/kubehippie/keycloak-operator/commit/f339b9139dc80f5f6d992ca005bfb85e17cc231f))
+
 ## [1.6.0](https://github.com/kubehippie/keycloak-operator/compare/v1.5.0...v1.6.0) (2026-09-10)
 
 ### Features
