@@ -1,6 +1,6 @@
 # keycloak-operator
 
-[![GitHub Repo](https://img.shields.io/badge/github-repo-yellowgreen)](https://github.com/kubehippie/keycloak-operator) [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubehippie-keycloak-operator)](https://artifacthub.io/packages/helm/kubehippie-keycloak-operator/keycloak-operator)
+[![GitHub Repo](https://img.shields.io/badge/github-repo-yellowgreen)](https://github.com/kubehippie/keycloak-operator) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/98b7c7b7d49241ffab61110b10bb6d15)](https://app.codacy.com/gh/kubehippie/keycloak-operator/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade) [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/kubehippie-keycloak-operator)](https://artifacthub.io/packages/helm/kubehippie-keycloak-operator/keycloak-operator)
 
 > [!WARNING]
 > **This project is in early development.** The builtin resources and their APIs
