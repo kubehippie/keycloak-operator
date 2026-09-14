@@ -138,6 +138,23 @@
           "description": "rootURL is the root URL used for relative redirect/base/admin URLs.",
           "type": "string"
         },
+        "serviceAccountClientRoles": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": "serviceAccountClientRoles maps a target client's clientID (e.g.\n\"realm-management\") to the client role names on that client (e.g.\n\"view-users\", \"manage-users\", \"query-users\") to assign to this\nclient's service account user. Only applied when\nserviceAccountsEnabled is true.",
+          "type": "object"
+        },
+        "serviceAccountRealmRoles": {
+          "description": "serviceAccountRealmRoles lists realm-level roles to assign to this\nclient's service account user. Only applied when\nserviceAccountsEnabled is true. Assignment changes are computed\nrelative to status.serviceAccountRealmRoles, so roles assigned\noutside of this resource (e.g. default realm roles) are left\nuntouched.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "serviceAccountsEnabled": {
           "description": "serviceAccountsEnabled enables the OIDC client credentials grant.",
           "type": "boolean"
@@ -233,6 +250,23 @@
         "keycloakID": {
           "description": "keycloakID is the internal UUID assigned by Keycloak for this client.",
           "type": "string"
+        },
+        "serviceAccountClientRoles": {
+          "additionalProperties": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "description": "serviceAccountClientRoles records the client roles this operator has\napplied to the client's service account user, keyed by the target\nclient's clientID.",
+          "type": "object"
+        },
+        "serviceAccountRealmRoles": {
+          "description": "serviceAccountRealmRoles records the realm roles this operator has\napplied to the client's service account user.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "type": "object"
