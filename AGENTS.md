@@ -178,6 +178,7 @@ All commands are defined in `Makefile`. Key targets:
 | `make lint-fix` | Run linter with auto-fix |
 | `make manifests` | Regenerate RBAC/CRD/webhook manifests via `controller-gen` |
 | `make generate` | Regenerate DeepCopy methods via `controller-gen` |
+| `make schema` | Regenerate JSON Schema files from CRDs for editor integration (yaml-language-server) |
 | `make fmt` | Run `go fmt ./...` |
 | `make vet` | Run `go vet ./...` |
 | `make docker-build` | Build the container image (`ghcr.io/kubehippie/keycloak-operator`) |
@@ -190,7 +191,7 @@ needed.
 After changing any `_types.go` file always run:
 
 ```bash
-make generate manifests
+make generate manifests schema
 ```
 
 ---
@@ -267,7 +268,9 @@ make build-installer   # outputs dist/install.yaml
 
 - Use pull requests for all changes; squash or rebase merge only.
 - Run `make fmt vet lint` before pushing.
-- After any `_types.go` change, run `make generate manifests` and commit the
-  updated generated files together with the type change.
+- After any `_types.go` change, run `make generate manifests schema` and
+  commit the updated generated files together with the type change. The
+  `schema` step keeps the editor JSON Schemas (`config/schema/`) in sync with
+  the CRDs, since it is not implied by `manifests`/`generate` alone.
 - Keep the Helm chart in sync with CRD/config changes (`make chart`).
 - For security issues, contact `thomas@webhippie.de`.
