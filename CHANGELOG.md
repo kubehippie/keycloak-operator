@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.7.0](https://github.com/kubehippie/keycloak-operator/compare/v1.6.1...v1.7.0) (2026-09-21)
+
+### Bugfixes
+
+* **deps:** update golang:1.27.1 docker digest to 03fd17c ([#121](https://github.com/kubehippie/keycloak-operator/issues/121)) ([d456cd8](https://github.com/kubehippie/keycloak-operator/commit/d456cd81c48ab6cc13257016a0dc11d1c324e987))
+* **deps:** update golang:1.27.1 docker digest to 1cfcdb1 ([#122](https://github.com/kubehippie/keycloak-operator/issues/122)) ([975c86b](https://github.com/kubehippie/keycloak-operator/commit/975c86b56267ee0867f60d0c4676a861f6112ea3))
+* **deps:** update golang:1.27.1 docker digest to 3680233 ([#123](https://github.com/kubehippie/keycloak-operator/issues/123)) ([a590a7a](https://github.com/kubehippie/keycloak-operator/commit/a590a7ac805a7456b1f97d95f6ab757fe8199892))
+
+### Dependencies
+
+* **minor:** update module github.com/onsi/ginkgo/v2 to v2.33.0 ([#117](https://github.com/kubehippie/keycloak-operator/issues/117)) ([1d23421](https://github.com/kubehippie/keycloak-operator/commit/1d23421db6757d8e6a2bae33c607f2f19f989427))
+* **patch:** update module github.com/onsi/gomega to v1.43.1 ([#116](https://github.com/kubehippie/keycloak-operator/issues/116)) ([1ed0caf](https://github.com/kubehippie/keycloak-operator/commit/1ed0cafdc4dba1ea75fb19f709098c58646b7da4))
+
 ## [1.6.1](https://github.com/kubehippie/keycloak-operator/compare/v1.6.0...v1.6.1) (2026-09-14)
 
 ### Bugfixes
