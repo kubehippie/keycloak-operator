@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.8.0](https://github.com/kubehippie/keycloak-operator/compare/v1.7.0...v1.8.0) (2026-09-28)
+
+### Dependencies
+
+* **minor:** update dependency golangci/golangci-lint to v2.14.0 ([#127](https://github.com/kubehippie/keycloak-operator/issues/127)) ([df41c35](https://github.com/kubehippie/keycloak-operator/commit/df41c3541cee9f138dace4af21bffd30e1412b1c))
+* **minor:** update module github.com/onsi/gomega to v1.44.0 ([#128](https://github.com/kubehippie/keycloak-operator/issues/128)) ([258d39c](https://github.com/kubehippie/keycloak-operator/commit/258d39c3dab3d50f300f506e002fd477fbadeab4))
+* **mise:** update dependency kubectl to v1.37.1 ([#124](https://github.com/kubehippie/keycloak-operator/issues/124)) ([48f5ed9](https://github.com/kubehippie/keycloak-operator/commit/48f5ed99872654ecc2e92f739f7ee06e90a0c962))
+* **mise:** update dependency prek to v0.5.4 ([#129](https://github.com/kubehippie/keycloak-operator/issues/129)) ([ad3740f](https://github.com/kubehippie/keycloak-operator/commit/ad3740f8d76f351450d2c0abdf80461dc11008cd))
+* **patch:** update kubernetes monorepo to v0.37.1 ([#125](https://github.com/kubehippie/keycloak-operator/issues/125)) ([e530834](https://github.com/kubehippie/keycloak-operator/commit/e530834f3032b9450cb92ab51888cbe7ad4d9014))
+
 ## [1.7.0](https://github.com/kubehippie/keycloak-operator/compare/v1.6.1...v1.7.0) (2026-09-21)
 
 ### Bugfixes
