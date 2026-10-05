@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.8.1](https://github.com/kubehippie/keycloak-operator/compare/v1.8.0...v1.8.1) (2026-10-05)
+
+### Bugfixes
+
+* **deps:** update golang:1.27.1 docker digest to e0174e5 ([#133](https://github.com/kubehippie/keycloak-operator/issues/133)) ([b9e090d](https://github.com/kubehippie/keycloak-operator/commit/b9e090d4719f7e904040bb391697019f0d0bd927))
+
+### Dependencies
+
+* **mise:** update dependency betterleaks to v1.9.0 ([#132](https://github.com/kubehippie/keycloak-operator/issues/132)) ([5fbfea9](https://github.com/kubehippie/keycloak-operator/commit/5fbfea9b06d1ba444f3db16dca415ab478156be5))
+* **mise:** update dependency prek to v0.5.5 ([#137](https://github.com/kubehippie/keycloak-operator/issues/137)) ([b58a296](https://github.com/kubehippie/keycloak-operator/commit/b58a2966083b11d76a453f89c5b5d919591e01ba))
+* **mise:** update dependency tilt to v0.37.8 ([#134](https://github.com/kubehippie/keycloak-operator/issues/134)) ([794c091](https://github.com/kubehippie/keycloak-operator/commit/794c0912f49bf22152ad3190b29357c4fa48c89e))
+* **mise:** update dependency yq to v4.54.1 ([#131](https://github.com/kubehippie/keycloak-operator/issues/131)) ([b9f0c2e](https://github.com/kubehippie/keycloak-operator/commit/b9f0c2e0f4c1f88b4465963c59c7e6506377fff2))
+* **patch:** update dependency kubernetes-sigs/kustomize to v5.8.2 ([#135](https://github.com/kubehippie/keycloak-operator/issues/135)) ([8d3372d](https://github.com/kubehippie/keycloak-operator/commit/8d3372deb86029d806fae6bc9093fc7e7a9ddc52))
+* **patch:** update module sigs.k8s.io/controller-runtime to v0.25.2 ([#136](https://github.com/kubehippie/keycloak-operator/issues/136)) ([afe3b76](https://github.com/kubehippie/keycloak-operator/commit/afe3b76d0ad531a33bc58bb9cd58d3f89d67f875))
+
 ## [1.8.0](https://github.com/kubehippie/keycloak-operator/compare/v1.7.0...v1.8.0) (2026-09-28)
 
 ### Dependencies
