@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.8.2](https://github.com/kubehippie/keycloak-operator/compare/v1.8.1...v1.8.2) (2026-10-12)
+
+### Bugfixes
+
+* **deps:** update golang:1.27.1 docker digest to 162be52 ([#140](https://github.com/kubehippie/keycloak-operator/issues/140)) ([cc35c8d](https://github.com/kubehippie/keycloak-operator/commit/cc35c8d1a29292a2dfb2b9c923ab3e7a3498decf))
+* **deps:** update golang:1.27.1 docker digest to 1e93e00 ([#139](https://github.com/kubehippie/keycloak-operator/issues/139)) ([518a70c](https://github.com/kubehippie/keycloak-operator/commit/518a70cc562ecf457528ac1743a859d1ba38db4c))
+* **deps:** update golang:1.27.1 docker digest to 23fe807 ([#138](https://github.com/kubehippie/keycloak-operator/issues/138)) ([aa0b9ad](https://github.com/kubehippie/keycloak-operator/commit/aa0b9ad759d5cc38019e5b0418a057ffe589d288))
+
+### Dependencies
+
+* **mise:** update dependency go to v1.27.2 ([#141](https://github.com/kubehippie/keycloak-operator/issues/141)) ([b03e896](https://github.com/kubehippie/keycloak-operator/commit/b03e896774965717960a728509dff14224881cc2))
+* **patch:** update dependency kubernetes-sigs/kustomize to v5.8.3 ([#142](https://github.com/kubehippie/keycloak-operator/issues/142)) ([86e853d](https://github.com/kubehippie/keycloak-operator/commit/86e853d3982e80993842966d387f8b00b30b1e21))
+* **patch:** update golang docker tag to v1.27.2 ([#143](https://github.com/kubehippie/keycloak-operator/issues/143)) ([9598c72](https://github.com/kubehippie/keycloak-operator/commit/9598c72bd22847412a58af1016452a447ecfea2e))
+* **patch:** update module github.com/onsi/ginkgo/v2 to v2.33.1 ([#144](https://github.com/kubehippie/keycloak-operator/issues/144)) ([7b74c7e](https://github.com/kubehippie/keycloak-operator/commit/7b74c7e81fbf62324e12529e3d438cc8f4339a05))
+
 ## [1.8.1](https://github.com/kubehippie/keycloak-operator/compare/v1.8.0...v1.8.1) (2026-10-05)
 
 ### Bugfixes
