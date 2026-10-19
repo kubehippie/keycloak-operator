@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.9.0](https://github.com/kubehippie/keycloak-operator/compare/v1.8.2...v1.9.0) (2026-10-19)
+
+### Bugfixes
+
+* **deps:** update golang:1.27.2 docker digest to 007a316 ([#145](https://github.com/kubehippie/keycloak-operator/issues/145)) ([0448dac](https://github.com/kubehippie/keycloak-operator/commit/0448dac0dd6fc32b344aff4e7f1702cfd4317247))
+* **deps:** update golang:1.27.2 docker digest to 8201530 ([#146](https://github.com/kubehippie/keycloak-operator/issues/146)) ([0d689fd](https://github.com/kubehippie/keycloak-operator/commit/0d689fd1fb319baad2a7f96b6cfd5042ed213eeb))
+
+### Dependencies
+
+* **minor:** update dependency golangci/golangci-lint to v2.15.0 ([#150](https://github.com/kubehippie/keycloak-operator/issues/150)) ([7746e30](https://github.com/kubehippie/keycloak-operator/commit/7746e302e4da9cf97d6e47b06a14a188dca5f963))
+* **minor:** update dependency kubernetes-sigs/controller-tools to v0.23.0 ([#148](https://github.com/kubehippie/keycloak-operator/issues/148)) ([9e88e25](https://github.com/kubehippie/keycloak-operator/commit/9e88e25df4b31adbf864c42f31988a80ae9cbc20))
+* **mise:** update dependency helm to v4.3.1 ([#147](https://github.com/kubehippie/keycloak-operator/issues/147)) ([07f6c42](https://github.com/kubehippie/keycloak-operator/commit/07f6c42cd19e14436cf23e2c7e33b14e6ab86d72))
+* **mise:** update dependency prek to v0.5.6 ([#151](https://github.com/kubehippie/keycloak-operator/issues/151)) ([343af9e](https://github.com/kubehippie/keycloak-operator/commit/343af9ecaeb00f97bca511a7b4667f4301df4033))
+
 ## [1.8.2](https://github.com/kubehippie/keycloak-operator/compare/v1.8.1...v1.8.2) (2026-10-12)
 
 ### Bugfixes
