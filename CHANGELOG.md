@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.9.1](https://github.com/kubehippie/keycloak-operator/compare/v1.9.0...v1.9.1) (2026-10-26)
+
+### Bugfixes
+
+* **deps:** update docker digests ([#156](https://github.com/kubehippie/keycloak-operator/issues/156)) ([3a91f02](https://github.com/kubehippie/keycloak-operator/commit/3a91f02fbb52f3f0e8e826f08d93632e17fb88d9))
+* **deps:** update gcr.io/distroless/static:nonroot docker digest to 18f4cc2 ([#157](https://github.com/kubehippie/keycloak-operator/issues/157)) ([26677e9](https://github.com/kubehippie/keycloak-operator/commit/26677e9caf8a255df6415aea99ecd208fe237a87))
+* **deps:** update gcr.io/distroless/static:nonroot docker digest to 5167571 ([#152](https://github.com/kubehippie/keycloak-operator/issues/152)) ([457c5f7](https://github.com/kubehippie/keycloak-operator/commit/457c5f7007fcae7820ba024ff05c07b8cf0d45aa))
+
+### Dependencies
+
+* **mise:** update dependency go to v1.27.3 ([#153](https://github.com/kubehippie/keycloak-operator/issues/153)) ([2a49375](https://github.com/kubehippie/keycloak-operator/commit/2a49375c334a80de6449d536418d0f663e9eb05b))
+* **mise:** update dependency prek to v0.5.7 ([#155](https://github.com/kubehippie/keycloak-operator/issues/155)) ([2d9596e](https://github.com/kubehippie/keycloak-operator/commit/2d9596ec6e55d7dce4e3dc7a49af2eb4077b1029))
+* **patch:** update golang docker tag to v1.27.3 ([#154](https://github.com/kubehippie/keycloak-operator/issues/154)) ([9c5a418](https://github.com/kubehippie/keycloak-operator/commit/9c5a418b54c40084b767f4ccb0ad8d592ca21108))
+
 ## [1.9.0](https://github.com/kubehippie/keycloak-operator/compare/v1.8.2...v1.9.0) (2026-10-19)
 
 ### Bugfixes
