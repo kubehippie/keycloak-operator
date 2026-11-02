@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.9.2](https://github.com/kubehippie/keycloak-operator/compare/v1.9.1...v1.9.2) (2026-11-02)
+
+### Bugfixes
+
+* **deps:** update gcr.io/distroless/static:nonroot docker digest to 25ac8f0 ([#166](https://github.com/kubehippie/keycloak-operator/issues/166)) ([d976dd2](https://github.com/kubehippie/keycloak-operator/commit/d976dd2d6d4fe8f66be96478564d00b421db6308))
+* **deps:** update golang:1.27.3 docker digest to 2669ec9 ([#164](https://github.com/kubehippie/keycloak-operator/issues/164)) ([259634e](https://github.com/kubehippie/keycloak-operator/commit/259634e258637c2f3d43f290e12fbb1adf69b24d))
+* **deps:** update golang:1.27.3 docker digest to 6f1acc8 ([#160](https://github.com/kubehippie/keycloak-operator/issues/160)) ([dc5023e](https://github.com/kubehippie/keycloak-operator/commit/dc5023e1bd62dadab9e24568fd4e7b9167bdda5b))
+* **deps:** update golang:1.27.3 docker digest to 9048d5e ([#158](https://github.com/kubehippie/keycloak-operator/issues/158)) ([9d3f134](https://github.com/kubehippie/keycloak-operator/commit/9d3f134d81659d9a92f9ff25ae3061de291c8c82))
+* **deps:** update golang:1.27.3 docker digest to 921f611 ([#159](https://github.com/kubehippie/keycloak-operator/issues/159)) ([96a85af](https://github.com/kubehippie/keycloak-operator/commit/96a85af2115ffe19ace5362d7168d235891aa12c))
+* **deps:** update golang:1.27.3 docker digest to b760209 ([#162](https://github.com/kubehippie/keycloak-operator/issues/162)) ([233961e](https://github.com/kubehippie/keycloak-operator/commit/233961ef5466cfcd20052846530508cd9d852628))
+
+### Dependencies
+
+* **mise:** update dependency kubectl to v1.37.2 ([#161](https://github.com/kubehippie/keycloak-operator/issues/161)) ([9ef560f](https://github.com/kubehippie/keycloak-operator/commit/9ef560ff6d2233a2b8a28d7eb8935a74f385939c))
+* **mise:** update dependency prek to v0.5.9 ([#165](https://github.com/kubehippie/keycloak-operator/issues/165)) ([e75d6b0](https://github.com/kubehippie/keycloak-operator/commit/e75d6b0d1c821cafc2086e22b2cc4dea9a93cdcd))
+* **patch:** update kubernetes monorepo to v0.37.2 ([#163](https://github.com/kubehippie/keycloak-operator/issues/163)) ([584c35c](https://github.com/kubehippie/keycloak-operator/commit/584c35c0e878e971565ddc84f30b7bf7663d650e))
+
 ## [1.9.1](https://github.com/kubehippie/keycloak-operator/compare/v1.9.0...v1.9.1) (2026-10-26)
 
 ### Bugfixes
