@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.10.0](https://github.com/kubehippie/keycloak-operator/compare/v1.9.2...v1.10.0) (2026-11-09)
+
+### Bugfixes
+
+* **deps:** update golang:1.27.3 docker digest to 0c050fe ([#173](https://github.com/kubehippie/keycloak-operator/issues/173)) ([af0d120](https://github.com/kubehippie/keycloak-operator/commit/af0d1201b3647705a777eee2d4cc2f35d7ba25fa))
+* **deps:** update golang:1.27.3 docker digest to a386c44 ([#172](https://github.com/kubehippie/keycloak-operator/issues/172)) ([c74865b](https://github.com/kubehippie/keycloak-operator/commit/c74865bebd016bbcc85cf5be83a6597958898801))
+* **deps:** update golang:1.27.3 docker digest to c292963 ([#171](https://github.com/kubehippie/keycloak-operator/issues/171)) ([ad8a93e](https://github.com/kubehippie/keycloak-operator/commit/ad8a93e9e1580dcc29b27286abdd7d1bf911566b))
+* **deps:** update golang:1.27.3 docker digest to e519d3b ([#174](https://github.com/kubehippie/keycloak-operator/issues/174)) ([b1ece8b](https://github.com/kubehippie/keycloak-operator/commit/b1ece8b2622d0cf2ca300e99a0fb657e53f1b677))
+
+### Dependencies
+
+* **minor:** update module github.com/onsi/ginkgo/v2 to v2.34.0 ([#167](https://github.com/kubehippie/keycloak-operator/issues/167)) ([b0efe04](https://github.com/kubehippie/keycloak-operator/commit/b0efe0485520761845fb4ee0afc1deff3b6292c2))
+* **mise:** update dependency betterleaks to v1.10.0 ([#170](https://github.com/kubehippie/keycloak-operator/issues/170)) ([82fad78](https://github.com/kubehippie/keycloak-operator/commit/82fad780bde1f9079744e0fcd0b95ce6feb8e2ad))
+* **mise:** update dependency prek to v0.5.10 ([#168](https://github.com/kubehippie/keycloak-operator/issues/168)) ([76d6320](https://github.com/kubehippie/keycloak-operator/commit/76d63206c52ce6136a3ab6abf43c74bcf4955943))
+* **mise:** update dependency yq to v4.54.2 ([d656fa9](https://github.com/kubehippie/keycloak-operator/commit/d656fa9102416e4165cf5a447de0b92bb3da2254))
+* **mise:** update dependency yq to v4.54.3 ([#176](https://github.com/kubehippie/keycloak-operator/issues/176)) ([18802a8](https://github.com/kubehippie/keycloak-operator/commit/18802a8f24eaf1cbed193f173dda6313df6d5393))
+
 ## [1.9.2](https://github.com/kubehippie/keycloak-operator/compare/v1.9.1...v1.9.2) (2026-11-02)
 
 ### Bugfixes
