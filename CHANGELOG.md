@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.10.1](https://github.com/kubehippie/keycloak-operator/compare/v1.10.0...v1.10.1) (2026-11-16)
+
+### Bugfixes
+
+* **deps:** update gcr.io/distroless/static:nonroot docker digest to aafe993 ([#180](https://github.com/kubehippie/keycloak-operator/issues/180)) ([4f1cb1c](https://github.com/kubehippie/keycloak-operator/commit/4f1cb1c8e79c1833d17fd1a18fd25d8cbbe77a71))
+* **deps:** update golang:1.27.4 docker digest to 5e8afd4 ([#179](https://github.com/kubehippie/keycloak-operator/issues/179)) ([4191793](https://github.com/kubehippie/keycloak-operator/commit/41917938838964b758893bbbed33e44a7fe8f952))
+
+### Dependencies
+
+* **mise:** update dependency betterleaks to v1.10.1 ([#181](https://github.com/kubehippie/keycloak-operator/issues/181)) ([d8563e0](https://github.com/kubehippie/keycloak-operator/commit/d8563e08d38301c2f9b1024c22659a59573a2cd4))
+* **mise:** update dependency go to v1.27.4 ([#177](https://github.com/kubehippie/keycloak-operator/issues/177)) ([1099105](https://github.com/kubehippie/keycloak-operator/commit/1099105ddd81ec0b38840368adaaba2ff070ca8b))
+* **mise:** update dependency helm to v4.3.2 ([#182](https://github.com/kubehippie/keycloak-operator/issues/182)) ([07cb8b5](https://github.com/kubehippie/keycloak-operator/commit/07cb8b5eb32d33d89cf9eff2b52d65b4a9cbb13a))
+* **mise:** update dependency prek to v0.5.11 ([#187](https://github.com/kubehippie/keycloak-operator/issues/187)) ([0c7df02](https://github.com/kubehippie/keycloak-operator/commit/0c7df0215d4ca060f3f0bfb8e0101574aece0558))
+* **mise:** update dependency tilt to v0.37.9 ([#183](https://github.com/kubehippie/keycloak-operator/issues/183)) ([65d6eca](https://github.com/kubehippie/keycloak-operator/commit/65d6eca055b12637d4bee117dec44f899f68d1c0))
+* **patch:** update golang docker tag to v1.27.4 ([#178](https://github.com/kubehippie/keycloak-operator/issues/178)) ([d2dcde2](https://github.com/kubehippie/keycloak-operator/commit/d2dcde266ab6921b13ce4a7b4265161c5e840a42))
+
 ## [1.10.0](https://github.com/kubehippie/keycloak-operator/compare/v1.9.2...v1.10.0) (2026-11-09)
 
 ### Bugfixes
