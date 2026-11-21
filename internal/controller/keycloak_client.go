@@ -22,7 +22,7 @@ import (
 	"crypto/x509"
 	"fmt"
 
-	"github.com/Nerzal/gocloak/v14"
+	"github.com/Nerzal/gocloak/v15"
 	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	openidv1alpha1 "github.com/kubehippie/keycloak-operator/api/openid/v1alpha1"
 
