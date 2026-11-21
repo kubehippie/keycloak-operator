@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Nerzal/gocloak/v14"
+	"github.com/Nerzal/gocloak/v15"
 	identityv1alpha1 "github.com/kubehippie/keycloak-operator/api/identity/v1alpha1"
 	controller "github.com/kubehippie/keycloak-operator/internal/controller"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
