@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.10.2](https://github.com/kubehippie/keycloak-operator/compare/v1.10.1...v1.10.2) (2026-11-23)
+
+### Bugfixes
+
+* **deps:** update gcr.io/distroless/static:nonroot docker digest to 8ce6dd8 ([#191](https://github.com/kubehippie/keycloak-operator/issues/191)) ([5983baf](https://github.com/kubehippie/keycloak-operator/commit/5983baf9b71a1e9f019d0055add8f40c31c40c32))
+* **deps:** update golang:1.27.4 docker digest to 205c763 ([#189](https://github.com/kubehippie/keycloak-operator/issues/189)) ([52e4c22](https://github.com/kubehippie/keycloak-operator/commit/52e4c2287660866d6f8693228c7ba6ca10adcbec))
+* **deps:** update golang:1.27.4 docker digest to fe517ac ([#186](https://github.com/kubehippie/keycloak-operator/issues/186)) ([e73bddd](https://github.com/kubehippie/keycloak-operator/commit/e73bddd8029043d16e438cf9fe974d761f16a395))
+
+### Dependencies
+
+* **patch:** update module sigs.k8s.io/controller-runtime to v0.25.3 ([#188](https://github.com/kubehippie/keycloak-operator/issues/188)) ([ac2fafc](https://github.com/kubehippie/keycloak-operator/commit/ac2fafca043e3640ab2ebed9fda5c52a88e6135e))
+
 ## [1.10.1](https://github.com/kubehippie/keycloak-operator/compare/v1.10.0...v1.10.1) (2026-11-16)
 
 ### Bugfixes
