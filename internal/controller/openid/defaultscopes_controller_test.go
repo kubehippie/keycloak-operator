@@ -17,7 +17,7 @@ limitations under the License.
 package openid
 
 import (
-	"github.com/Nerzal/gocloak/v14"
+	"github.com/Nerzal/gocloak/v15"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
